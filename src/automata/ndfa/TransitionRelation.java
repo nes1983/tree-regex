@@ -1,4 +1,4 @@
-package automata.tnfa;
+package automata.ndfa;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;

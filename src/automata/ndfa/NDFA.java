@@ -1,4 +1,4 @@
-package automata.tnfa;
+package automata.ndfa;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -8,26 +8,22 @@ import java.util.Queue;
 import java.util.Set;
 import automata.composition.Alphabet;
 import automata.composition.SetOfStates;
-import automata.composition.SetOfTags;
 import automata.core.State;
 import automata.core.Symbol;
-import automata.core.Tag;
 
 
-public class TNFA
+public class NDFA
 {
 	private SetOfStates			states;
-	private SetOfTags			tags;
 	private Alphabet			alphabet;
 	private TransitionRelation	relations;
 	private State				initialState;
 	private SetOfStates			finalStates;
 
 
-	public TNFA()
+	public NDFA()
 	{
 		this.states = new SetOfStates(SetOfStates.Q_LETTER);
-		this.tags = new SetOfTags();
 		this.alphabet = new Alphabet();
 		this.relations = new TransitionRelation();
 		this.finalStates = new SetOfStates(SetOfStates.F_LETTER);
@@ -38,20 +34,17 @@ public class TNFA
 	{
 		State start;
 		Symbol symbol;
-		Tag tag;
 		State end;
 
 		for (Transition transition : transitions)
 		{
 			start = transition.getStart();
 			symbol = transition.getSymbol();
-			tag = transition.getTag();
 			end = transition.getEnd();
 
 			if (!states.contains(start)) states.add(start);
 			if (!states.contains(end)) states.add(end);
 			if (!alphabet.contains(symbol)) alphabet.add(symbol);
-			if (tag != null && !tags.contains(tag)) tags.add(tag);
 
 			if (!relations.contains(transition)) relations.add(transition);
 		}
@@ -145,7 +138,6 @@ public class TNFA
 		result += "TNFA\n";
 		result += "========================\n";
 		result += states + "\n";
-		result += tags + "\n";
 		result += alphabet + "\n";
 		result += relations + "\n";
 		result += "s:\t" + initialState + "\n";
