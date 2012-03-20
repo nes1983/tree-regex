@@ -6,6 +6,7 @@ import java.util.Set;
 import automata.composition.Alphabet;
 import automata.core.State;
 import automata.core.Symbol;
+import automata.core.Transition;
 
 
 public class TransitionRelation implements Iterable<Transition>
@@ -26,13 +27,11 @@ public class TransitionRelation implements Iterable<Transition>
 
 		for (Transition transition : transitions)
 		{
-			if (transition.getStart() == start && transition.getSymbol() == symbol) result.add(transition.getEnd());
-		}
-
-		if (symbol != Alphabet.EMPTY)
-		{
-			result.addAll(canReach(start, Alphabet.EMPTY));
-			if (result.isEmpty()) return null;
+			if (transition.getStart() == start && transition.getSymbol() == symbol)
+			{
+				result.add(transition.getEnd());
+				result.addAll(canReach(transition.getEnd(), Alphabet.EMPTY));
+			}
 		}
 
 		return result;

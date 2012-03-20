@@ -1,6 +1,7 @@
 package automata.ndfa;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -10,6 +11,8 @@ import automata.composition.Alphabet;
 import automata.composition.SetOfStates;
 import automata.core.State;
 import automata.core.Symbol;
+import automata.core.Transition;
+import automata.dfa.DFA;
 
 
 public class NDFA
@@ -66,10 +69,12 @@ public class NDFA
 	}
 
 
-	public void toTDFA()
+	public DFA toTDFA()
 	{
 		Map<State, SetOfStates> newStates = new HashMap<State, SetOfStates>();
-		Queue<SetOfStates> stack = new LinkedList<SetOfStates>();
+		Set<State> newFinal = new LinkedHashSet<State>();
+		Queue<State> stack = new LinkedList<State>();
+		Set<Transition> transitions = new LinkedHashSet<Transition>();
 
 		State q0 = new State();
 		SetOfStates first = new SetOfStates();
@@ -80,12 +85,22 @@ public class NDFA
 			first.add(state);
 		}
 
+		boolean isFinal = false;
+
+		for (State state : first)
+		{
+			if (finalStates.contains(state)) isFinal = true;
+		}
+
+		if (isFinal) newFinal.add(q0);
+
 		newStates.put(q0, first);
-		stack.add(first);
+		stack.add(q0);
 
 		// ----
 
-		SetOfStates current, found;
+		State current;
+		SetOfStates found;
 
 		while ((current = stack.poll()) != null)
 		{
@@ -94,33 +109,58 @@ public class NDFA
 				if (symbol == Alphabet.EMPTY) continue;
 
 				found = new SetOfStates();
-				for (State substate : current)
+				for (State substate : newStates.get(current))
 				{
 					Set<State> temp = relations.canReach(substate, symbol);
-					if (temp != null)
-					{
-						found.addAll(temp);
-					} else
-					{
-						found.add(substate);
-					}
+					found.addAll(temp);
 
 				}
+
+				State q1 = null;
 
 				boolean isNew = true;
-				for (SetOfStates sos : newStates.values())
+				for (Entry<State, SetOfStates> entry : newStates.entrySet())
 				{
-					if (sos.equals(found)) isNew = false;
+					if (entry.getValue().equals(found))
+					{
+						q1 = entry.getKey();
+						isNew = false;
+					}
 				}
+
+
 				if (isNew)
 				{
-					State q1 = new State();
+					q1 = new State();
 					newStates.put(q1, found);
-					stack.add(found);
+					stack.add(q1);
+
+					isFinal = false;
+
+					for (State state : found)
+					{
+						if (finalStates.contains(state)) isFinal = true;
+					}
+
+					if (isFinal) newFinal.add(q1);
 				}
+				Transition transition = new Transition(current, symbol, q1);
+				transitions.add(transition);
 			}
 		}
 
+		DFA newAutomata = new DFA();
+		newAutomata.setInitial(q0);
+
+		for (Transition transit : transitions)
+		{
+			newAutomata.addConstruct(transit);
+		}
+
+		for (State state : newFinal)
+		{
+			newAutomata.setFinal(state);
+		}
 
 		for (Entry<State, SetOfStates> entry : newStates.entrySet())
 		{
@@ -128,6 +168,8 @@ public class NDFA
 			System.out.println(entry.getValue());
 			System.out.println();
 		}
+
+		return newAutomata;
 	}
 
 

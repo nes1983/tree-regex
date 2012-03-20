@@ -1,7 +1,5 @@
-package automata.dfa;
+package automata.core;
 
-import automata.core.State;
-import automata.core.Symbol;
 
 
 public class Transition

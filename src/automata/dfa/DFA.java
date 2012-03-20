@@ -10,6 +10,7 @@ import automata.composition.Alphabet;
 import automata.composition.SetOfStates;
 import automata.core.State;
 import automata.core.Symbol;
+import automata.core.Transition;
 
 
 public class DFA

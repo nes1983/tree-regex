@@ -3,7 +3,7 @@ package automata.core;
 public class State
 {
 	private int			id;
-	private static int	lastId	= 0;
+	private static int	lastId	= 1;
 
 
 	public State()

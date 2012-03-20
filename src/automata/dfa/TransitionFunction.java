@@ -6,6 +6,7 @@ import java.util.Set;
 import automata.composition.Alphabet;
 import automata.core.State;
 import automata.core.Symbol;
+import automata.core.Transition;
 
 
 public class TransitionFunction implements Iterable<Transition>
@@ -54,6 +55,12 @@ public class TransitionFunction implements Iterable<Transition>
 	public boolean contains(Transition transition)
 	{
 		return this.transitions.contains(transition);
+	}
+
+
+	public Set<Transition> getAll()
+	{
+		return transitions;
 	}
 
 
