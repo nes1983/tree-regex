@@ -1,9 +1,12 @@
 package automata;
+
 import automata.core.Automaton;
 import automata.core.State;
 import automata.core.Transition;
+import automata.exceptions.NotDeterministicException;
 import automata.utils.AutomatonConverter;
 import automata.utils.AutomatonDisplayer;
+import automata.utils.AutomatonRunner;
 
 
 public class Launcher
@@ -34,5 +37,13 @@ public class Launcher
 		Automaton dfa = AutomatonConverter.ndfaToDfa(ndfa);
 
 		System.out.println(AutomatonDisplayer.display(dfa));
+
+		try
+		{
+			System.out.println(AutomatonRunner.evaluate(dfa, "001"));
+		} catch (NotDeterministicException e)
+		{
+			e.printStackTrace();
+		}
 	}
 }

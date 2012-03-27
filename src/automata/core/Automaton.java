@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import automata.exceptions.NotDeterministicException;
 
 
 /**
@@ -229,22 +230,45 @@ public class Automaton
 
 
 	/**
+	 * @param state
+	 * @param character
+	 * @return
+	 */
+	public State reach(State state, Character character)
+			throws NotDeterministicException
+	{
+		if (!isDeterministic()) throw new NotDeterministicException();
+
+		State result = null;
+
+		for (Transition transition : transitions)
+		{
+			if (transition.getStart() == state
+					&& transition.getCharacter() == character)
+				return transition.getEnd();
+		}
+
+		return result;
+	}
+
+
+	/**
 	 * Gets the {@link Set} of all {@link State} which can be reached from a
 	 * specified {@link State} and {@link Character}.
 	 * 
-	 * @param start
+	 * @param state
 	 *            The starting {@link State}
 	 * @param character
 	 *            The desired {@link Character}
 	 * @return a {@link Set} of {@link State}
 	 */
-	public Set<State> canReach(State start, Character character)
+	public Set<State> canReach(State state, Character character)
 	{
 		Set<State> result = new HashSet<State>();
 
 		for (Transition transition : transitions)
 		{
-			if (transition.getStart() == start
+			if (transition.getStart() == state
 					&& transition.getCharacter() == character)
 			{
 				result.add(transition.getEnd());
