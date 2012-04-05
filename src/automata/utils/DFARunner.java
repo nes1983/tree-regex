@@ -7,7 +7,7 @@ import automata.core.State;
 import automata.exceptions.NotDeterministicException;
 
 
-public class AutomatonRunner
+public class DFARunner
 {
 	/**
 	 * Evaluate a string on an automaton.
@@ -31,7 +31,7 @@ public class AutomatonRunner
 		current = automaton.getInitialState();
 
 		// Do the evaluation
-		while ((current = automaton.reach(current, characters.current())) != null)
+		while ((current = automaton.dfaStep(current, characters.current())) != null)
 		{
 			if (characters.next() == CharacterIterator.DONE) break;
 		}

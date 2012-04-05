@@ -14,12 +14,12 @@ public class AutomatonDisplayer
 	/**
 	 * Static {@link String} representing Letters
 	 */
-	private static String	STATES		= "\uD835\uDCE0";
-	private static String	ALPHABET	= "\u03A3";
-	private static String	FUNCTION	= "\u0394";
-	private static String	INITIAL		= "s";
-	private static String	FINAL		= "\uD835\uDCD5";
-	private static String	EMPTY_SET	= "\u2205";
+	private final static String	STATES		= "\uD835\uDCE0";
+	private final static String	ALPHABET	= "\u03A3";
+	private final static String	FUNCTION	= "\u0394";
+	private final static String	INITIAL		= "s";
+	private final static String	FINAL		= "\uD835\uDCD5";
+	private final static String	EMPTY_SET	= "\u2205";
 
 
 	/**

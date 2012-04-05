@@ -4,9 +4,9 @@ import automata.core.Automaton;
 import automata.core.State;
 import automata.core.Transition;
 import automata.exceptions.NotDeterministicException;
-import automata.utils.AutomatonConverter;
+import automata.utils.NFAToDFAConverter;
 import automata.utils.AutomatonDisplayer;
-import automata.utils.AutomatonRunner;
+import automata.utils.DFARunner;
 
 
 public class Launcher
@@ -34,13 +34,13 @@ public class Launcher
 
 		System.out.println(AutomatonDisplayer.display(ndfa));
 
-		Automaton dfa = AutomatonConverter.ndfaToDfa(ndfa);
+		Automaton dfa = NFAToDFAConverter.convert(ndfa);
 
 		System.out.println(AutomatonDisplayer.display(dfa));
 
 		try
 		{
-			System.out.println(AutomatonRunner.evaluate(dfa, "001"));
+			System.out.println(DFARunner.evaluate(dfa, "001"));
 		} catch (NotDeterministicException e)
 		{
 			e.printStackTrace();

@@ -169,18 +169,6 @@ public class Automaton
 
 
 	/**
-	 * Method overloading to use {@link Set} instead of {@link Array}
-	 * 
-	 * @param transitions
-	 *            {@link Set} of {@link Transition}
-	 */
-	public void constructFromTransitions(Transition... transitions)
-	{
-		constructFromTransitions(Arrays.asList(transitions));
-	}
-
-
-	/**
 	 * Construct the {@link Set} of {@link State}, the {@link Set} of
 	 * {@link Character} and the {@link Set} of {@link Transition} of the
 	 * {@link Automaton} based on the given {@link Transition}
@@ -230,11 +218,28 @@ public class Automaton
 
 
 	/**
-	 * @param state
-	 * @param character
-	 * @return
+	 * Method overloading to use {@link Set} instead of {@link Array}
+	 * 
+	 * @param transitions
+	 *            {@link Set} of {@link Transition}
 	 */
-	public State reach(State state, Character character)
+	public void constructFromTransitions(Transition... transitions)
+	{
+		constructFromTransitions(Arrays.asList(transitions));
+	}
+
+
+	/**
+	 * Get the {@link State} which is reach in a deterministic finite automaton
+	 * from a specified {@link State} and specific {@link Character}
+	 * 
+	 * @param state
+	 *            The starting {@link State}
+	 * @param character
+	 *            The desired {@link Character}
+	 * @return a {@link State}
+	 */
+	public State dfaStep(State state, Character character)
 			throws NotDeterministicException
 	{
 		if (!isDeterministic()) throw new NotDeterministicException();
@@ -253,8 +258,9 @@ public class Automaton
 
 
 	/**
-	 * Gets the {@link Set} of all {@link State} which can be reached from a
-	 * specified {@link State} and {@link Character}.
+	 * Gets the {@link Set} of all {@link State} which can be reached in a
+	 * nondeterministic finite automaton from a specified {@link State} and
+	 * specific {@link Character}.
 	 * 
 	 * @param state
 	 *            The starting {@link State}
@@ -262,7 +268,7 @@ public class Automaton
 	 *            The desired {@link Character}
 	 * @return a {@link Set} of {@link State}
 	 */
-	public Set<State> canReach(State state, Character character)
+	public Set<State> nfaStep(State state, Character character)
 	{
 		Set<State> result = new HashSet<State>();
 
@@ -272,7 +278,7 @@ public class Automaton
 					&& transition.getCharacter() == character)
 			{
 				result.add(transition.getEnd());
-				result.addAll(canReach(transition.getEnd(), null));
+				result.addAll(nfaStep(transition.getEnd(), null));
 			}
 		}
 

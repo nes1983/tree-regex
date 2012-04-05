@@ -16,9 +16,9 @@ import automata.core.Transition;
 /**
  * Class to apply some transformation to an {@link Automaton}
  * 
- * @author fabien
+ * @author Fabien Dubosson
  */
-public class AutomatonConverter
+public class NFAToDFAConverter
 {
 	/**
 	 * Convert an nondeterministic finite {@link Automaton} into a deterministic
@@ -28,7 +28,7 @@ public class AutomatonConverter
 	 *            The NDFA {@link Automaton}
 	 * @return the equivalent DFA {@link Automaton}
 	 */
-	public static Automaton ndfaToDfa(Automaton oldAutomaton)
+	public static Automaton convert(Automaton oldAutomaton)
 	{
 		/*
 		 * Variable which will contain the new State representing a subset of
@@ -45,8 +45,7 @@ public class AutomatonConverter
 		List<Transition> newTransitions = new LinkedList<Transition>();
 
 		/*
-		 * Variable which will contains a list of remaining net states to
-		 * analyse
+		 * Variable which will contains a list of remaining states to treat
 		 */
 		Queue<State> workingQueue = new LinkedList<>();
 
@@ -62,7 +61,7 @@ public class AutomatonConverter
 		tempState = new State();
 		tempSet = new HashSet<State>();
 		tempSet.add(oldAutomaton.getInitialState());
-		tempSet.addAll(oldAutomaton.canReach(oldAutomaton.getInitialState(),
+		tempSet.addAll(oldAutomaton.nfaStep(oldAutomaton.getInitialState(),
 				null));
 
 		/*
@@ -93,7 +92,7 @@ public class AutomatonConverter
 				tempSet = new HashSet<State>();
 				for (State state : newStates.get(current))
 				{
-					tempSet.addAll(oldAutomaton.canReach(state, character));
+					tempSet.addAll(oldAutomaton.nfaStep(state, character));
 				}
 
 				boolean isNew = true;
