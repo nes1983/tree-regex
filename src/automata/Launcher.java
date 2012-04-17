@@ -12,20 +12,20 @@ import automata.utils.DFARunner;
 public class Launcher
 {
 
-	public static void main(String[] args)
+	public static void wikipedia(String[] args)
 	{
 		State q1 = new State();
 		State q2 = new State();
 		State q3 = new State();
 		State q4 = new State();
 
-		Transition t1 = new Transition(q1, '0', q2);
-		Transition t2 = new Transition(q2, '1', q4);
-		Transition t3 = new Transition(q4, '0', q3);
-		Transition t4 = new Transition(q3, '0', q4);
-		Transition t5 = new Transition(q3, null, q2);
-		Transition t6 = new Transition(q1, null, q3);
-		Transition t7 = new Transition(q2, '1', q2);
+		Transition t1 = new Transition(q1, '0', null, q2);
+		Transition t2 = new Transition(q2, '1', null, q4);
+		Transition t3 = new Transition(q4, '0', null, q3);
+		Transition t4 = new Transition(q3, '0', null, q4);
+		Transition t5 = new Transition(q3, null, null, q2);
+		Transition t6 = new Transition(q1, null, null, q3);
+		Transition t7 = new Transition(q2, '1', null, q2);
 
 		Automaton ndfa = new Automaton();
 		ndfa.constructFromTransitions(t1, t2, t3, t4, t5, t6, t7);
@@ -45,5 +45,11 @@ public class Launcher
 		{
 			e.printStackTrace();
 		}
+	}
+
+
+	public static void main(String[] args)
+	{
+		wikipedia(args);
 	}
 }

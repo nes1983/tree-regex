@@ -121,8 +121,9 @@ public class NFAToDFAConverter
 					}
 				}
 
-				newTransitions
-						.add(new Transition(current, character, tempState));
+				//TODO: Just added null to avoid code error
+				newTransitions.add(new Transition(current, character, null,
+						tempState));
 
 			}
 		}
