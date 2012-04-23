@@ -1,7 +1,10 @@
-package automata.core;
+package automaton.core;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 /**
- * Class representing a {@link State} in an {@link Automaton}
+ * Class representing a {@link State} in an {@link TDFA}
  * 
  * @author Fabien Dubosson
  */
@@ -10,17 +13,17 @@ public class State
 	/**
 	 * The unique identifier of the {@link State}
 	 */
-	private int				id;
+	private final int				id;
 
 	/**
 	 * Counter to assign next unique identifier
 	 */
-	private static int		lastId	= 1;
+	private static AtomicInteger	lastId	= new AtomicInteger(0);
 
 	/**
 	 * Literal String which identify the {@link State} object
 	 */
-	private static String	LITERAL	= "\uA757";
+	private static String			LITERAL	= "\uA757";
 
 
 	/**
@@ -28,7 +31,7 @@ public class State
 	 */
 	public State()
 	{
-		this.id = State.lastId++;
+		this.id = lastId.getAndIncrement();
 	}
 
 

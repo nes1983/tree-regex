@@ -1,11 +1,11 @@
-package automata.utils;
+package automaton.utils;
 
 import java.util.Set;
-import automata.core.Automaton;
+import automaton.core.TDFA;
 
 
 /**
- * Class to display an represent an {@link Automaton} in a text format
+ * Class to display an represent an {@link TDFA} in a text format
  * 
  * @author fabien
  */
@@ -23,13 +23,13 @@ public class AutomatonDisplayer
 
 
 	/**
-	 * Display an {@link Automaton} in text version
+	 * Display an {@link TDFA} in text version
 	 * 
 	 * @param automaton
-	 *            The {@link Automaton} to display
+	 *            The {@link TDFA} to display
 	 * @return a {@link String}
 	 */
-	public static String display(Automaton automaton)
+	public static String display(TDFA automaton)
 	{
 		String deterministic, initial;
 

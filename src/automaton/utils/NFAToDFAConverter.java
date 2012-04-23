@@ -1,4 +1,4 @@
-package automata.utils;
+package automaton.utils;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,27 +8,27 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
-import automata.core.Automaton;
-import automata.core.State;
-import automata.core.Transition;
+import automaton.core.TDFA;
+import automaton.core.State;
+import automaton.core.Transition;
 
 
 /**
- * Class to apply some transformation to an {@link Automaton}
+ * Class to apply some transformation to an {@link TDFA}
  * 
  * @author Fabien Dubosson
  */
 public class NFAToDFAConverter
 {
 	/**
-	 * Convert an nondeterministic finite {@link Automaton} into a deterministic
+	 * Convert an nondeterministic finite {@link TDFA} into a deterministic
 	 * finite automaton using powerset construction algorithm
 	 * 
 	 * @param oldAutomaton
-	 *            The NDFA {@link Automaton}
-	 * @return the equivalent DFA {@link Automaton}
+	 *            The NDFA {@link TDFA}
+	 * @return the equivalent DFA {@link TDFA}
 	 */
-	public static Automaton convert(Automaton oldAutomaton)
+	public static TDFA convert(TDFA oldAutomaton)
 	{
 		/*
 		 * Variable which will contain the new State representing a subset of
@@ -121,7 +121,7 @@ public class NFAToDFAConverter
 					}
 				}
 
-				//TODO: Just added null to avoid code error
+				// TODO Just added null to avoid code error
 				newTransitions.add(new Transition(current, character, null,
 						tempState));
 
@@ -131,7 +131,7 @@ public class NFAToDFAConverter
 		/*
 		 * Construct the new automaton
 		 */
-		Automaton newAutomaton = new Automaton();
+		TDFA newAutomaton = new TDFA();
 		newAutomaton.constructFromTransitions(newTransitions);
 		newAutomaton.setInitialState(newInitialState);
 		newAutomaton.setFinalStates(newFinalStates);

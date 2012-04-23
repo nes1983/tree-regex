@@ -1,10 +1,10 @@
-package automata.utils;
+package automaton.utils;
 
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
-import automata.core.Automaton;
-import automata.core.State;
-import automata.exceptions.NotDeterministicException;
+import automaton.core.TDFA;
+import automaton.core.State;
+import automaton.exceptions.NotDeterministicException;
 
 
 public class DFARunner
@@ -19,7 +19,7 @@ public class DFARunner
 	 * @return A boolean. True if the string finish on accepting state, False
 	 *         otherwise.
 	 */
-	public static boolean evaluate(Automaton automaton, String string)
+	public static boolean evaluate(TDFA automaton, String string)
 			throws NotDeterministicException
 	{
 		// Create needed variables
