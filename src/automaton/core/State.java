@@ -4,11 +4,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
- * Class representing a {@link State} in an {@link TDFA}
+ * A {@link State} of a {@link TDFA}.
  * 
  * @author Fabien Dubosson
  */
-public class State implements Comparable<State>
+public final class State implements Comparable<State>
 {
 	/**
 	 * The unique identifier of the {@link State}
@@ -46,9 +46,6 @@ public class State implements Comparable<State>
 	}
 
 
-	/**
-	 * Represents the {@link State} by the LITERAL and the identifier
-	 */
 	@Override
 	public String toString()
 	{
@@ -59,6 +56,7 @@ public class State implements Comparable<State>
 	@Override
 	public int compareTo(State o)
 	{
+		// TODO Verify if follow axiom of comparison (See compareTo javadoc)
 		return o.getId() - this.getId();
 	}
 }

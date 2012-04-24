@@ -1,7 +1,8 @@
 package automaton.core;
 
 /**
- * Class representing an range of character to be used in automaton
+ * {@link InputRange} represent a range of {@link Character} which can be used
+ * in {@link TransitionTable} of {@link TDFA}.
  * 
  * @author Fabien Dubosson
  */
@@ -19,7 +20,7 @@ public class InputRange implements Comparable<InputRange>
 
 
 	/**
-	 * Constructor class which take the first and last character
+	 * Constructor which take the first and last character as parameter
 	 * 
 	 * @param from
 	 *            The first {@link Character} of the range
@@ -55,15 +56,25 @@ public class InputRange implements Comparable<InputRange>
 	}
 
 
-	@Override
-	public int compareTo(InputRange o)
-	{
-		return o.getFrom() - this.getFrom();
-	}
-
-
+	/**
+	 * Tell if the {@link InputRange} contains a {@link Character} within its
+	 * range
+	 * 
+	 * @param character
+	 *            A specific {@link Character}
+	 * @return if the {@link Character} is contained within the
+	 *         {@link InputRange}
+	 */
 	public boolean contains(Character character)
 	{
 		return (from <= character && character <= to);
+	}
+
+
+	@Override
+	public int compareTo(InputRange o)
+	{
+		// TODO Verify if follow axiom of comparison (See compareTo javadoc)
+		return o.getFrom() - this.getFrom();
 	}
 }

@@ -1,8 +1,11 @@
 package automaton.core;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
+import automaton.instructions.Instruction;
 
 
 /**
@@ -13,17 +16,18 @@ import java.util.SortedSet;
 public class TDFA
 {
 	/**
-	 * {@link Set} of {@link State}
+	 * {@link Set} of {@link State}s
 	 */
 	private Set<State>				states;
 
 	/**
-	 * {@link Set} of valid {@link Character}
+	 * {@link Set} of valid {@link Character}s
 	 */
 	private SortedSet<InputRange>	alphabet;
 
 	/**
-	 * {@link TransitionTable} representing all possible transition
+	 * {@link TransitionTable} representing all possible transition in
+	 * {@link TDFA}
 	 */
 	private TransitionTable			transitionTable;
 
@@ -33,43 +37,154 @@ public class TDFA
 	private State					initialState;
 
 	/**
-	 * {@link Set} of final {@link State}
+	 * {@link Set} of final {@link State}s
 	 */
 	private Set<State>				finalStates;
 
+
 	/**
-	 * Specify if the {@link TDFA} is deterministic
+	 * Initialize a {@link TDFA}
 	 */
-	private Boolean					isDeterministic;
-	
-	public void addTransition(State oldState, InputRange range, State newState)
+	public TDFA()
 	{
-		this.states.add(oldState);
-		this.states.add(newState);
+		this.states = new LinkedHashSet<>();
+		this.alphabet = new TreeSet<>();
+		this.transitionTable = new TransitionTable();
+		this.finalStates = new LinkedHashSet<>();
+	}
+
+
+	/**
+	 * Construct {@link TDFA} by adding new transition.
+	 * 
+	 * @param startingState
+	 *            Starting {@link State} of the transition
+	 * @param range
+	 *            Assigned {@link Character}s of the transition
+	 * @param endingState
+	 *            Ending {@link State} of the transition
+	 * @param instruction
+	 *            Assigned {@link Instruction} to execute when using the
+	 *            transition
+	 */
+	public void addTransition(State startingState, InputRange range,
+			State endingState, Instruction instruction)
+	{
+		this.states.add(startingState);
+		this.states.add(endingState);
 		this.addAlphabet(range);
 		assert invariant();
 	}
-	
-	public Set<InputRange> getAlphabet()
+
+
+	/**
+	 * Verify the consistency of the {@link TDFA}
+	 * 
+	 * @return <code>true</code> if the {@link TDFA} is consistent,
+	 *         <code>false</code> otherwise
+	 */
+	protected boolean invariant()
 	{
-		return Collections.unmodifiableSet(alphabet);
-	}
-	
-	
-	protected boolean invariant() 
-	{
-		SortedSet<InputRange> alphabetOfTransitions = getAlphabetFrom(transitionTable);
+		Set<InputRange> alphabetOfTransitions =
+				getAlphabetFrom(transitionTable);
 		return alphabetOfTransitions.equals(alphabet);
 	}
 
-	private SortedSet<InputRange> getAlphabetFrom(TransitionTable transitionTable2)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
+
+	/**
+	 * Add a {@link Character} into the alphabet
+	 * 
+	 * @param input
+	 *            the {@link Character} to add
+	 */
 	private void addAlphabet(InputRange input)
 	{
 		// TODO write method
 	}
+
+
+	/**
+	 * Define the initial {@link State} of the {@link TDFA}
+	 * 
+	 * @param initialState
+	 *            The new initial {@link State} of {@link TDFA}
+	 */
+	public void setInitialState(State initialState)
+	{
+		this.initialState = initialState;
+	}
+
+
+	/**
+	 * Define a new {@link State} as a final {@link State} of {@link TDFA}
+	 * 
+	 * @param finalState
+	 *            the {@link State} to define as final {@link State}
+	 */
+	public void addFinalState(State finalState)
+	{
+		this.finalStates.add(finalState);
+		assert invariant();
+	}
+
+
+	/**
+	 * Return an unmodifiable {@link Set} of all {@link State}s of {@link TDFA}
+	 * 
+	 * @return an unmodifiable {@link Set} of {@link State}s of {@link TDFA}
+	 */
+	public Set<State> getStates()
+	{
+		return Collections.unmodifiableSet(states);
+	}
+
+
+	/**
+	 * Return an unmodifiable {@link Set} of all {@link Character}s of
+	 * {@link TDFA}
+	 * 
+	 * @return an unmodifiable {@link Set} of {@link Character}s of {@link TDFA}
+	 */
+	public Set<InputRange> getAlphabet()
+	{
+		return Collections.unmodifiableSet(alphabet);
+	}
+
+
+	/**
+	 * The initial {@link State} of {@link TDFA}
+	 * 
+	 * @return the initial {@link State} of {@link TDFA}
+	 */
+	public State getInitialState()
+	{
+		return initialState;
+	}
+
+
+	/**
+	 * Return an unmodifiable {@link Set} of all final {@link State}s of
+	 * {@link TDFA}
+	 * 
+	 * @return an unmodifiable {@link Set} of final {@link State}s of
+	 *         {@link TDFA}
+	 */
+	public Set<State> getFinalStates()
+	{
+		return Collections.unmodifiableSet(finalStates);
+	}
+
+
+	/**
+	 * Calculate the alphabet of a {@link TransitionTable}
+	 * 
+	 * @param transitionTable2
+	 * @return the {@link Set} of {@link Character}s representing the alphabet
+	 */
+	private Set<InputRange> getAlphabetFrom(TransitionTable transitionTable2)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
