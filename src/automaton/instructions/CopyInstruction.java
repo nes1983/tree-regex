@@ -2,14 +2,20 @@ package automaton.instructions;
 
 public class CopyInstruction implements Instruction
 {
+	private final int	from, to;
+
+
+	public CopyInstruction(int from, int to)
+	{
+		this.from = from;
+		this.to = to;
+	}
+
 
 	@Override
-	public void execute(Context context, int... args)
+	public void execute(Context context, int pos)
 	{
-		int index = args[0];
-		int tag = args[1];
-		int currentPos = args[2];
-		// TODO Auto-generated method stub
+		context.copy(this.from, this.to);
 	}
 
 }

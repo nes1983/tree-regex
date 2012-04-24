@@ -4,7 +4,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import automaton.instructions.Instruction;
+import automaton.instructions.SequenceOfInstructions;
 
 
 /**
@@ -18,7 +18,7 @@ public class TransitionTable
 	/**
 	 * The {@link Map} containing all possible transitions
 	 */
-	private final SortedMap<Pair<State, InputRange>, Pair<State, Instruction>>	transitions;
+	private final SortedMap<Pair<State, InputRange>, Pair<State, SequenceOfInstructions>>	transitions;
 
 
 	/**
@@ -41,11 +41,11 @@ public class TransitionTable
 	 * @param endingState
 	 *            The ending {@link State} of the transition
 	 * @param instruction
-	 *            The {@link Instruction} to be executed when using the
+	 *            The {@link SequenceOfInstructions} to be executed when using the
 	 *            transition
 	 */
 	public void put(State startingState, InputRange range, State endingState,
-			Instruction instruction)
+			SequenceOfInstructions instruction)
 	{
 		// TODO Some overlapping tests
 		this.transitions.put(new Pair<>(startingState, range), new Pair<>(
@@ -65,43 +65,43 @@ public class TransitionTable
 	 */
 	public State getState(State state, Character character)
 	{
-		Pair<State, Instruction> pair = getPair(state, character);
+		Pair<State, SequenceOfInstructions> pair = getPair(state, character);
 		return pair.getFirst();
 	}
 
 
 	/**
-	 * Get the {@link Instruction} associated with the transition starting from
+	 * Get the {@link SequenceOfInstructions} associated with the transition starting from
 	 * a {@link State} with a specified {@link Character}.
 	 * 
 	 * @param state
 	 *            The starting {@link State}
 	 * @param character
 	 *            The specified {@link Character}
-	 * @return The {@link Instruction} associated with the transition
+	 * @return The {@link SequenceOfInstructions} associated with the transition
 	 */
-	public Instruction getInstruction(State state, Character character)
+	public SequenceOfInstructions getInstruction(State state, Character character)
 	{
-		Pair<State, Instruction> pair = getPair(state, character);
+		Pair<State, SequenceOfInstructions> pair = getPair(state, character);
 		return pair.getSecond();
 	}
 
 
 	/**
-	 * Get the {@link Pair} of {@link State} and {@link Instruction} assigned
+	 * Get the {@link Pair} of {@link State} and {@link SequenceOfInstructions} assigned
 	 * when starting from a {@link State} with a specified {@link Character}
 	 * 
 	 * @param state
 	 *            The starting {@link State}
 	 * @param character
 	 *            The specified {@link Character}
-	 * @return The {@link Pair} of {@link State} and {@link Instruction}
+	 * @return The {@link Pair} of {@link State} and {@link SequenceOfInstructions}
 	 */
-	private Pair<State, Instruction> getPair(State state, Character character)
+	private Pair<State, SequenceOfInstructions> getPair(State state, Character character)
 	{
 		// TODO Verify that the state is the same!
 		InputRange searched = new InputRange(character, character);
-		SortedMap<Pair<State, InputRange>, Pair<State, Instruction>> tail =
+		SortedMap<Pair<State, InputRange>, Pair<State, SequenceOfInstructions>> tail =
 				transitions.tailMap(new Pair<>(state, searched));
 		Pair<State, InputRange> pair = tail.firstKey();
 		if (!pair.getFirst().equals(state)) return new Pair<>(null, null);

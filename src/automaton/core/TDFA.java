@@ -5,7 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import automaton.instructions.Instruction;
+import automaton.instructions.SequenceOfInstructions;
 
 
 /**
@@ -64,11 +64,11 @@ public class TDFA
 	 * @param endingState
 	 *            Ending {@link State} of the transition
 	 * @param instruction
-	 *            Assigned {@link Instruction} to execute when using the
+	 *            Assigned {@link SequenceOfInstructions} to execute when using the
 	 *            transition
 	 */
 	public void addTransition(State startingState, InputRange range,
-			State endingState, Instruction instruction)
+			State endingState, SequenceOfInstructions instruction)
 	{
 		this.states.add(startingState);
 		this.states.add(endingState);

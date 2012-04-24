@@ -6,6 +6,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 
 @RunWith(Suite.class)
-@SuiteClasses({ StateTest.class, TransitionTableTest.class })
+@SuiteClasses({ StateTest.class, TransitionTableTest.class, ContextTest.class,
+		SequenceOfInstructionsTest.class })
 public class AllTests
 {}

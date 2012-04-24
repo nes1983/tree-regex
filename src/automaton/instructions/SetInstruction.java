@@ -2,14 +2,21 @@ package automaton.instructions;
 
 public class SetInstruction implements Instruction
 {
+	private final int	address, tag;
+
+
+	public SetInstruction(int address, int tag)
+	{
+		this.address = address;
+		this.tag = tag;
+	}
+
 
 	@Override
-	public void execute(Context context, int... args)
+	public void execute(Context context, int pos)
 	{
-		int index1 = args[0];
-		int index2 = args[1];
-		// TODO Auto-generated method stub
-
+		context.set(this.address, this.tag, pos);
 	}
+
 
 }
