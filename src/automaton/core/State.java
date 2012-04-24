@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 
  * @author Fabien Dubosson
  */
-public class State
+public class State implements Comparable<State>
 {
 	/**
 	 * The unique identifier of the {@link State}
@@ -21,7 +21,7 @@ public class State
 	private static AtomicInteger	lastId	= new AtomicInteger(0);
 
 	/**
-	 * Literal String which identify the {@link State} object
+	 * Literal {@link String} which identify the {@link State} type
 	 */
 	private static String			LITERAL	= "\uA757";
 
@@ -53,5 +53,12 @@ public class State
 	public String toString()
 	{
 		return String.format(State.LITERAL + "%d", this.id);
+	}
+
+
+	@Override
+	public int compareTo(State o)
+	{
+		return o.getId() - this.getId();
 	}
 }
