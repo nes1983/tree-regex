@@ -2,7 +2,7 @@ package automaton.tests;
 
 import org.junit.Test;
 import automaton.instructions.Context;
-import automaton.instructions.CopyInstruction;
+import automaton.instructions.CopyAllInstruction;
 import automaton.instructions.Instruction;
 import automaton.instructions.SequenceOfInstructions;
 import automaton.instructions.SetInstruction;
@@ -25,9 +25,9 @@ public class SequenceOfInstructionsTest
 		Instruction s1 = new SetInstruction(0, 1);
 		Instruction s2 = new SetInstruction(2, 3);
 
-		Instruction c1 = new CopyInstruction(0, 2);
-		Instruction c2 = new CopyInstruction(0, 3);
-		Instruction c3 = new CopyInstruction(1, 3);
+		Instruction c1 = new CopyAllInstruction(0, 2);
+		Instruction c2 = new CopyAllInstruction(0, 3);
+		Instruction c3 = new CopyAllInstruction(1, 3);
 
 		sequence.enqueue(s0);
 		sequence.enqueue(s1);
