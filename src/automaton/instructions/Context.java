@@ -1,5 +1,6 @@
 package automaton.instructions;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -9,11 +10,13 @@ public class Context
 {
 
 	Map<Integer, TagValueFunction>	memory;
+	Map<Integer, Integer>			result;
 
 
 	public Context()
 	{
 		this.memory = new TreeMap<>();
+		this.result = new TreeMap<>();
 	}
 
 
@@ -36,6 +39,18 @@ public class Context
 		if (!memory.containsKey(address))
 			this.memory.put(address, new TagValueFunction());
 		this.memory.get(address).set(tag, pos);
+	}
+
+
+	public void saveValue(int address, int tag, int resultIndex)
+	{
+		this.result.put(resultIndex, get(address, tag));
+	}
+
+
+	public Map<Integer, Integer> getResult()
+	{
+		return Collections.unmodifiableMap(this.result);
 	}
 
 

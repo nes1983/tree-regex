@@ -2,9 +2,12 @@ package automaton.core;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
+import automaton.instructions.Context;
 import automaton.instructions.SequenceOfInstructions;
 
 
@@ -18,28 +21,28 @@ public class TDFA
 	/**
 	 * {@link Set} of {@link State}s
 	 */
-	private Set<State>				states;
+	private Set<State>							states;
 
 	/**
 	 * {@link Set} of valid {@link Character}s
 	 */
-	private SortedSet<InputRange>	alphabet;
+	private SortedSet<InputRange>				alphabet;
 
 	/**
 	 * {@link TransitionTable} representing all possible transition in
 	 * {@link TDFA}
 	 */
-	private TransitionTable			transitionTable;
+	private TransitionTable						transitionTable;
 
 	/**
 	 * Initial {@link State}
 	 */
-	private State					initialState;
+	private Pair<State, SequenceOfInstructions>	initialState;
 
 	/**
 	 * {@link Set} of final {@link State}s
 	 */
-	private Set<State>				finalStates;
+	private Map<State, SequenceOfInstructions>	finalStates;
 
 
 	/**
@@ -50,7 +53,7 @@ public class TDFA
 		this.states = new LinkedHashSet<>();
 		this.alphabet = new TreeSet<>();
 		this.transitionTable = new TransitionTable();
-		this.finalStates = new LinkedHashSet<>();
+		this.finalStates = new TreeMap<State, SequenceOfInstructions>();
 	}
 
 
@@ -64,8 +67,8 @@ public class TDFA
 	 * @param endingState
 	 *            Ending {@link State} of the transition
 	 * @param instruction
-	 *            Assigned {@link SequenceOfInstructions} to execute when using the
-	 *            transition
+	 *            Assigned {@link SequenceOfInstructions} to execute when using
+	 *            the transition
 	 */
 	public void addTransition(State startingState, InputRange range,
 			State endingState, SequenceOfInstructions instruction)
@@ -73,6 +76,9 @@ public class TDFA
 		this.states.add(startingState);
 		this.states.add(endingState);
 		this.addAlphabet(range);
+		// TODO Complete the method
+		this.transitionTable
+				.put(startingState, range, endingState, instruction);
 		assert invariant();
 	}
 
@@ -88,6 +94,19 @@ public class TDFA
 		Set<InputRange> alphabetOfTransitions =
 				getAlphabetFrom(transitionTable);
 		return alphabetOfTransitions.equals(alphabet);
+	}
+
+
+	public State
+			step(Context context, int pos, State start, Character character)
+	{
+		State result = this.transitionTable.getState(start, character);
+
+		if (result != null)
+			this.transitionTable.getInstruction(start, character).execute(
+					context, pos);
+
+		return result;
 	}
 
 
@@ -109,9 +128,11 @@ public class TDFA
 	 * @param initialState
 	 *            The new initial {@link State} of {@link TDFA}
 	 */
-	public void setInitialState(State initialState)
+	public void setInitialState(State initialState,
+			SequenceOfInstructions sequence)
 	{
-		this.initialState = initialState;
+		this.initialState =
+				new Pair<State, SequenceOfInstructions>(initialState, sequence);
 	}
 
 
@@ -121,9 +142,10 @@ public class TDFA
 	 * @param finalState
 	 *            the {@link State} to define as final {@link State}
 	 */
-	public void addFinalState(State finalState)
+	public void
+			addFinalState(State finalState, SequenceOfInstructions sequence)
 	{
-		this.finalStates.add(finalState);
+		this.finalStates.put(finalState, sequence);
 		assert invariant();
 	}
 
@@ -158,7 +180,13 @@ public class TDFA
 	 */
 	public State getInitialState()
 	{
-		return initialState;
+		return initialState.getFirst();
+	}
+
+
+	public SequenceOfInstructions getInitialInstructions()
+	{
+		return initialState.getSecond();
 	}
 
 
@@ -171,7 +199,13 @@ public class TDFA
 	 */
 	public Set<State> getFinalStates()
 	{
-		return Collections.unmodifiableSet(finalStates);
+		return Collections.unmodifiableSet(finalStates.keySet());
+	}
+
+
+	public SequenceOfInstructions getFinalInstructions(State state)
+	{
+		return this.finalStates.get(state);
 	}
 
 
