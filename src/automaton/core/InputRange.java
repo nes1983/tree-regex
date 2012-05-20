@@ -74,7 +74,6 @@ public class InputRange implements Comparable<InputRange>
 	@Override
 	public int compareTo(InputRange o)
 	{
-		// TODO Verify if follow axiom of comparison (See compareTo javadoc)
 		return o.getFrom() - this.getFrom();
 	}
 }
