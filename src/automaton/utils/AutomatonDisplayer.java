@@ -33,13 +33,8 @@ public class AutomatonDisplayer
 	{
 		String deterministic, initial;
 
-		if (automaton.isDeterministic() == null)
-			deterministic = "Not defined";
-		else if (automaton.isDeterministic() == true)
-			deterministic = "True";
-		else
-			deterministic = "False";
-
+		String deterministic = String.valueOf(automaton.isDeterministic());
+		
 		if (automaton.getInitialState() == null)
 			initial = EMPTY_SET;
 		else

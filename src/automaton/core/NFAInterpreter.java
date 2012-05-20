@@ -1,5 +1,10 @@
 package automaton.core;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,129 +16,13 @@ import java.util.NoSuchElementException;
 import java.util.regex.MatchResult;
 
 import org.junit.Test;
-
-import automaton.core.Automaton.TNFA;
-import automaton.core.TransitionTable.Tag;
-import org.junit.Assert;
 import org.mockito.Mockito;
 
-import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
+import automaton.core.TransitionTable.Tag;
 
-public class NFAInterpreter {
-	final TNFA nfa;
-
-	final Tag ENTIRE_MATCH_TAG;
-	final Pair<State, Tag> SCAN; 
-	
-	NFAInterpreter(TNFA nfa) {
-		this.nfa = nfa;
-		ENTIRE_MATCH_TAG = new Tag() {
-
-			public int compareTo(Tag o) {
-				return 0;
-			}
-
-			public int getGroup() {
-				return 0;
-			}};
-		SCAN = new Pair<>(new State(), null);
-			
-	}
-	
-	static class WholeMatchTag implements Tag {
-		
-		public int compareTo(Tag o) {
-			return 0;
-		}
-
-		public int getGroup() {
-			return 0;
-		}
-	}
-	
-	public MatchResult match(int j, String input) {
-		Deque<Pair<State,Tag>> q = new ArrayDeque<>();
-		q.add(SCAN);
-		int beginning = j;
-		Pair<State,Tag> transition = new Pair<>(nfa.getInitialState(), (Tag) new WholeMatchTag());
-		RealMatchResult r = new RealMatchResult();
-		do {
-			if(transition.equals(SCAN)) {
-				j++;
-				q.add(SCAN);
-			} else {
-				Collection<Pair<State, Tag>> transitions = nfa.availableTransitionsFor(transition.getFirst(), input.charAt(j));
-				assert transitions != null;
-				for(Pair<State, Tag> t : transitions) {
-					q.add(t);
-				}
-			}
-			transition = q.pop();
-			if(! transition.equals(SCAN)) {
-				r.takeCaptureGroup(transition.getSecond(), j-1);
-			}
-		} while(j <= input.length() && ! nfa.isAccepting(transition.getFirst()) && ! q.isEmpty());
-		
-		if(nfa.isAccepting(transition.getFirst())) {
-			r.takeCaptureGroup( transition.getSecond(), j-1);
-			r.takeCaptureGroup(ENTIRE_MATCH_TAG, j-1);
-			return r; //TODO: make immutable.
-		} else {
-			return NoMatchResult.SINGLETON;
-		}
-	}
-	
-	
-	
-	class RealMatchResult implements MatchResult {
-		
-		List<Pair<Integer, Integer>> captureGroups = new ArrayList<>();
-
-		
-		public int start() {
-			return start(0);
-		}
-		
-		void takeCaptureGroup(Tag tag, int match) {
-			assert tag != null;
-			captureGroups.add(tag.getGroup(), new Pair<>(0,match));
-		}
-
-		public int start(int group) {
-			return captureGroups.get(group).getFirst();
-		}
-
-		public int end() {
-			return end(0);
-		}
-
-		public int end(int group) {
-			return captureGroups.get(group).getSecond();
-		}
-
-		public String group() {
-			throw null;
-		}
-
-		public String group(int group) {
-			throw null;
-		}
-
-		public int groupCount() {
-			throw null;
-		}
-		
-	}
-	
-	public MatchResult match(String input ) {
-		return match(0, input);
-	}
-
-	
+class NFAInterpreter {
 	public static final class NFAInterpreterTest {
-		
+
 		@Test
 		public void testMocked() {
 			final TNFA tnfa = mock(TNFA.class);
@@ -141,48 +30,153 @@ public class NFAInterpreter {
 			final State b = mock(State.class);
 			final State c = mock(State.class);
 			final Tag tag = mock(Tag.class);
-			
+
 			when(tag.getGroup()).thenReturn(0);
-			when(tnfa.availableTransitionsFor(Mockito.eq(a), eq('a'))).thenReturn(
-					Arrays.asList(new Pair<State,Tag>(a, tag)));
-			when(tnfa.availableTransitionsFor(Mockito.eq(a), eq('b'))).thenReturn(
-					Arrays.asList(new Pair<State,Tag>(b, tag)));
-			when(tnfa.availableTransitionsFor(Mockito.eq(b), Mockito.any(Character.class))).thenReturn(
+			when(tnfa.availableTransitionsFor(Mockito.eq(a), eq('a')))
+					.thenReturn(Arrays.asList(new Pair<State, Tag>(a, tag)));
+			when(tnfa.availableTransitionsFor(Mockito.eq(a), eq('b')))
+					.thenReturn(Arrays.asList(new Pair<State, Tag>(b, tag)));
+			when(
+					tnfa.availableTransitionsFor(Mockito.eq(b),
+							Mockito.any(Character.class))).thenReturn(
 					(Collection) Collections.emptyList());
 			when(tnfa.getInitialState()).thenReturn(a);
 			when(tnfa.isAccepting(eq(a))).thenReturn(false);
 			when(tnfa.isAccepting(eq(b))).thenReturn(true);
 
-			
-			NFAInterpreter n = new NFAInterpreter(tnfa);
-			MatchResult match = n.match("aaab");
-			
+			final NFAInterpreter n = new NFAInterpreter(tnfa);
+			final MatchResult match = n.match("aaab");
+
 			assertThat(match.start(), is(0));
 			assertThat(match.end(), is(3));
 		}
 	}
-		
-}
 
+	class RealMatchResult implements MatchResult {
+
+		List<Pair<Integer, Integer>> captureGroups = new ArrayList<>();
+
+		public int end() {
+			return end(0);
+		}
+
+		public int end(final int group) {
+			return captureGroups.get(group).getSecond();
+		}
+
+		public String group() {
+			throw null;
+		}
+
+		public String group(final int group) {
+			throw null;
+		}
+
+		public int groupCount() {
+			throw null;
+		}
+
+		public int start() {
+			return start(0);
+		}
+
+		public int start(final int group) {
+			return captureGroups.get(group).getFirst();
+		}
+
+		void takeCaptureGroup(final Tag tag, final int match) {
+			assert tag != null;
+			captureGroups.add(tag.getGroup(), new Pair<>(0, match));
+		}
+
+	}
+
+	static class WholeMatchTag implements Tag {
+
+		public int compareTo(final Tag o) {
+			return 0;
+		}
+
+		public int getGroup() {
+			return 0;
+		}
+	}
+
+	final Tag ENTIRE_MATCH_TAG;
+
+	final TNFA nfa;
+
+	final Pair<State, Tag> SCAN;
+
+	NFAInterpreter(final TNFA nfa) {
+		this.nfa = nfa;
+		ENTIRE_MATCH_TAG = new Tag() {
+
+			public int compareTo(final Tag o) {
+				return 0;
+			}
+
+			public int getGroup() {
+				return 0;
+			}
+		};
+		SCAN = new Pair<>(new State(), null);
+
+	}
+
+	public MatchResult match(int j, final String input) {
+		final Deque<Pair<State, Tag>> q = new ArrayDeque<>();
+		q.add(SCAN);
+		final int beginning = j;
+		Pair<State, Tag> transition = new Pair<State, Tag>(
+				nfa.getInitialState(), new WholeMatchTag());
+		final RealMatchResult r = new RealMatchResult();
+		do {
+			if (transition.equals(SCAN)) {
+				j++;
+				q.add(SCAN);
+			} else {
+				final Collection<Pair<State, Tag>> transitions = nfa
+						.availableTransitionsFor(transition.getFirst(),
+								input.charAt(j));
+				assert transitions != null;
+				for (final Pair<State, Tag> t : transitions) {
+					q.add(t);
+				}
+			}
+			transition = q.pop();
+			if (!transition.equals(SCAN)) {
+				r.takeCaptureGroup(transition.getSecond(), j - 1);
+			}
+		} while (j <= input.length() && !nfa.isAccepting(transition.getFirst())
+				&& !q.isEmpty());
+
+		if (nfa.isAccepting(transition.getFirst())) {
+			r.takeCaptureGroup(transition.getSecond(), j - 1);
+			r.takeCaptureGroup(ENTIRE_MATCH_TAG, j - 1);
+			return r; // TODO: make immutable.
+		} else {
+			return NoMatchResult.SINGLETON;
+		}
+	}
+
+	public MatchResult match(final String input) {
+		return match(0, input);
+	}
+
+}
 
 enum NoMatchResult implements MatchResult {
 	SINGLETON;
-
-	public int start() {
-		return -1;
-	}
-
-	public int start(int group) {
-		throw new NoSuchElementException();
-	}
 
 	public int end() {
 		return -1;
 	}
 
-	public int end(int group) {
-		if(group == 0)
+	public int end(final int group) {
+		if (group == 0) {
 			return end();
+		}
 		throw new NoSuchElementException();
 	}
 
@@ -190,12 +184,20 @@ enum NoMatchResult implements MatchResult {
 		throw new NoSuchElementException();
 	}
 
-	public String group(int group) {
+	public String group(final int group) {
 		throw new NoSuchElementException();
 	}
 
 	public int groupCount() {
 		return -1;
 	}
-	
+
+	public int start() {
+		return -1;
+	}
+
+	public int start(final int group) {
+		throw new NoSuchElementException();
+	}
+
 }
