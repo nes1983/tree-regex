@@ -1,5 +1,6 @@
 package automaton.core;
 
+
 /**
  * A generic class representing a {@link Pair} of two kind of {@link Object}
  * 
@@ -9,17 +10,16 @@ package automaton.core;
  * @param <B>
  *            The second {@link Object} {@link Class} type
  */
-public class Pair<A, B>
-{
+public class Pair<A extends Comparable<A>, B extends Comparable<B>> implements
+		Comparable<Pair<A, B>> {
 	/**
 	 * The first {@link Object} of the {@link Pair}
 	 */
-	private A	first;
+	final private A first;
 	/**
 	 * The second {@link Object} of the {@link Pair}
 	 */
-	private B	second;
-
+	final private B second;
 
 	/**
 	 * Constructor taking the two {@link Object} as parameters
@@ -29,90 +29,70 @@ public class Pair<A, B>
 	 * @param second
 	 *            The second {@link Object} of the {@link Pair}
 	 */
-	public Pair(A first, B second)
-	{
+	public Pair(A first, B second) {
 		super();
 		this.first = first;
 		this.second = second;
 	}
 
-
 	@Override
-	public int hashCode()
-	{
-		int hashFirst = first != null ? first.hashCode() : 0;
-		int hashSecond = second != null ? second.hashCode() : 0;
-
-		return (hashFirst + hashSecond) * hashSecond + hashFirst;
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((first == null) ? 0 : first.hashCode());
+		result = prime * result + ((second == null) ? 0 : second.hashCode());
+		return result;
 	}
 
-
 	@Override
-	public boolean equals(Object other)
-	{
-		if (other instanceof Pair)
-		{
-			Pair<?, ?> otherPair = (Pair<?, ?>) other;
-			return ((this.first == otherPair.first || (this.first != null
-					&& otherPair.first != null && this.first
-						.equals(otherPair.first))) && (this.second == otherPair.second || (this.second != null
-					&& otherPair.second != null && this.second
-						.equals(otherPair.second))));
-		}
-
-		return false;
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Pair<?,?> other = (Pair<?,?>) obj;
+		if (first == null) {
+			if (other.first != null)
+				return false;
+		} else if (!first.equals(other.first))
+			return false;
+		if (second == null) {
+			if (other.second != null)
+				return false;
+		} else if (!second.equals(other.second))
+			return false;
+		return true;
 	}
 
-
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return "(" + first + ", " + second + ")";
 	}
-
 
 	/**
 	 * Get the first {@link Object} of the {@link Pair}
 	 * 
 	 * @return the first {@link Object} of the {@link Pair}
 	 */
-	public A getFirst()
-	{
+	public A getFirst() {
 		return first;
 	}
-
-
-	/**
-	 * Set the first {@link Object} of the {@link Pair}
-	 * 
-	 * @param first
-	 *            The new first {@link Object} of the {@link Pair}
-	 */
-	public void setFirst(A first)
-	{
-		this.first = first;
-	}
-
 
 	/**
 	 * Get the second {@link Object} of the {@link Pair}
 	 * 
 	 * @return the second {@link Object} of the {@link Pair}
 	 */
-	public B getSecond()
-	{
+	public B getSecond() {
 		return second;
 	}
 
-
-	/**
-	 * Set the second {@link Object} of the {@link Pair}
-	 * 
-	 * @param second
-	 *            The new second {@link Object} of the {@link Pair}
-	 */
-	public void setSecond(B second)
-	{
-		this.second = second;
+	public int compareTo(Pair<A, B> o) {
+		int result = (this.getFirst()).compareTo(o.getFirst());
+		if (result != 0)
+			return result;
+		return this.getSecond().compareTo(o.getSecond());
 	}
 }

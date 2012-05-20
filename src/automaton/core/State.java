@@ -4,11 +4,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
- * A {@link State} of a {@link TDFA}.
+ * A {@link State} of a {@link TDFA}. Immutable.
  * 
  * @author Fabien Dubosson
  */
-public final class State implements Comparable<State>
+public class State implements Comparable<State>
 {
 	/**
 	 * The unique identifier of the {@link State}
@@ -23,15 +23,19 @@ public final class State implements Comparable<State>
 	/**
 	 * Literal {@link String} which identify the {@link State} type
 	 */
-	private static String			LITERAL	= "\uA757";
+	private final static String			LITERAL	= "\uA757";
 
 
 	/**
 	 * Constructs a {@link State} and assign it the next unique identifier
 	 */
-	public State()
+	State()
 	{
 		this.id = lastId.getAndIncrement();
+	}
+	
+	public static State get() {
+		return new State();
 	}
 
 
@@ -56,7 +60,6 @@ public final class State implements Comparable<State>
 	@Override
 	public int compareTo(State o)
 	{
-		// TODO Verify if follow axiom of comparison (See compareTo javadoc)
 		return o.getId() - this.getId();
 	}
 }

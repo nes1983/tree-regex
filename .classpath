@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="libs/mockito-all-1.9.0.jar"/>
+	<classpathentry kind="lib" path="libs/jparsec-2-1.0.jar" sourcepath="libs/jparsec-2.0_src.zip"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
