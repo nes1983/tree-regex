@@ -6,18 +6,50 @@ package automaton.core;
  * 
  * @author Fabien Dubosson
  */
-public class InputRange implements Comparable<InputRange>
-{
+class InputRange implements Comparable<InputRange> {
+	private static class Any extends InputRange {
+		Any() {
+			super(Character.MIN_VALUE, Character.MAX_VALUE);
+		}
+
+		@Override
+		public String toString() {
+			return "ANY";
+		}
+	}
+
+	private static class Epsilon extends InputRange {
+		Epsilon() {
+			super(Character.MIN_VALUE, Character.MAX_VALUE);
+		}
+
+		@Override
+		public String toString() {
+			return "ε";
+		}
+	}
+
+	public static final InputRange ANY = new Any();
+
+	public static final InputRange EPSILON = new Epsilon();
+
+	public static InputRange make(final char character) {
+		return make(character, character);
+	}
+
+	public static InputRange make(final char from, final char to) {
+		return new InputRange(from, to);
+	}
+
 	/**
 	 * First {@link Character} of the range
 	 */
-	private final char	from;
+	private final char from;
 
 	/**
 	 * Last {@link Character} or the range
 	 */
-	private final char	to;
-
+	private final char to;
 
 	/**
 	 * Constructor which take the first and last character as parameter
@@ -27,34 +59,15 @@ public class InputRange implements Comparable<InputRange>
 	 * @param to
 	 *            The last {@link Character} of the range
 	 */
-	public InputRange(char from, char to)
-	{
+	InputRange(final char from, final char to) {
 		this.from = from;
 		this.to = to;
 	}
 
-
-	/**
-	 * Return the first {@link Character} of the range
-	 * 
-	 * @return the first {@link Character} of the range
-	 */
-	public char getFrom()
-	{
-		return from;
+	@Override
+	public int compareTo(final InputRange o) {
+		return o.getFrom() - this.getFrom();
 	}
-
-
-	/**
-	 * Return the last {@link Character} of the range
-	 * 
-	 * @return the last {@link Character} of the range
-	 */
-	public char getTo()
-	{
-		return to;
-	}
-
 
 	/**
 	 * Tell if the {@link InputRange} contains a {@link Character} within its
@@ -65,15 +78,30 @@ public class InputRange implements Comparable<InputRange>
 	 * @return if the {@link Character} is contained within the
 	 *         {@link InputRange}
 	 */
-	public boolean contains(Character character)
-	{
+	public boolean contains(final Character character) {
 		return (from <= character && character <= to);
 	}
 
+	/**
+	 * Return the first {@link Character} of the range
+	 * 
+	 * @return the first {@link Character} of the range
+	 */
+	public char getFrom() {
+		return from;
+	}
+
+	/**
+	 * Return the last {@link Character} of the range
+	 * 
+	 * @return the last {@link Character} of the range
+	 */
+	public char getTo() {
+		return to;
+	}
 
 	@Override
-	public int compareTo(InputRange o)
-	{
-		return o.getFrom() - this.getFrom();
+	public String toString() {
+		return "" + from + "-" + to;
 	}
 }

@@ -11,10 +11,17 @@ class State implements Comparable<State> {
 	/**
 	 * Counter to assign next unique identifier
 	 */
-	private static AtomicInteger lastId = new AtomicInteger(0);
+	private final static AtomicInteger lastId = new AtomicInteger(0);
 
 	public static State get() {
 		return new State();
+	}
+
+	/**
+	 * Testing only.
+	 */
+	static void resetCount() {
+		lastId.set(0);
 	}
 
 	/**

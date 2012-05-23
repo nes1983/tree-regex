@@ -20,9 +20,58 @@ import automaton.instructions.SequenceOfInstructions;
  * A {@link TransitionTable} is the set of all possible transition of a
  * {@link TDFA}
  * 
- * @author Fabien Dubosson, Niko Schwarz
+ * @author Niko Schwarz, Fabien Dubosson
  */
-public interface TransitionTable {
+interface TransitionTable {
+
+	static class CaptureGroupMaker {
+		CaptureGroup last = new RealCaptureGroup(-1);
+
+		synchronized CaptureGroup next() {
+			last = RealCaptureGroup.make(last.getNumber() + 1);
+			return last;
+		}
+	}
+
+	static class RealCaptureGroup implements CaptureGroup {
+		static RealCaptureGroup make(final int number) {
+			final RealCaptureGroup cg = new RealCaptureGroup(number);
+			cg.startTag = Tag.RealTag.makeStartTag(cg);
+			cg.endTag = Tag.RealTag.makeEndTag(cg);
+			return cg;
+
+		}
+
+		Tag endTag;
+		final int number;
+
+		Tag startTag;
+
+		RealCaptureGroup(final int number) {
+			super();
+			this.number = number;
+		}
+
+		public Tag getEndTag() {
+			assert endTag != null;
+			return endTag;
+		}
+
+		public int getNumber() {
+			return number;
+		}
+
+		public Tag getStartTag() {
+			assert startTag != null;
+			return startTag;
+		}
+
+		@Override
+		public String toString() {
+			return "g" + number;
+		}
+
+	}
 
 	static abstract class RealTransitionTable<T> implements TransitionTable {
 
@@ -93,18 +142,44 @@ public interface TransitionTable {
 				RealTransitionTable<Collection<Pair<State, Tag>>> {
 			public static class Builder {
 
-				TreeMap<Pair<State, InputRange>, Collection<Pair<State, Tag>>> transitions = new TreeMap<>();
+				final CaptureGroupMaker captureGroupMaker = new CaptureGroupMaker();
+
+				final TreeMap<Pair<State, InputRange>, Collection<Pair<State, Tag>>> transitions = new TreeMap<>();
+
+				public void addEndTagTransition(final Collection<State> froms,
+						final State to, final CaptureGroup captureGroup) {
+					for (final State from : froms) {
+						put(from, InputRange.EPSILON, to,
+								captureGroup.getEndTag());
+					}
+				}
+
+				public void addStartTagTransition(
+						final Collection<State> froms, final State to,
+						final CaptureGroup cg) {
+					for (final State from : froms) {
+						put(from, InputRange.EPSILON, to, cg.getStartTag());
+					}
+				}
 
 				public TNFATransitionTable build() {
 					return new TNFATransitionTable(
 							Collections.unmodifiableSortedMap(transitions));
 				}
 
+				public SortedMap<Pair<State, InputRange>, Collection<Pair<State, Tag>>> getTransitions() {
+					return Collections.unmodifiableSortedMap(transitions);
+				}
+
+				public CaptureGroup makeCaptureGroup() {
+					return captureGroupMaker.next();
+				}
+
 				public void put(final State startingState,
 						final InputRange range, final State endingState,
 						final Tag tag) {
 					// TODO Some overlapping tests
-
+					assert startingState != null && range != null;
 					final Pair<State, InputRange> key = new Pair<>(
 							startingState, range);
 
@@ -167,7 +242,7 @@ public interface TransitionTable {
 		 *         {@link SequenceOfInstructions}
 		 */
 		T getEntry(final State state, final Character character) {
-			final InputRange searched = new InputRange(character, character);
+			final InputRange searched = InputRange.make(character, character);
 			final SortedMap<Pair<State, InputRange>, T> tail = transitions
 					.tailMap(new Pair<>(state, searched));
 			final Pair<State, InputRange> pair = tail.firstKey();
@@ -195,12 +270,11 @@ public interface TransitionTable {
 		 */
 		public abstract void put(State startingState, InputRange range,
 				State endingState, Tag tag);
-	}
 
-	public static interface Tag extends Comparable<Tag> {
-
-		int getGroup();
-
+		@Override
+		public String toString() {
+			return transitions.toString();
+		}
 	}
 
 	public static final class TransitionTableTest {
@@ -224,9 +298,9 @@ public interface TransitionTable {
 			final State q9 = new State();
 
 			// Some input ranges
-			final InputRange i1 = new InputRange('a', 'd');
-			final InputRange i2 = new InputRange('k', 'o');
-			final InputRange i3 = new InputRange('y', 'z');
+			final InputRange i1 = InputRange.make('a', 'd');
+			final InputRange i2 = InputRange.make('k', 'o');
+			final InputRange i3 = InputRange.make('y', 'z');
 
 			// Creating some transitions
 

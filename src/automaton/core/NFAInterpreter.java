@@ -18,8 +18,6 @@ import java.util.regex.MatchResult;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import automaton.core.TransitionTable.Tag;
-
 class NFAInterpreter {
 	public static final class NFAInterpreterTest {
 
@@ -89,20 +87,11 @@ class NFAInterpreter {
 			captureGroups.add(tag.getGroup(), new Pair<>(0, match));
 		}
 
-	}
-
-	static class WholeMatchTag implements Tag {
-
-		public int compareTo(final Tag o) {
-			return 0;
-		}
-
-		public int getGroup() {
-			return 0;
+		@Override
+		public String toString() {
+			return "" + start() + "-" + end();
 		}
 	}
-
-	final Tag ENTIRE_MATCH_TAG;
 
 	final TNFA nfa;
 
@@ -110,26 +99,20 @@ class NFAInterpreter {
 
 	NFAInterpreter(final TNFA nfa) {
 		this.nfa = nfa;
-		ENTIRE_MATCH_TAG = new Tag() {
 
-			public int compareTo(final Tag o) {
-				return 0;
-			}
-
-			public int getGroup() {
-				return 0;
-			}
-		};
 		SCAN = new Pair<>(new State(), null);
 
 	}
 
 	public MatchResult match(int j, final String input) {
+		if (input.equals("")) {
+			return NoMatchResult.SINGLETON;
+		}
 		final Deque<Pair<State, Tag>> q = new ArrayDeque<>();
 		q.add(SCAN);
 		final int beginning = j;
 		Pair<State, Tag> transition = new Pair<State, Tag>(
-				nfa.getInitialState(), new WholeMatchTag());
+				nfa.getInitialState(), Tag.ENTIRE_MATCH);
 		final RealMatchResult r = new RealMatchResult();
 		do {
 			if (transition.equals(SCAN)) {
@@ -153,7 +136,7 @@ class NFAInterpreter {
 
 		if (nfa.isAccepting(transition.getFirst())) {
 			r.takeCaptureGroup(transition.getSecond(), j - 1);
-			r.takeCaptureGroup(ENTIRE_MATCH_TAG, j - 1);
+			r.takeCaptureGroup(Tag.ENTIRE_MATCH, j - 1);
 			return r; // TODO: make immutable.
 		} else {
 			return NoMatchResult.SINGLETON;
@@ -200,4 +183,8 @@ enum NoMatchResult implements MatchResult {
 		throw new NoSuchElementException();
 	}
 
+	@Override
+	public String toString() {
+		return "NO_MATCH";
+	}
 }
