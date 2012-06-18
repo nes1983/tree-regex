@@ -237,21 +237,26 @@ interface TransitionTable {
 		 * @param state
 		 *            The starting {@link State}
 		 * @param character
-		 *            The specified {@link Character}
+		 *            The specified {@link Character}. May be null. If so, only
+		 *            epsilon transitions are returned.
 		 * @return The {@link Pair} of {@link State} and
-		 *         {@link SequenceOfInstructions}
+		 *         {@link SequenceOfInstructions}. Null if there isn't one.
 		 */
 		T getEntry(final State state, final Character character) {
-			final InputRange searched = InputRange.make(character, character);
+			final InputRange searched = character != null ? InputRange.make(
+					character, character) : InputRange.EPSILON;
 			final SortedMap<Pair<State, InputRange>, T> tail = transitions
 					.tailMap(new Pair<>(state, searched));
+			if (tail.isEmpty()) {
+				return null;
+			}
 			final Pair<State, InputRange> pair = tail.firstKey();
 			if (!pair.getFirst().equals(state)) {
 				return null;
 			}
-			if (!pair.getSecond().contains(character)) {
+			if (character != null && !pair.getSecond().contains(character)) {
 				return null;
-			}
+			} // TODO what if character == null?
 			return transitions.get(tail.firstKey());
 		}
 

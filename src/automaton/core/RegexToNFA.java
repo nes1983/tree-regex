@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.MatchResult;
 
 import org.junit.Before;
@@ -18,10 +20,13 @@ import automaton.core.ParserProvider.Node;
 import automaton.core.ParserProvider.Node.Any;
 import automaton.core.ParserProvider.Node.Basic;
 import automaton.core.ParserProvider.Node.Char;
+import automaton.core.ParserProvider.Node.Eos;
 import automaton.core.ParserProvider.Node.EscapedChar;
 import automaton.core.ParserProvider.Node.Group;
 import automaton.core.ParserProvider.Node.Optional;
 import automaton.core.ParserProvider.Node.Plus;
+import automaton.core.ParserProvider.Node.PositiveSet;
+import automaton.core.ParserProvider.Node.SetItem;
 import automaton.core.ParserProvider.Node.Simple;
 import automaton.core.ParserProvider.Node.SimpleChar;
 import automaton.core.ParserProvider.Node.Star;
@@ -58,16 +63,20 @@ class RegexToNFA {
 			this(Arrays.asList(initial), Arrays.asList(finishing));
 		}
 
+		public Collection<State> getBeginRepeatHandle() {
+			return initial;
+		}
+
 		public Collection<State> getFinishing() {
 			return finishing;
 		}
 
-		public Collection<State> getInitial() {
-			return initial;
+		public Collection<State> getFinishingRepeatHandles() {
+			return getFinishing();
 		}
 
-		public Collection<State> repeatHandles() {
-			return getFinishing();
+		public Collection<State> getInitial() {
+			return initial;
 		}
 
 		@Override
@@ -83,7 +92,8 @@ class RegexToNFA {
 			final RegexToNFA r = new RegexToNFA();
 			final Any any = mock(Any.class);
 			final TNFA n = r.convert(any);
-			assertThat(n.toString(), is("q0 -> [q1], {(q0, ANY)=[(q1, NONE)]}"));
+			assertThat(n.toString(),
+					is("q0 -> [q1], {(q0, ANY)=[(q0, NONE), (q1, NONE)]}"));
 			final NFAInterpreter i = new NFAInterpreter(n);
 			final MatchResult o = i.match("");
 			assertThat(o.toString(), is("NO_MATCH"));
@@ -95,12 +105,24 @@ class RegexToNFA {
 			final Char character = mock(Char.class);
 			when(character.getCharacter()).thenReturn('4');
 			final TNFA n = r.convert(character);
-			assertThat(n.toString(), is("q0 -> [q1], {(q0, 4-4)=[(q1, NONE)]}"));
+			assertThat(
+					n.toString(),
+					is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], (q0, 4-4)=[(q1, NONE)]}"));
 			final NFAInterpreter i = new NFAInterpreter(n);
 			final MatchResult o = i.match("5");
 			assertThat(o.toString(), is("NO_MATCH"));
 			final MatchResult oo = i.match("4");
 			assertThat(oo.toString(), is("0-0"));
+		}
+
+		@Test
+		public void eos() {
+			final RegexToNFA r = new RegexToNFA();
+			final Eos eos = mock(Eos.class);
+			final TNFA n = r.convert(eos);
+			assertThat(
+					n.toString(),
+					is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], (q0, $)=[(q1, NONE)]}"));
 		}
 
 		@Test
@@ -111,7 +133,9 @@ class RegexToNFA {
 			final Char character = (Char) s.basics.get(0);
 			assertThat(character, is(EscapedChar.class));
 			final TNFA n = r.convert(character);
-			assertThat(n.toString(), is("q0 -> [q1], {(q0, .-.)=[(q1, NONE)]}"));
+			assertThat(
+					n.toString(),
+					is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], (q0, .-.)=[(q1, NONE)]}"));
 			final NFAInterpreter i = new NFAInterpreter(n);
 			final MatchResult o = i.match("5");
 			assertThat(o.toString(), is("NO_MATCH"));
@@ -127,7 +151,7 @@ class RegexToNFA {
 			final TNFA tnfa = r.convert(s);
 			assertThat(
 					tnfa.toString(),
-					is("q0 -> [q3], {(q2, ε)=[(q3, ➁0)], (q1, .-.)=[(q2, NONE)], (q0, ε)=[(q1, ➀0)]}"));
+					is("q0 -> [q3], {(q2, ε)=[(q3, ➁0)], (q1, .-.)=[(q2, NONE)], (q0, ANY)=[(q0, NONE), (q1, ➀0)]}"));
 		}
 
 		@Test
@@ -138,8 +162,7 @@ class RegexToNFA {
 			final TNFA tnfa = r.convert(s);
 			assertThat(
 					tnfa.toString(),
-					is("q0 -> [q3, q0], {(q3, ε)=[(q0, NONE)], "
-							+ "(q2, ε)=[(q3, ➁0)], (q1, .-.)=[(q2, NONE)], (q0, ε)=[(q1, ➀0)]}"));
+					is("q0 -> [q3, q0], {(q2, ε)=[(q3, ➁0), (q1, NONE)], (q1, .-.)=[(q2, NONE)], (q0, ANY)=[(q0, NONE), (q1, ➀0)]}"));
 		}
 
 		@Before
@@ -155,8 +178,9 @@ class RegexToNFA {
 			when(c.getCharacter()).thenReturn('.');
 			when(s.getBasics()).thenReturn((List) Arrays.asList(c));
 			final TNFA tnfa = r.convert(s);
-			assertThat(tnfa.toString(),
-					is("q0 -> [q1], {(q0, .-.)=[(q1, NONE)]}"));
+			assertThat(
+					tnfa.toString(),
+					is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], (q0, .-.)=[(q1, NONE)]}"));
 		}
 
 		@Test
@@ -171,7 +195,7 @@ class RegexToNFA {
 			final TNFA tnfa = r.convert(s);
 			assertThat(
 					tnfa.toString(),
-					is("q0 -> [q1, q0], {(q1, ε)=[(q0, NONE)], (q0, a-a)=[(q1, NONE)]}"));
+					is("q0 -> [q1, q0], {(q1, ε)=[(q0, NONE)], (q0, ANY)=[(q0, NONE)], (q0, a-a)=[(q1, NONE)]}"));
 		}
 
 		@Test
@@ -180,8 +204,9 @@ class RegexToNFA {
 			final Simple s = (Simple) new ParserProvider().regexp()
 					.parse("\\.");
 			final TNFA tnfa = r.convert(s);
-			assertThat(tnfa.toString(),
-					is("q0 -> [q1], {(q0, .-.)=[(q1, NONE)]}"));
+			assertThat(
+					tnfa.toString(),
+					is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], (q0, .-.)=[(q1, NONE)]}"));
 		}
 
 		@Test
@@ -191,21 +216,32 @@ class RegexToNFA {
 			final TNFA tnfa = r.convert(s);
 			assertThat(
 					tnfa.toString(),
-					is("q0 -> [q1, q0], {(q1, ε)=[(q0, NONE)], (q0, a-a)=[(q1, NONE)]}"));
+					is("q0 -> [q1, q0], {(q1, ε)=[(q0, NONE)], (q0, ANY)=[(q0, NONE)], "
+							+ "(q0, a-a)=[(q1, NONE)]}"));
 		}
 	}
 
 	static class TaggedMiniAutomaton extends MiniAutomaton {
-		final Collection<State> repeatHandles;
+		final Collection<State> beginRepeatHandle;
+		final Collection<State> finishRepeatHandles;
 
 		public TaggedMiniAutomaton(final Collection<State> initial,
-				final State finishing, final Collection<State> repeatHandles) {
+				final State finishing,
+				final Collection<State> repeatBeginHandle,
+				final Collection<State> repeatHandles) {
 			super(initial, finishing);
-			this.repeatHandles = repeatHandles;
+			this.finishRepeatHandles = repeatHandles;
+			this.beginRepeatHandle = repeatBeginHandle;
 		}
 
-		public Collection<State> getRepeatHandles() {
-			return repeatHandles;
+		@Override
+		public Collection<State> getBeginRepeatHandle() {
+			return beginRepeatHandle;
+		}
+
+		@Override
+		public Collection<State> getFinishingRepeatHandles() {
+			return finishRepeatHandles;
 		}
 
 		@Override
@@ -242,6 +278,24 @@ class RegexToNFA {
 		return builder.build();
 	}
 
+	InputRange inputRangeFor(final Node.Char character) {
+		return InputRange.make(character.getCharacter());
+	}
+
+	InputRange inputRangeFor(final Node.Range range) {
+		return InputRange.make(range.getFrom(), range.getTo());
+	}
+
+	InputRange inputRangeFor(final SetItem i) {
+		if (i instanceof Node.Range) {
+			return inputRangeFor((Node.Range) i);
+		} else if (i instanceof Node.Char) {
+			return inputRangeFor((Node.Char) i);
+		} else {
+			throw new AssertionError("Unknown set item: " + i + ".");
+		}
+	}
+
 	MiniAutomaton make(final MiniAutomaton last, final Builder builder,
 			final Node node) {
 		MiniAutomaton ret;
@@ -259,13 +313,13 @@ class RegexToNFA {
 			ret = makePlus(last, builder, (Node.Plus) node);
 		} else if (node instanceof Node.Group) {
 			ret = makeGroup(last, builder, (Node.Group) node);
-		} else if (node instanceof Node.Any) {
-			throw new AssertionError("Unknown node type: " + node);
 		} else if (node instanceof Node.Eos) {
-			throw new AssertionError("Unknown node type: " + node);
+			ret = makeEos(last, builder);
 		} else if (node instanceof Node.Char) {
 			ret = makeChar(last, builder, (Node.Char) node);
-		} else if (node instanceof Node.Set) {
+		} else if (node instanceof Node.PositiveSet) {
+			ret = makePositiveSet(last, builder, (Node.PositiveSet) node);
+		} else if (node instanceof Node.NegativeSet) {
 			throw new AssertionError("Unknown node type: " + node);
 		} else {
 			throw new AssertionError("Unknown node type: " + node);
@@ -295,6 +349,12 @@ class RegexToNFA {
 		return ret;
 	}
 
+	MiniAutomaton makeEos(final MiniAutomaton last, final Builder builder) {
+		final State a = builder.makeState();
+		builder.addUntaggedTransition(InputRange.EOS, last.getFinishing(), a);
+		return new MiniAutomaton(last.getFinishing(), a);
+	}
+
 	MiniAutomaton makeGroup(final MiniAutomaton last, final Builder builder,
 			final Group group) {
 		final CaptureGroup cg = builder.makeCaptureGroup();
@@ -314,12 +374,16 @@ class RegexToNFA {
 		final State endGroup = builder.makeState();
 		builder.addEndTagTransition(body.getFinishing(), endGroup, cg);
 
-		return new TaggedMiniAutomaton(last.getFinishing(), endGroup,
+		final TaggedMiniAutomaton ret = new TaggedMiniAutomaton(
+				last.getFinishing(), endGroup, body.getInitial(),
 				body.getFinishing());
+		return ret;
 	}
 
 	MiniAutomaton makeInitialMiniAutomaton(final Builder builder) {
 		final State init = builder.makeInitialState();
+
+		builder.addUntaggedTransition(InputRange.ANY, init, init);
 
 		return new MiniAutomaton(init, init);
 	}
@@ -344,6 +408,17 @@ class RegexToNFA {
 		throw new RuntimeException("Not implemented");
 	}
 
+	MiniAutomaton makePositiveSet(final MiniAutomaton last,
+			final Builder builder, final PositiveSet set) {
+		final List<SetItem> is = set.getItems();
+		final SortedSet<InputRange> ranges = new TreeSet<>();
+		for (final SetItem i : is) {
+			final InputRange ir = inputRangeFor(i);
+			ranges.add(ir);
+		}
+		throw null;
+	}
+
 	MiniAutomaton makeSimple(final MiniAutomaton last, final Builder b,
 			final Simple simple) {
 		final List<? extends Basic> bs = simple.getBasics();
@@ -358,6 +433,7 @@ class RegexToNFA {
 
 	MiniAutomaton makeStar(final MiniAutomaton last, final Builder builder,
 			final Star star) {
+
 		final MiniAutomaton inner = make(last, builder, star.getElementary());
 
 		final List<State> f = new ArrayList<>(last.getFinishing());
@@ -365,9 +441,8 @@ class RegexToNFA {
 
 		final MiniAutomaton ret = new MiniAutomaton(last.getFinishing(), f);
 
-		builder.makeUntaggedEpsilonTransitionFromTo(inner.repeatHandles(),
-				ret.getInitial());
-
+		builder.makeUntaggedEpsilonTransitionFromTo(
+				inner.getFinishingRepeatHandles(), inner.getBeginRepeatHandle());
 		return ret;
 	}
 }

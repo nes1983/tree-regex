@@ -38,7 +38,7 @@ import automaton.core.ParserProvider.Node.Star;
 import automaton.core.ParserProvider.Node.Union;
 
 /**
- * Not threadsafe! Use from only one thread!
+ * Objects not threadsafe! Use from only one thread!
  * 
  * @author nes
  * 
@@ -75,7 +75,7 @@ class ParserProvider {
 			// <group> | <any> | <eos> | <char> | <set>
 		}
 
-		public static final class Eos implements Elementary {
+		public static class Eos implements Elementary {
 		}
 
 		public static class EscapedChar extends Char {
@@ -181,6 +181,14 @@ class ParserProvider {
 				this.to = to;
 			}
 
+			public char getFrom() {
+				return from;
+			}
+
+			public char getTo() {
+				return to;
+			}
+
 			@Override
 			public String toString() {
 				return String.valueOf(from) + "-" + to;
@@ -197,6 +205,10 @@ class ParserProvider {
 			Set(final List<SetItem> items) {
 				super();
 				this.items = Collections.unmodifiableList(items);
+			}
+
+			public List<SetItem> getItems() {
+				return items;
 			}
 
 			@Override

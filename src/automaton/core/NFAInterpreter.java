@@ -18,8 +18,21 @@ import java.util.regex.MatchResult;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import automaton.core.ParserProvider.Node.Simple;
+
 class NFAInterpreter {
 	public static final class NFAInterpreterTest {
+
+		@Test
+		public void group2() {
+			final RegexToNFA r = new RegexToNFA();
+			final Simple s = (Simple) new ParserProvider().regexp().parse(
+					"(\\.)*");
+			final TNFA tnfa = r.convert(s);
+			final NFAInterpreter n = new NFAInterpreter(tnfa);
+			final RealMatchResult match = (RealMatchResult) n.match("...");
+			assertThat(match.captureGroups.toString(), is(""));
+		}
 
 		@Test
 		public void testMocked() {
@@ -104,15 +117,18 @@ class NFAInterpreter {
 
 	}
 
-	public MatchResult match(int j, final String input) {
-		if (input.equals("")) {
-			return NoMatchResult.SINGLETON;
+	Character charAt(final int j, final String input) {
+		if (j >= input.length()) {
+			return null;
 		}
+		return input.charAt(j);
+	}
+
+	public MatchResult match(int j, final String input) {
 		final Deque<Pair<State, Tag>> q = new ArrayDeque<>();
 		q.add(SCAN);
-		final int beginning = j;
-		Pair<State, Tag> transition = new Pair<State, Tag>(
-				nfa.getInitialState(), Tag.ENTIRE_MATCH);
+		Pair<State, Tag> transition = new Pair<>(nfa.getInitialState(),
+				Tag.ENTIRE_MATCH);
 		final RealMatchResult r = new RealMatchResult();
 		do {
 			if (transition.equals(SCAN)) {
@@ -121,7 +137,7 @@ class NFAInterpreter {
 			} else {
 				final Collection<Pair<State, Tag>> transitions = nfa
 						.availableTransitionsFor(transition.getFirst(),
-								input.charAt(j));
+								charAt(j, input));
 				assert transitions != null;
 				for (final Pair<State, Tag> t : transitions) {
 					q.add(t);

@@ -18,6 +18,17 @@ class InputRange implements Comparable<InputRange> {
 		}
 	}
 
+	private static class Eos extends InputRange {
+		Eos() {
+			super((char) (Character.MIN_VALUE + 1), Character.MAX_VALUE);
+		}
+
+		@Override
+		public String toString() {
+			return "$";
+		}
+	}
+
 	private static class Epsilon extends InputRange {
 		Epsilon() {
 			super(Character.MIN_VALUE, Character.MAX_VALUE);
@@ -30,6 +41,8 @@ class InputRange implements Comparable<InputRange> {
 	}
 
 	public static final InputRange ANY = new Any();
+
+	public static final InputRange EOS = new Eos();
 
 	public static final InputRange EPSILON = new Epsilon();
 
@@ -64,9 +77,8 @@ class InputRange implements Comparable<InputRange> {
 		this.to = to;
 	}
 
-	@Override
 	public int compareTo(final InputRange o) {
-		return o.getFrom() - this.getFrom();
+		return this.getFrom() - o.getFrom();
 	}
 
 	/**
@@ -74,11 +86,11 @@ class InputRange implements Comparable<InputRange> {
 	 * range
 	 * 
 	 * @param character
-	 *            A specific {@link Character}
+	 *            A specific {@link Character}.
 	 * @return if the {@link Character} is contained within the
-	 *         {@link InputRange}
+	 *         {@link InputRange}.
 	 */
-	public boolean contains(final Character character) {
+	public boolean contains(final char character) {
 		return (from <= character && character <= to);
 	}
 
