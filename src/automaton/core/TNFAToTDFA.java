@@ -8,14 +8,23 @@ import static org.mockito.Mockito.*;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.SortedSet;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import automaton.core.Pair.Pr;
+import automaton.core.TNFAToTDFA.MapItems.MapItem;
+import automaton.core.Tag.MarkerTag;
 
 class TNFAToTDFA {
 
@@ -29,6 +38,124 @@ class TNFAToTDFA {
 
 		public Collection<Pair<State, Tag>> getStates() {
 			return states;
+		}
+
+	}
+
+	static class MapItems implements Iterable<MapItem> {
+
+		static class MapItem implements Comparable<MapItem> {
+			final int pos;
+			final Tag tag;
+
+			public MapItem(final Tag tag, final int pos) {
+				super();
+				this.tag = tag;
+				this.pos = pos;
+			}
+
+			public int compareTo(final MapItem o) {
+				final int comp = this.tag.compareTo(o.tag);
+				if (comp != 0) {
+					return comp;
+				}
+				return this.pos - o.pos;
+			}
+
+			@Override
+			public String toString() {
+				return "MapItem[" + pos + ", " + tag + "]";
+			}
+		}
+
+		final Map<Tag, BitSet> mapItems;
+
+		public MapItems(final Map<Tag, BitSet> mapItems) {
+			this.mapItems = mapItems;
+		}
+
+		@Override
+		public boolean equals(final Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final MapItems other = (MapItems) obj;
+			if (mapItems == null) {
+				if (other.mapItems != null) {
+					return false;
+				}
+			} else if (!mapItems.equals(other.mapItems)) {
+				return false;
+			}
+			return true;
+		}
+
+		public Map<Tag, BitSet> getMapItems() {
+			return mapItems;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((mapItems == null) ? 0 : mapItems.hashCode());
+			return result;
+		}
+
+		public Iterator<MapItem> iterator() {
+			return new Iterator<TNFAToTDFA.MapItems.MapItem>() {
+
+				Entry<Tag, BitSet> currentEntry;
+				final Iterator<Entry<Tag, BitSet>> iterator = mapItems
+						.entrySet().iterator();
+				int position = -1;
+
+				private void ensureCurrentEntry() {
+					if (currentEntry == null) {
+						currentEntry = iterator.next();
+					}
+					assert currentEntry != null;
+				}
+
+				@Override
+				public boolean hasNext() {
+					if (iterator.hasNext()) {
+						return true;
+					}
+					ensureCurrentEntry();
+					return currentEntry.getValue().nextSetBit(position + 1) >= 0;
+				}
+
+				@Override
+				public MapItem next() {
+					ensureCurrentEntry();
+					BitSet bs;
+					restart: do {
+						bs = currentEntry.getValue();
+						position = bs.nextSetBit(position + 1);
+						if (position < 0) {
+							currentEntry = iterator.next();
+							position = -1;
+							continue restart;
+						}
+					} while (false);
+					assert position >= 0 && bs != null;
+
+					return new MapItem(currentEntry.getKey(), position);
+				}
+
+				@Override
+				public void remove() {
+					throw new UnsupportedOperationException();
+				}
+			};
 		}
 
 	}
@@ -68,14 +195,15 @@ class TNFAToTDFA {
 	}
 
 	static class Triple {
+		public final SortedSet<MapItem> mapItems;
 		public final int priority;
 		public final State state;
-		public final Tag tag;
 
-		public Triple(final State state, final int priority, final Tag tag) {
+		public Triple(final State state, final int priority,
+				final SortedSet<MapItem> mapItems) {
 			this.state = state;
 			this.priority = priority;
-			this.tag = tag;
+			this.mapItems = mapItems;
 		}
 	}
 
@@ -85,29 +213,39 @@ class TNFAToTDFA {
 		this.tnfa = tnfa;
 	}
 
-	public void closure(final Collection<Pair<State, Tag>> S) {
+	public void closure(final Collection<Pr<State, SortedSet<MapItem>>> S) {
 		final Deque<Triple> stack = new ArrayDeque<>();
-		for (final Pair<State, Tag> pr : S) {
+		for (final Pr<State, SortedSet<MapItem>> pr : S) {
 			stack.push(new Triple(pr.getFirst(), 0, pr.getSecond()));
 		}
-		final Collection<Pair<State, Tag>> closure = new ArrayList<>(S);
+		final Collection<Pr<State, SortedSet<MapItem>>> closure = new ArrayList<>(
+				S);
 		while (!stack.isEmpty()) {
 			State s;
 			int p;
-			Tag k;
+			SortedSet<MapItem> k;
 			{
 				final Triple t = stack.pop();
 				s = t.state;
 				p = t.priority;
-				k = t.tag;
+				k = t.mapItems;
 			}
 			for (final Pair<State, Tag> transition : tnfa
 					.availableTransitionsFor(s, null)) {
-				if (!transition.getSecond().equals(Tag.NONE)) {
-					// XXX continue here.
+				final Tag tag = transition.getSecond();
+				if (!tag.equals(Tag.NONE)) {
+					final MapItem toBeRemoved = toBeRemoved(k, tag);
+					k.remove(toBeRemoved);
+					final SortedSet<MapItem> range = getSame(k, tag);
 				}
 			}
 		}
+	}
+
+	SortedSet<MapItem> getSame(final SortedSet<MapItem> k, final Tag tag) {
+		final MapItem from = new MapItem(tag, 0);
+		final MapItem to = new MapItem(new MarkerTag(tag.getGroup() + 1), 0);
+		return k.subSet(from, to);
 	}
 
 	/**
@@ -139,5 +277,13 @@ class TNFAToTDFA {
 			}
 		}
 		return Collections.unmodifiableList(ret);
+	}
+
+	MapItem toBeRemoved(final SortedSet<MapItem> k, final Tag tag) {
+		final SortedSet<MapItem> sames = getSame(k, tag);
+		if (k.isEmpty()) {
+			return null;
+		}
+		return sames.first();
 	}
 }

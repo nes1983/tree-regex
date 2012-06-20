@@ -1,21 +1,36 @@
 package automaton.core;
 
-import automaton.core.TransitionTable.RealCaptureGroup;
+import automaton.core.TransitionTable.CaptureGroupMaker;
+import automaton.core.TransitionTable.CaptureGroupMaker.RealCaptureGroup;
 
 interface Tag extends Comparable<Tag> {
-	static class Marker implements Tag {
+	static abstract class AbstractTag implements Tag {
+		@Override
+		public int compareTo(final Tag o) {
+			return Integer.valueOf(getGroup()).compareTo(o.getGroup());
+		}
+	}
+
+	static class MarkerTag implements Tag {
+		final int group;
 		final String name;
 
-		Marker(final String name) {
+		MarkerTag(final int group) {
+			this.name = "MarkerTag";
+			this.group = group;
+		}
+
+		MarkerTag(final String name) {
 			this.name = name;
+			this.group = 0;
 		}
 
 		public int compareTo(final Tag o) {
-			return 0; // XXX unsupported?
+			return getGroup() - o.getGroup();
 		}
 
 		public int getGroup() {
-			return 0;
+			return group;
 		}
 
 		@Override
@@ -35,7 +50,11 @@ interface Tag extends Comparable<Tag> {
 
 	}
 
-	static abstract class RealTag implements Tag {
+	/**
+	 * Don't instantiate directly. Leave it to {@link CaptureGroupMaker}.
+	 * 
+	 */
+	static abstract class RealTag extends AbstractTag {
 		static class EndTag extends RealTag {
 
 			EndTag(final CaptureGroup captureGroup) {
@@ -96,11 +115,6 @@ interface Tag extends Comparable<Tag> {
 		}
 
 		@Override
-		public int compareTo(final Tag o) {
-			return Integer.valueOf(getGroup()).compareTo(o.getGroup());
-		}
-
-		@Override
 		public int getGroup() {
 			return captureGroup.getNumber();
 		}
@@ -110,9 +124,9 @@ interface Tag extends Comparable<Tag> {
 		public abstract boolean isStartTag();
 	}
 
-	public final Tag ENTIRE_MATCH = new Marker("ENTIRE_MATCH");
+	public final Tag ENTIRE_MATCH = new MarkerTag("ENTIRE_MATCH");
 
-	public final Tag NONE = new Marker("NONE");
+	public final Tag NONE = new MarkerTag("NONE");
 
 	public int getGroup();
 
