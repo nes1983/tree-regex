@@ -9,7 +9,7 @@ package automaton.core;
  * @param <B>
  *            The second {@link Object} {@link Class} type
  */
-public class Pair<A extends Comparable<A>, B extends Comparable<B>> extends
+class Pair<A extends Comparable<A>, B extends Comparable<B>> extends
 		XAbstractPair<A, B> implements Comparable<Pair<A, B>> {
 
 	/**

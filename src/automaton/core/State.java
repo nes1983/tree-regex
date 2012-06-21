@@ -38,7 +38,7 @@ class State implements Comparable<State> {
 
 	@Override
 	public int compareTo(final State o) {
-		return o.getId() - this.getId();
+		return id - o.id;
 	}
 
 	/**

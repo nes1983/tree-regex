@@ -16,7 +16,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableSet;
+import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -174,36 +177,28 @@ class TNFAToTDFA {
 
 		@Test
 		public void testReach() {
+			final TransitionTriple triple = mock(TransitionTriple.class);
 			final Pair<State, Tag> pr = mock(Pair.class);
 			final DFAState tState = new DFAState(Arrays.asList(pr));
 			final State s = mock(State.class);
 			final Tag t = mock(Tag.class);
-			when(
-					tnfa.availableTransitionsFor(eq(s),
-							Mockito.any(Character.class))).thenReturn(
-					Arrays.asList(pr));
+
+			when(triple.getState()).thenReturn(s);
+			when(triple.getTag()).thenReturn(t);
+
 			when(pr.getFirst()).thenReturn(s);
 			when(pr.getSecond()).thenReturn(t);
 
-			final List<Pair<State, Tag>> states = tnfa2tdfa.reach(tState, 'b');
+			when(
+					tnfa.availableTransitionsFor(eq(s),
+							Mockito.any(Character.class))).thenReturn(
+					Arrays.asList(triple));
 
+			final List<Pair<State, Tag>> states = tnfa2tdfa.reach(tState, 'b');
 			assertThat(states.size(), is(1));
 			assertThat(states.get(0).getFirst(), is(s));
 			assertThat(states.get(0).getSecond(), is(t));
 
-		}
-	}
-
-	static class Triple {
-		public final SortedSet<MapItem> mapItems;
-		public final int priority;
-		public final State state;
-
-		public Triple(final State state, final int priority,
-				final SortedSet<MapItem> mapItems) {
-			this.state = state;
-			this.priority = priority;
-			this.mapItems = mapItems;
 		}
 	}
 
@@ -213,13 +208,18 @@ class TNFAToTDFA {
 		this.tnfa = tnfa;
 	}
 
-	public void closure(final Collection<Pr<State, SortedSet<MapItem>>> S) {
+	/**
+	 * Maps directly to section 4 of the paper. That's why it looks so ugly.
+	 * 
+	 * @param S
+	 */
+	Collection<Pr<State, SortedSet<MapItem>>> closure(
+			final Collection<Pr<State, SortedSet<MapItem>>> S) {
 		final Deque<Triple> stack = new ArrayDeque<>();
 		for (final Pr<State, SortedSet<MapItem>> pr : S) {
 			stack.push(new Triple(pr.getFirst(), 0, pr.getSecond()));
 		}
-		final Collection<Pr<State, SortedSet<MapItem>>> closure = new ArrayList<>(
-				S);
+		final NavigableSet<Triple> closure = initClosure(S);
 		while (!stack.isEmpty()) {
 			State s;
 			int p;
@@ -230,22 +230,76 @@ class TNFAToTDFA {
 				p = t.priority;
 				k = t.mapItems;
 			}
-			for (final Pair<State, Tag> transition : tnfa
+			for (final TransitionTriple transition : tnfa
 					.availableTransitionsFor(s, null)) {
-				final Tag tag = transition.getSecond();
+				final Tag tag = transition.getTag();
 				if (!tag.equals(Tag.NONE)) {
-					final MapItem toBeRemoved = toBeRemoved(k, tag);
-					k.remove(toBeRemoved);
-					final SortedSet<MapItem> range = getSame(k, tag);
+					{
+						final MapItem toBeRemoved = toBeRemoved(k, tag);
+
+						k.remove(toBeRemoved); // Does nothing when toBeRemoved
+												// ==
+												// null, which is good.
+						final Set<MapItem> range = getSame(k, tag);
+						final int last = -1;
+						int x = -1;
+						for (final MapItem mi : range) {
+							if (last + 1 < mi.pos) {
+								x = last + 1;
+								break;
+							}
+						}
+						assert x != -1;
+						assert !k.contains(new MapItem(tag, x));
+
+						k.add(new MapItem(tag, x));
+					}
 				}
+
+				{
+					final State u = transition.getState();
+					final Triple fromElement = new Triple(u, Integer.MIN_VALUE,
+							null);
+					final Triple toElement = new Triple(u,
+							transition.getPriority(), null);
+					final SortedSet<Triple> removeThem = closure.subSet(
+							fromElement, toElement);
+					closure.removeAll(removeThem);
+				}
+
+				{
+					final State u = transition.getState();
+					final int priority = transition.getPriority();
+					final Triple t = new Triple(u, priority, k);
+					if (!closure.contains(t)) {
+						closure.add(t);
+						stack.push(t);
+					}
+				}
+
 			}
 		}
+		return removePriorities(closure);
+	}
+
+	public void convert(final Collection<Pr<State, SortedSet<MapItem>>> s) {
+		final Collection<Pr<State, SortedSet<MapItem>>> i = closure(s);
+		for()
 	}
 
 	SortedSet<MapItem> getSame(final SortedSet<MapItem> k, final Tag tag) {
 		final MapItem from = new MapItem(tag, 0);
 		final MapItem to = new MapItem(new MarkerTag(tag.getGroup() + 1), 0);
 		return k.subSet(from, to);
+	}
+
+	NavigableSet<Triple> initClosure(
+			final Collection<Pr<State, SortedSet<MapItem>>> S) {
+		final NavigableSet<Triple> closure = new TreeSet<>();
+		for (final Pr<State, SortedSet<MapItem>> pr : S) {
+			closure.add(new Triple(pr.getFirst(), 0, pr.getSecond()));
+		}
+		return closure;
 	}
 
 	/**
@@ -260,23 +314,31 @@ class TNFAToTDFA {
 	 * (u, p, k) to closure push (u, p, k) onto stack remove the middle element,
 	 * the priority, from all triples in closure return closure
 	 * 
-	 * @param t
-	 * @param a
 	 * @return
 	 */
 
-	public List<Pair<State, Tag>> reach(final DFAState t, final char a) {
+	List<Pair<State, Tag>> reach(final DFAState state, final char a) {
 		final List<Pair<State, Tag>> ret = new ArrayList<>();
-		for (final Pair<State, Tag> pr : t.getStates()) {
-			final Collection<Pair<State, Tag>> ts = tnfa
+		for (final Pair<State, Tag> pr : state.getStates()) {
+			final Collection<TransitionTriple> ts = tnfa
 					.availableTransitionsFor(pr.getFirst(), a); // TODO switch
 																// to
 																// InputRange.
-			for (final Pair<State, Tag> pr2 : ts) {
-				ret.add(new Pair<>(pr2.getFirst(), pr.getSecond()));
+			for (final TransitionTriple t : ts) {
+				ret.add(new Pair<>(t.getState(), t.getTag()));
 			}
 		}
 		return Collections.unmodifiableList(ret);
+	}
+
+	Collection<Pr<State, SortedSet<MapItem>>> removePriorities(
+			final NavigableSet<Triple> closure) {
+		final Collection<Pr<State, SortedSet<MapItem>>> ret = new ArrayList<>(
+				closure.size());
+		for (final Triple t : closure) {
+			ret.add(new Pr<>(t.state, t.mapItems));
+		}
+		return Collections.unmodifiableCollection(ret);
 	}
 
 	MapItem toBeRemoved(final SortedSet<MapItem> k, final Tag tag) {
@@ -284,6 +346,75 @@ class TNFAToTDFA {
 		if (k.isEmpty()) {
 			return null;
 		}
-		return sames.first();
+		return sames.iterator().next();
+	}
+}
+
+class Triple implements Comparable<Triple> {
+	public final SortedSet<MapItem> mapItems;
+	public final int priority;
+	public final State state;
+
+	public Triple(final State state, final int priority,
+			final SortedSet<MapItem> mapItems) {
+		this.state = state;
+		this.priority = priority;
+		this.mapItems = mapItems;
+	}
+
+	public int compareTo(final Triple o) {
+		final int cmp = this.state.compareTo(o.state);
+		if (cmp != 0) {
+			return cmp;
+		}
+		return this.priority - o.priority;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		final Triple other = (Triple) obj;
+		if (mapItems == null) {
+			if (other.mapItems != null) {
+				return false;
+			}
+		} else if (!mapItems.equals(other.mapItems)) {
+			return false;
+		}
+		if (priority != other.priority) {
+			return false;
+		}
+		if (state == null) {
+			if (other.state != null) {
+				return false;
+			}
+		} else if (!state.equals(other.state)) {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((mapItems == null) ? 0 : mapItems.hashCode());
+		result = prime * result + priority;
+		result = prime * result + ((state == null) ? 0 : state.hashCode());
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return "[" + mapItems + ", " + priority + ", " + state + "]";
 	}
 }
