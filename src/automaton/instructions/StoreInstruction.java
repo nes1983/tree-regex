@@ -1,5 +1,7 @@
 package automaton.instructions;
 
+import automaton.core.Instruction;
+
 public class StoreInstruction implements Instruction
 {
 	private final int	address, tag, resultIndex;

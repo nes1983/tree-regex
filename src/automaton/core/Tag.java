@@ -3,6 +3,12 @@ package automaton.core;
 import automaton.core.TransitionTable.CaptureGroupMaker;
 import automaton.core.TransitionTable.CaptureGroupMaker.RealCaptureGroup;
 
+/**
+ * Get one from {@link CaptureGroupMaker}.
+ * 
+ * @author nes
+ * 
+ */
 interface Tag extends Comparable<Tag> {
 	static abstract class AbstractTag implements Tag {
 		@Override

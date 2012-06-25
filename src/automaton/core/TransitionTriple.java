@@ -67,7 +67,7 @@ class TransitionTriple {
 
 	@Override
 	public String toString() {
-		return "" + state + ", " + priority + ", " + tag;
+		return "" + getState() + ", " + getPriority() + ", " + getTag();
 	}
 
 }

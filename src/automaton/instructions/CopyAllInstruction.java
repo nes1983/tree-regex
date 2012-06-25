@@ -1,5 +1,7 @@
 package automaton.instructions;
 
+import automaton.core.Instruction;
+
 public class CopyAllInstruction implements Instruction
 {
 	private final int	from, to;

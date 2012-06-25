@@ -1,9 +1,10 @@
 package automaton.tests;
 
 import org.junit.Test;
+
+import automaton.core.Instruction;
 import automaton.instructions.Context;
 import automaton.instructions.CopyAllInstruction;
-import automaton.instructions.Instruction;
 import automaton.instructions.SequenceOfInstructions;
 import automaton.instructions.SetInstruction;
 import static org.junit.Assert.*;

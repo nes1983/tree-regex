@@ -2,6 +2,8 @@ package automaton.instructions;
 
 import java.util.LinkedList;
 
+import automaton.core.Instruction;
+
 
 public class SequenceOfInstructions
 {
