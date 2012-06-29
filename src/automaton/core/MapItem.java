@@ -15,7 +15,7 @@ class MapItem implements Comparable<MapItem> {
 		if (comp != 0) {
 			return comp;
 		}
-		return this.pos - o.pos;
+		return Integer.compare(pos, o.pos);
 	}
 
 	public int getPos() {

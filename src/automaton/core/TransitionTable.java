@@ -2,21 +2,25 @@ package automaton.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import automaton.core.Automaton.TDFA;
 import automaton.core.TransitionTable.RealTransitionTable.TNFATransitionTable;
 import automaton.core.TransitionTable.RealTransitionTable.TNFATransitionTable.Builder;
-import automaton.instructions.SequenceOfInstructions;
+import automaton.core.TransitionTable.TDFATransitionTable.Builder.Entry;
 
 /**
  * A {@link TransitionTable} is the set of all possible transition of a
@@ -77,83 +81,146 @@ interface TransitionTable {
 		}
 	}
 
-	// /**
-	// * Compares only the first entry in a pair.
-	// */
-	// static class PairComparator<A extends Comparable<A>, B extends
-	// Comparable<B>>
-	// implements Comparator<Pair<A, B>> {
-	//
-	// @Override
-	// public int compare(final Pair<A, B> o1, final Pair<A, B> o2) {
-	// return o1.getFirst().compareTo(o2.getFirst());
-	// }
-	//
-	// }
+	public static class DFATableTest {
+		final int s1 = 0;
+		final int s2 = 1;
+		final int s3 = 2;
+		final int s4 = 3;
+		TDFATransitionTable table;
 
-	static abstract class RealTransitionTable<T> implements TransitionTable {
+		@Before
+		public void setUp() {
+			table = new TDFATransitionTable(new char[] { 'c', 'l' },
+					new char[] { 'k', 'm' }, new int[] { s1, s2 }, new int[] {
+							s3, s4 }, new List[] { Collections.EMPTY_LIST,
+							Collections.EMPTY_LIST });
+		}
 
-		static class TDFATransitionTable extends
-				RealTransitionTable<TransitionTriple> {
-			TDFATransitionTable(
-					final TreeMap<Pair<State, InputRange>, TransitionTriple> map) {
-				super(map);
-			}
+		@Test
+		public void testTable() {
+			final NextState pr = table.newStateAndInstructions(200, 'd');
+			assertThat(pr, is(nullValue()));
+		}
 
-			/**
-			 * Get the {@link SequenceOfInstructions} associated with the
-			 * transition starting from a {@link State} with a specified
-			 * {@link Character}.
-			 * 
-			 * @param state
-			 *            The starting {@link State}
-			 * @param character
-			 *            The specified {@link Character}
-			 * @return The {@link SequenceOfInstructions} associated with the
-			 *         transition
-			 */
-			public Tag getTag(final State state, final Character character) {
-				final TransitionTriple triple = getEntry(state, character);
-				return triple.getTag();
-			}
-
-			/**
-			 * Get the {@link State} reached from another {@link State} with a
-			 * specific {@link Character}
-			 * 
-			 * @param state
-			 *            The starting {@link State}
-			 * @param character
-			 *            The specified {@link Character}
-			 * @return The {@link State} reached by the transition
-			 */
-			public State nextStateFor(final State state,
-					final Character character) {
-				final TransitionTriple pair = getEntry(state, character);
-				return pair.getState();
-			}
-
-			/**
-			 * Put a new transition in the {@link TransitionTable}
-			 * 
-			 * @param startingState
-			 *            The starting {@link State} of the transition
-			 * @param range
-			 *            The {@link Character}s representing the transition
-			 * @param endingState
-			 *            The ending {@link State} of the transition
-			 * @param instruction
-			 *            The {@link SequenceOfInstructions} to be executed when
-			 *            using the transition
-			 */
-			public void put(final State startingState, final InputRange range,
-					final State endingState, final Tag tag, final int priority) {
-				// TODO Some overlapping tests
-				this.transitions.put(new Pair<>(startingState, range),
-						new TransitionTriple(endingState, priority, tag));
-			}
+		@Test
+		public void testTable2() {
+			final NextState pr = table.newStateAndInstructions(s1, 'c');
+			assertThat(pr.getNextState(), is(s3));
 
 		}
+
+		@Test
+		public void testTable3() {
+			final NextState pr = table.newStateAndInstructions(s1, 'k');
+			assertThat(pr.getNextState(), is(s3));
+
+		}
+
+		@Test
+		public void testTable4() {
+			final NextState pr = table.newStateAndInstructions(s1, 'l');
+			assertThat(pr, is(nullValue()));
+
+		}
+
+		@Test
+		public void testTable5() {
+			final NextState pr = table.newStateAndInstructions(s2, 'l');
+			assertThat(pr.getNextState(), is(s4));
+		}
+
+	}
+
+	public static class DFATTableBuilderTEst {
+		automaton.core.TransitionTable.TDFATransitionTable.Builder builder;
+
+		@Before
+		public void setUp() {
+			builder = new TDFATransitionTable.Builder();
+		}
+
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		@Test
+		public void testBuilder() {
+			final Map q0 = mock(Map.class);
+			final Map q1 = mock(Map.class);
+
+			builder.addTransition(q0, new InputRange('a', 'c'), q1,
+					(List) Collections.emptyList());
+
+			final TDFATransitionTable dfa = builder.build();
+			assertThat(dfa.toString(), is("q0-a-c -> q1"));
+			final NextState pr = dfa.newStateAndInstructions(0, 'b');
+			assertThat(pr.getNextState(), is(1));
+			assertThat(pr.getInstructions(), is(Collections.EMPTY_LIST));
+
+		}
+	}
+
+	static class NextState {
+		List<Instruction> instructions;
+		int nextState;
+
+		public NextState(final int nextState,
+				final List<Instruction> instructions) {
+			super();
+			this.nextState = nextState;
+			this.instructions = instructions;
+		}
+
+		public List<Instruction> getInstructions() {
+			return instructions;
+		}
+
+		public int getNextState() {
+			return nextState;
+		}
+	}
+
+	static abstract class RealTransitionTable<T> implements TransitionTable {
+		//
+		// static class TDFATransitionTable extends
+		// RealTransitionTable<TransitionTriple> {
+		//
+		// TDFATransitionTable(
+		// final TreeMap<Pair<State, InputRange>, TransitionTriple> map) {
+		// super(map);
+		// }
+		//
+		// /**
+		// * Get the {@link SequenceOfInstructions} associated with the
+		// * transition starting from a {@link State} with a specified
+		// * {@link Character}.
+		// *
+		// * @param state
+		// * The starting {@link State}
+		// * @param character
+		// * The specified {@link Character}
+		// * @return The {@link SequenceOfInstructions} associated with the
+		// * transition
+		// */
+		// public Tag getTag(final State state, final Character character) {
+		// final TransitionTriple triple = getEntry(state, character);
+		// return triple.getTag();
+		// }
+		//
+		// /**
+		// * Get the {@link State} reached from another {@link State} with a
+		// * specific {@link Character}
+		// *
+		// * @param state
+		// * The starting {@link State}
+		// * @param character
+		// * The specified {@link Character}
+		// * @return The {@link State} reached by the transition
+		// */
+		// public State nextStateFor(final State state,
+		// final Character character) {
+		// final TransitionTriple pair = getEntry(state, character);
+		// return pair.getState();
+		// }
+		//
+		// }
 
 		static class TNFATransitionTable extends
 				RealTransitionTable<Collection<TransitionTriple>> {
@@ -217,6 +284,14 @@ interface TransitionTable {
 			TNFATransitionTable(
 					final NavigableMap<Pair<State, InputRange>, Collection<TransitionTriple>> transitions) {
 				super(transitions);
+			}
+
+			public Collection<InputRange> allInputRanges() {
+				final List<InputRange> ret = new ArrayList<>();
+				for (final Pair<State, InputRange> range : transitions.keySet()) {
+					ret.add(range.getSecond());
+				}
+				return ret;
 			}
 
 			public Collection<TransitionTriple> nextAvailableTransitions(
@@ -284,6 +359,179 @@ interface TransitionTable {
 		@Override
 		public String toString() {
 			return transitions.toString();
+		}
+	}
+
+	static class TDFATransitionTable {
+		// XXX optimizations: use int for state, then lookup state by
+		// states[state].
+
+		static class Builder {
+			static class Entry implements Comparable<Entry> {
+				final char from, to;
+				final List<Instruction> instructions;
+				final int state, newState;
+
+				public Entry(final char from, final char to,
+						final List<Instruction> instructions, final int state,
+						final int newState) {
+					this.from = from;
+					this.to = to;
+					this.instructions = instructions;
+					this.state = state;
+					this.newState = newState;
+				}
+
+				public int compareTo(final Entry o) {
+					final int cmp = Integer.compare(state, o.state);
+					if (cmp != 0) {
+						return cmp;
+					}
+					return Character.compare(from, o.from);
+				}
+
+				@Override
+				public String toString() {
+					return "q" + state + "-" + from + "-" + to + " -> q"
+							+ newState + " " + instructions;
+				}
+
+			}
+
+			static class Mapping {
+				int lastCreatedState = -1;
+
+				final Map<Map<State, SortedSet<MapItem>>, Integer> mapping = new HashMap<>();
+
+				public int lookup(final Map<State, SortedSet<MapItem>> state) {
+					final Integer to = mapping.get(state);
+					if (to != null) {
+						return to;
+					}
+					final int next = next();
+					mapping.put(state, next);
+					return next;
+				}
+
+				int next() {
+					return ++lastCreatedState;
+				}
+			}
+
+			final Mapping mapping = new Mapping();
+			final List<Entry> transitions = new ArrayList<>();
+
+			public void addTransition(
+					final Map<State, SortedSet<MapItem>> fromState,
+					final InputRange inputRange,
+					final Map<State, SortedSet<MapItem>> newState,
+					final List<Instruction> instructions) {
+
+				final Entry e = new Entry(inputRange.getFrom(),
+						inputRange.getTo(), instructions,
+						mapping.lookup(fromState), mapping.lookup(newState));
+				transitions.add(e);
+			}
+
+			public TDFATransitionTable build() {
+				Collections.sort(transitions);
+				final int size = transitions.size();
+				final char[] froms = new char[size];
+				@SuppressWarnings("unchecked")
+				final List<Instruction>[] instructions = new List[size];
+				final int[] newStates = new int[size];
+				final int[] states = new int[size];
+				final char[] tos = new char[size];
+
+				for (int i = 0; i < size; i++) {
+					final Entry e = transitions.get(i);
+					froms[i] = e.from;
+					tos[i] = e.to;
+					states[i] = e.state;
+					newStates[i] = e.newState;
+					instructions[i] = e.instructions;
+				}
+				return new TDFATransitionTable(froms, tos, states, newStates,
+						instructions);
+			}
+		}
+
+		final char[] froms;
+		final List<Instruction>[] instructions;
+		final int[] newStates;
+		final int size;
+		final int[] states;
+		final char[] tos;
+
+		TDFATransitionTable(final char[] froms, final char[] tos,
+				final int[] states, final int[] newStates,
+				final List<Instruction>[] instructions) {
+			this.size = froms.length;
+			assert tos.length == size && states.length == size
+					&& froms.length == size && newStates.length == size
+					&& instructions.length == size;
+			this.froms = froms;
+			this.tos = tos;
+			this.states = states;
+			this.newStates = newStates;
+			this.instructions = instructions;
+		}
+
+		private int cmp(final int state, final char input, final int x) {
+			final int scmp = Integer.compare(states[x], state); // XXX order?
+			if (scmp != 0) {
+				return scmp;
+			}
+			return Character.compare(input, froms[x]);
+		}
+
+		public NextState newStateAndInstructions(final int state,
+				final char input) {
+			int l = 0;
+			int r = size - 1;
+			int x = -1;
+			while (r >= l) {
+				x = (l + r) / 2;
+				final int cmp = cmp(state, input, x);
+				if (cmp == 0) {
+					return new NextState(newStates[x], instructions[x]);
+				} else if (cmp < 0) {
+					r = x - 1;
+				} else if (cmp > 0) {
+					l = x + 1;
+				} else {
+					assert false;
+				}
+			}
+
+			assert x != -1;
+
+			for (int i = -1; i <= 1; i++) {
+				final int y = x + i;
+
+				if (y < 0 || y >= size) {
+					continue;
+				}
+
+				if (Integer.compare(states[y], state) == 0 && froms[y] <= input
+						&& input <= tos[y]) {
+					return new NextState(newStates[y], instructions[y]);
+				}
+			}
+
+			return null;
+		}
+
+		@Override
+		public String toString() {
+			final StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < size; i++) {
+				final Entry e = new Builder.Entry(froms[i], tos[i],
+						instructions[i], states[i], newStates[i]);
+				sb.append(e.toString());
+				sb.append('\n');
+			}
+			return sb.toString();
 		}
 	}
 

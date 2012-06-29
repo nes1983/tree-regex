@@ -333,7 +333,8 @@ class RegexToNFA {
 	MiniAutomaton makeAny(final MiniAutomaton last, final Builder builder) {
 		final State a = builder.makeState();
 
-		builder.addUntaggedTransition(InputRange.ANY, last.getFinishing(), a);
+		builder.addUntaggedTransition(InputRange.ANY, last.getFinishing(), a,
+				Builder.DEFAULT);
 
 		return new MiniAutomaton(last.getFinishing(), a);
 	}
@@ -344,14 +345,15 @@ class RegexToNFA {
 		final MiniAutomaton ret = new MiniAutomaton(last.getFinishing(), a);
 
 		b.addUntaggedTransition(InputRange.make(character.getCharacter()),
-				ret.getInitial(), a);
+				ret.getInitial(), a, Builder.DEFAULT);
 
 		return ret;
 	}
 
 	MiniAutomaton makeEos(final MiniAutomaton last, final Builder builder) {
 		final State a = builder.makeState();
-		builder.addUntaggedTransition(InputRange.EOS, last.getFinishing(), a);
+		builder.addUntaggedTransition(InputRange.EOS, last.getFinishing(), a,
+				Builder.DEFAULT);
 		return new MiniAutomaton(last.getFinishing(), a);
 	}
 
@@ -359,7 +361,8 @@ class RegexToNFA {
 			final Group group) {
 		final CaptureGroup cg = builder.makeCaptureGroup();
 		final State startGroup = builder.makeState();
-		builder.addStartTagTransition(last.getFinishing(), startGroup, cg);
+		builder.addStartTagTransition(last.getFinishing(), startGroup, cg,
+				Builder.DEFAULT);
 		final MiniAutomaton startGroupAutomaton = new MiniAutomaton(
 				(State) null, startGroup) {
 			@Override
@@ -372,7 +375,8 @@ class RegexToNFA {
 				group.getBody());
 
 		final State endGroup = builder.makeState();
-		builder.addEndTagTransition(body.getFinishing(), endGroup, cg);
+		builder.addEndTagTransition(body.getFinishing(), endGroup, cg,
+				Builder.DEFAULT);
 
 		final TaggedMiniAutomaton ret = new TaggedMiniAutomaton(
 				last.getFinishing(), endGroup, body.getInitial(),
@@ -383,7 +387,8 @@ class RegexToNFA {
 	MiniAutomaton makeInitialMiniAutomaton(final Builder builder) {
 		final State init = builder.makeInitialState();
 
-		builder.addUntaggedTransition(InputRange.ANY, init, init);
+		builder.addUntaggedTransition(InputRange.ANY, init, init,
+				Builder.DEFAULT);
 
 		return new MiniAutomaton(init, init);
 	}
@@ -442,7 +447,8 @@ class RegexToNFA {
 		final MiniAutomaton ret = new MiniAutomaton(last.getFinishing(), f);
 
 		builder.makeUntaggedEpsilonTransitionFromTo(
-				inner.getFinishingRepeatHandles(), inner.getBeginRepeatHandle());
+				inner.getFinishingRepeatHandles(),
+				inner.getBeginRepeatHandle(), Builder.DEFAULT);
 		return ret;
 	}
 }

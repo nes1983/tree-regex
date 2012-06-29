@@ -12,6 +12,7 @@ interface TNFA {
 
 	static class RealNFA implements TNFA {
 		static class Builder {
+			public static final int DEFAULT = 0;
 			public final static int GREEDY = 0;
 			public final static int NON_GREEDY = Integer.MIN_VALUE;
 
@@ -106,6 +107,10 @@ interface TNFA {
 			this.finalStates = finalStates;
 		}
 
+		public Collection<InputRange> allInputRanges() {
+			return transitionTable.allInputRanges();
+		}
+
 		public Collection<TransitionTriple> availableTransitionsFor(
 				final State state, final Character input) {
 			return transitionTable.nextAvailableTransitions(state, input);
@@ -128,6 +133,8 @@ interface TNFA {
 			return ret;
 		}
 	}
+
+	Collection<InputRange> allInputRanges();
 
 	public Collection<TransitionTriple> availableTransitionsFor(State state,
 			Character input);

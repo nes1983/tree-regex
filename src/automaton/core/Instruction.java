@@ -1,22 +1,27 @@
 package automaton.core;
 
-import automaton.instructions.Context;
-
 interface Instruction {
-	static class CopyInstruction implements Instruction {
-		// private final MapItem from, to;
+	public static class Context {
+	}
 
+	static class CopyInstruction implements Instruction {
 		public static CopyInstruction make(final MapItem from, final MapItem to) {
 			throw null;
 		}
 
-		CopyInstruction(final MapItem from, final MapItem to) {
+		MapItem from, to;
 
+		CopyInstruction(final MapItem from, final MapItem to) {
+			throw null;
 		}
 
 		@Override
 		public void execute(final Context context, final int pos) {
 			throw null;
+		}
+
+		MapItem getFrom() {
+			return from;
 		}
 
 	}
@@ -55,5 +60,4 @@ interface Instruction {
 	}
 
 	public void execute(Context context, int pos);
-
 }
