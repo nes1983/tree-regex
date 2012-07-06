@@ -30,21 +30,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import automaton.core.Instruction.CopyInstruction;
 import automaton.core.Pair.Pr;
 import automaton.core.Tag.MarkerTag;
 
 class TNFAToTDFA {
-
-	static enum CopyInstructionComparator implements
-			Comparator<Instruction.CopyInstruction> {
-		SINGLETON;
-
-		public int compare(final CopyInstruction o1, final CopyInstruction o2) {
-			return o1.getFrom().compareTo(o2.getFrom());
-		}
-
-	}
 
 	static class DFAState {
 		final Collection<Pr<State, SortedSet<MapItem>>> madeUpOf;
@@ -93,15 +82,24 @@ class TNFAToTDFA {
 
 		TNFAToTDFA nfa2dfa;
 
+		State s0;
+		State s1;
+		State s2;
+		Tag t0;
 		TNFA tnfa;
 
 		TNFA makeTheNFA() {
-			final TNFA tnfa = mock(TNFA.class);
-			final State s0 = State.get();
-			final State s1 = State.get();
-			final State s2 = State.get();
-			final Tag t0 = mock(Tag.class);
+			State.resetCount();
 
+			s0 = State.get();
+			s1 = State.get();
+			s2 = State.get();
+
+			final TNFA tnfa = mock(TNFA.class);
+
+			t0 = mock(Tag.class);
+
+			when(t0.toString()).thenReturn("t0");
 			when(t0.getGroup()).thenReturn(1);
 
 			when(tnfa.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
@@ -110,6 +108,8 @@ class TNFAToTDFA {
 					.thenReturn(
 							Arrays.asList(new TransitionTriple(s1, 1, t0),
 									new TransitionTriple(s0, 0, Tag.NONE)));
+			when(tnfa.availableTransitionsFor(eq(s0), eq('a'))).thenReturn(
+					Arrays.asList(new TransitionTriple(s0, 0, Tag.NONE)));
 			when(tnfa.availableTransitionsFor(s1, 'a')).thenReturn(
 					Arrays.asList(new TransitionTriple(s2, 1, Tag.NONE),
 							new TransitionTriple(s1, 0, Tag.NONE)));
@@ -130,9 +130,33 @@ class TNFAToTDFA {
 		public void testClosure() {
 			final Map<State, SortedSet<MapItem>> initState = nfa2dfa
 					.convertToDfaState(tnfa.getInitialState());
+			assertThat(initState.toString(), is("{q0=[]}"));
 			final Map<State, SortedSet<MapItem>> withTags = nfa2dfa.closure(initState);
-			System.out.println(withTags);
-			assertThat(withTags.toString(), is(""));
+			final Iterator<Entry<State, SortedSet<MapItem>>> iter = withTags.entrySet()
+					.iterator();
+			final Entry<State, SortedSet<MapItem>> e1 = iter.next();
+			final Entry<State, SortedSet<MapItem>> e2 = iter.next();
+			assertFalse(e1.getValue() == e2.getValue());
+			assertThat(withTags.size(), is(2));
+			assertThat(withTags.entrySet().iterator().next().getValue().isEmpty(),
+					is(true));
+			assertThat(withTags.toString(), is("{q0=[], q1=[MapItem[0, t0]]}"));
+
+		}
+
+		@Test
+		public void testClosure2() {
+			final Map<State, SortedSet<MapItem>> input = new LinkedHashMap<>();
+			input.put(s0, new TreeSet<MapItem>());
+			final SortedSet<MapItem> arg = new TreeSet<>();
+			arg.add(new MapItem(t0, 0));
+			input.put(s2, arg);
+			input.put(s1, new TreeSet<>(arg));
+			assertThat(input.toString(),
+					is("{q0=[], q2=[MapItem[0, t0]], q1=[MapItem[0, t0]]}"));
+
+			final Map<State, SortedSet<MapItem>> res = nfa2dfa.closure(input);
+			assertThat(res.toString(), is(""));
 		}
 
 		@Test
@@ -140,6 +164,18 @@ class TNFAToTDFA {
 			final TDFA tdfa = nfa2dfa.convert();
 			System.out.println(tdfa);
 			assertThat(tdfa.toString(), is(""));
+		}
+
+		@Test
+		public void testReach() {
+			final Map<State, SortedSet<MapItem>> arg = new LinkedHashMap<>();
+			arg.put(s0, new TreeSet<MapItem>());
+			final SortedSet<MapItem> argg = new TreeSet<>();
+			argg.add(new MapItem(t0, 0));
+			arg.put(s1, argg);
+			final Map<State, SortedSet<MapItem>> res = nfa2dfa.reach(arg, 'a');
+			assertThat(res.toString(),
+					is("{q0=[], q2=[MapItem[0, t0]], q1=[MapItem[0, t0]]}"));
 		}
 	}
 
@@ -399,18 +435,20 @@ class TNFAToTDFA {
 			}
 			for (final TransitionTriple transition : tnfa
 					.availableTransitionsFor(s, null)) {
+				final SortedSet<MapItem> kk = new TreeSet<>(k);
 				final Tag tag = transition.getTag();
-				if (!tag.equals(Tag.NONE)) {
-					{
-						final MapItem toBeRemoved = toBeRemoved(k, tag);
 
+				if (!tag.equals(Tag.NONE)) {
+
+					{
+						final MapItem toBeRemoved = toBeRemoved(kk, tag);
 						if (toBeRemoved != null) {
 							k.remove(toBeRemoved);
 						}
-						final Set<MapItem> range = getSame(k, tag);
-						final int x = minimumX(k, tag, range);
+						final Set<MapItem> range = getSame(closure, tag);
+						final int x = minimumX(kk, tag, range);
 
-						k.add(new MapItem(tag, x));
+						kk.add(new MapItem(tag, x));
 					}
 				}
 
@@ -427,7 +465,7 @@ class TNFAToTDFA {
 					final State u = transition.getState();
 					final int priority = transition.getPriority();
 					final Triple t = new Triple(u, priority,
-							Collections.unmodifiableSortedSet(k));
+							Collections.unmodifiableSortedSet(kk));
 					if (!closure.contains(t)) {
 						closure.add(t);
 						stack.push(t);
@@ -451,12 +489,13 @@ class TNFAToTDFA {
 	 */
 	public TDFA convert(final Map<State, SortedSet<MapItem>> s) {
 		final Map<State, SortedSet<MapItem>> i = closure(s);
-		final Collection<Instruction> initializer = new ArrayList<>();
+
+		final List<Instruction> initializer = new ArrayList<>();
 
 		for (final SortedSet<MapItem> mis : i.values()) {
 			for (final MapItem mi : mis) {
 				if (mi.getPos() == 0) {
-					initializer.add(automaton.core.Instruction.SetInstruction.make(mi));
+					initializer.add(instructionMaker.storePos(mi));
 				}
 			}
 		}
@@ -478,6 +517,7 @@ class TNFAToTDFA {
 				final List<Instruction> c = new ArrayList<>();
 
 				final Collection<MapItem> newStates = newStates(u, k);
+				System.out.println("k" + k);
 				for (final MapItem mi : newStates) {
 					c.add(instructionMaker.storePos(mi));
 				}
@@ -513,13 +553,13 @@ class TNFAToTDFA {
 			}
 
 		}
-		return new TDFA(tdfaBuilder.build());
+		return new TDFA(tdfaBuilder.build(), initializer);
 
 	}
 
 	Map<State, SortedSet<MapItem>> convertToDfaState(final State s) {
 		final Map<State, SortedSet<MapItem>> initState = new HashMap<>();
-		initState.put(s, Collections.unmodifiableSortedSet(new TreeSet<MapItem>()));
+		initState.put(s, new TreeSet<MapItem>());
 		return initState;
 	}
 
@@ -656,10 +696,11 @@ class TNFAToTDFA {
 
 		for (final Entry<State, SortedSet<MapItem>> pr : state.entrySet()) {
 			final SortedSet<MapItem> k = pr.getValue();
+
 			final Collection<TransitionTriple> ts = tnfa.availableTransitionsFor(
 					pr.getKey(), a);
 			for (final TransitionTriple t : ts) {
-				ret.put(t.getState(), k);
+				ret.put(t.getState(), new TreeSet<>(k));
 			}
 		}
 		return Collections.unmodifiableMap(ret);
