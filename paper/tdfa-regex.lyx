@@ -260,14 +260,10 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Caption
 
 \begin_layout Plain Layout
-push_states(nfa, dfa)
+push_states(nfa, dfa, open)
 \end_layout
 
 \end_inset
@@ -276,7 +272,130 @@ push_states(nfa, dfa)
 \end_layout
 
 \begin_layout Plain Layout
+return dfa if open is empty
+\end_layout
 
+\begin_layout Plain Layout
+else
+\end_layout
+
+\begin_layout Plain Layout
+first:rest 
+\begin_inset Formula $\leftarrow$
+\end_inset
+
+ open
+\end_layout
+
+\begin_layout Plain Layout
+towards = Map[readable 
+\begin_inset Formula $\rightarrow$
+\end_inset
+
+Set[NfaState]]
+\end_layout
+
+\begin_layout Plain Layout
+for all nfa_state in first and all valid inputs r from nfa_state
+\end_layout
+
+\begin_layout Plain Layout
+towards[r] 
+\begin_inset Formula $\leftarrow$
+\end_inset
+
+towards[r] 
+\begin_inset Formula $\cup$
+\end_inset
+
+ step(nfa_state)
+\end_layout
+
+\begin_layout Plain Layout
+end
+\end_layout
+
+\begin_layout Plain Layout
+dfa.transitions, new_nodes 
+\begin_inset Formula $\leftarrow$
+\end_inset
+
+
+\emph on
+merge
+\emph default
+(dfa.transitions, towards)
+\end_layout
+
+\begin_layout Plain Layout
+return push_states(nfa, dfa, open ++ new_nodes)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+create_dfa(nfa)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+initialize dfa
+\end_layout
+
+\begin_layout Plain Layout
+dfa.start 
+\begin_inset Formula $\leftarrow$
+\end_inset
+
+nfa.start 
+\begin_inset Formula $\cup$
+\end_inset
+
+ step(nfa, nfa.start, 
+\begin_inset Formula $\varepsilon$
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+dfa 
+\begin_inset Formula $\leftarrow$
+\end_inset
+
+push_states(nfa, dfa, [dfa.start])
+\end_layout
+
+\begin_layout Plain Layout
+dfa.ends 
+\begin_inset Formula $\leftarrow$
+\end_inset
+
+[n for n in dfa.states if 
+\begin_inset Formula $n\cap nfa.ends\neq\emptyset$
+\end_inset
+
+]
 \end_layout
 
 \end_inset
