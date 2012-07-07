@@ -60,6 +60,227 @@
 \begin_body
 
 \begin_layout Standard
+Notes:
+\end_layout
+
+\begin_layout Standard
+Pseudocode
+\end_layout
+
+\begin_layout Standard
+Beispiel(e) '(?:(?:(a+)b)+c)+'
+\end_layout
+
+\begin_layout Standard
+Algorithm:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+simple_step(nfa, node, read)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+return set of all tagged nodes (n,
+\begin_inset Formula $m_{t}$
+\end_inset
+
+, priority) for (node, n, read, t, priority) in nfa.transitions
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+resolve_conflicts(map)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+flat 
+\begin_inset Formula $\leftarrow$
+\end_inset
+
+ deep union of keys of map
+\end_layout
+
+\begin_layout Plain Layout
+return flat if there are no conflicts
+\end_layout
+
+\begin_layout Plain Layout
+else:
+\end_layout
+
+\begin_layout Plain Layout
+for all 
+\begin_inset Formula $N_{1}=(n,m_{t_{1}},p_{1})$
+\end_inset
+
+ in 
+\begin_inset Formula $flat$
+\end_inset
+
+ and all 
+\begin_inset Formula $N_{2}=(n,m_{t_{2}},p_{2})$
+\end_inset
+
+ in 
+\begin_inset Formula $flat\setminus\{N_{1}\}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+if 
+\begin_inset Formula $p_{2}>p_{1}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+return resolve_conflicts(remove 
+\begin_inset Formula $N_{1}$
+\end_inset
+
+from map) // Note that this kills off offspring as well
+\end_layout
+
+\begin_layout Plain Layout
+else
+\end_layout
+
+\begin_layout Plain Layout
+return resolve_conflicts(remove 
+\begin_inset Formula $N_{2}$
+\end_inset
+
+from map)
+\end_layout
+
+\begin_layout Plain Layout
+end
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+step(nfa, node, read)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+direct 
+\begin_inset Formula $\leftarrow$
+\end_inset
+
+simple_step(nfa, node, read)
+\end_layout
+
+\begin_layout Plain Layout
+map 
+\begin_inset Formula $\leftarrow$
+\end_inset
+
+Map(n 
+\begin_inset Formula $\rightarrow$
+\end_inset
+
+step(nfa, n, 
+\begin_inset Formula $\varepsilon$
+\end_inset
+
+) for n in direct) // might recur infinitely as of now, um, lets say it's
+ a lazy map
+\end_layout
+
+\begin_layout Plain Layout
+return resolve_conflicts(map)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+push_states(nfa, dfa)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
 
 \end_layout
 
