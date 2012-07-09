@@ -25,6 +25,7 @@
 \bibtex_command default
 \index_command default
 \paperfontsize default
+\spacing single
 \use_hyperref false
 \papersize default
 \use_geometry false
@@ -59,8 +60,74 @@
 
 \begin_body
 
+\begin_layout Title
+Efficient regexp implementation for finding the longest matching groups
+\end_layout
+
+\begin_layout Abstract
+The 
+\shape smallcaps
+posix
+\shape default
+ standard seems inconsistent in that it prescribes on one hand to prefer
+ the longest and left-most match but the right-most combination no matter
+ the length.
+ While this seems reasonable if one is familiar with typical implementations,
+ it can lead to unintuitive matches: 
+\end_layout
+
+\begin_layout Abstract
+Given the regexp 
+\family typewriter
+(?:(a*)b)+
+\family default
+ and the string 
+\family typewriter
+aaabb
+\family default
+ one might expect to match 
+\family typewriter
+aaa
+\family default
+, i.e.
+ the longest match, but by 
+\shape smallcaps
+posix
+\shape default
+ standard 1003.1, the empty string is the result instead, i.e.
+ the right-most matching group.
+\end_layout
+
+\begin_layout Abstract
+The more intuitive match does not lead to efficiency problems.
+ As we will show, the TDFA algorithm by Laurikari
+\begin_inset CommandInset citation
+LatexCommand cite
+key "laurikari2000nfas"
+
+\end_inset
+
+ can be modified using hierarchical commits to give an algorithm with only
+ a linear slowdown in the depth of the capture group nesting.
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
 \begin_layout Standard
-Notes:
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "biblio"
+options "plain"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Notes: 
 \end_layout
 
 \begin_layout Standard
