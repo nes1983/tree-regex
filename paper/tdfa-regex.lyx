@@ -77,7 +77,17 @@ posix
 \end_layout
 
 \begin_layout Abstract
-Given the regexp 
+Given the regexp
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Non-capturing groups will be used to simplify examples.
+\end_layout
+
+\end_inset
+
+ 
 \family typewriter
 (?:(a*)b)+
 \family default
@@ -108,11 +118,145 @@ key "laurikari2000nfas"
 \end_inset
 
  can be modified using hierarchical commits to give an algorithm with only
- a linear slowdown in the depth of the capture group nesting.
+ a linear slowdown in the depth of the capture group nesting in the worst
+ case.
 \end_layout
 
 \begin_layout Section
 Introduction
+\end_layout
+
+\begin_layout Standard
+The algorithm in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "laurikari2000nfas"
+
+\end_inset
+
+ uses NFAs in which some transitions tag the resulting state.
+ A tagged state 
+\begin_inset Formula $s_{0}m_{0}^{0}$
+\end_inset
+
+ is neither equivalent to the untagged state 
+\begin_inset Formula $s_{0}$
+\end_inset
+
+ nor the same state tagged at a different time 
+\begin_inset Formula $s_{0}m_{0}^{1}$
+\end_inset
+
+.
+ To ensure that there are only finitely different tagged states--and thus
+ to ensure that the conversion to a DFA terminates--, 
+\begin_inset Formula $s_{0}m_{0}^{0}$
+\end_inset
+
+ and 
+\begin_inset Formula $s_{0}m_{0}^{1}$
+\end_inset
+
+ (but not 
+\begin_inset Formula $s_{0}$
+\end_inset
+
+) are understood to be in conflict.
+ Conflicts are resolved with priorities being attached to the transitions,
+ e.g.
+ the greedy consumption in 
+\family typewriter
+a*
+\family default
+ will have priority over other transitions and thus a tag that is produced
+ right after such a transition is prefered to another, that resulted from
+ a forward 
+\begin_inset Formula $\varepsilon$
+\end_inset
+
+\SpecialChar \nobreakdash-
+transition.
+\end_layout
+
+\begin_layout Standard
+In section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:The-TNFA-algorithm"
+
+\end_inset
+
+ the TNFA algorithm is presented so that the modifications in section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:TNFA-with-hierarchical"
+
+\end_inset
+
+ can be understood more easily.
+\end_layout
+
+\begin_layout Section
+The TNFA algorithm
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:The-TNFA-algorithm"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+TNFA with hierarchical commits
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:TNFA-with-hierarchical"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to get some more control over the overwriting of the tags, a separate
+ 
+\family typewriter
+commit
+\family default
+ step can be introduced.
+ Each nesting then would need a separate copy of the temporary 
+\begin_inset Quotes eld
+\end_inset
+
+best
+\begin_inset Quotes erd
+\end_inset
+
+ match for a given group.
+ For example 
+\family typewriter
+(?:(?:(a+)b)+c)+
+\family default
+ would need two additional copies of the innermost group, to handle conflicts.
+ 
+\end_layout
+
+\begin_layout Standard
+The intuition is to notice that two tags -- the opening and the corresponding
+ end tag -- always appear in order and the inner groups should not spill
+ over the end of the outer group.
+ After each closing tag then a commit is made, which handles whether the
+ new or the old match is longer.
+ 
+\end_layout
+
+\begin_layout Section
+Applications
+\end_layout
+
+\begin_layout Section
+Conclusion
 \end_layout
 
 \begin_layout Standard
