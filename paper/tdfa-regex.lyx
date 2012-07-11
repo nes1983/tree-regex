@@ -3,6 +3,10 @@
 \begin_document
 \begin_header
 \textclass article
+\begin_preamble
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\end_preamble
 \use_default_options true
 \maintain_unincluded_children false
 \language english
@@ -207,6 +211,14 @@ name "sec:The-TNFA-algorithm"
 
 \end_layout
 
+\begin_layout Standard
+In the TNFA algorithm, the state of the machine is not only determined by
+ the position in the state graph, but also by a number of positions in the
+ string that is read, that can later be used to construct the subgroups
+ of the match.
+ 
+\end_layout
+
 \begin_layout Section
 TNFA with hierarchical commits
 \begin_inset CommandInset label
@@ -296,7 +308,7 @@ status open
 \begin_inset Caption
 
 \begin_layout Plain Layout
-simple_step(nfa, node, read)
+step
 \end_layout
 
 \end_inset
@@ -305,11 +317,433 @@ simple_step(nfa, node, read)
 \end_layout
 
 \begin_layout Plain Layout
-return set of all tagged nodes (n,
-\begin_inset Formula $m_{t}$
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithmic}[1]
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Function{SimpleStep}{$nfa$, $node$, $read$} 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State 
+\backslash
+Return $
+\backslash
+{(n, t, priority) : (node, n, read, t, priority) 
+\backslash
+in nfa.transitions
+\backslash
+}$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFunction
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Statex
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Function{ResolveConflicts}{$map$}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State $flat 
+\backslash
+gets 
+\backslash
+text{recusively all } keys 
+\backslash
+text{ of } map$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+ForAll{conflicting $N_1 = (n, m_{t_1}, p_1), N_2 = (n, m_{t_2}, p_2) 
+\backslash
+in flat$}
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+If{$p_2 > p_1$}
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State remove $N_1$ from map
+\backslash
+Comment{Also removes dependent states}
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+Else
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State remove $N_2$ from map
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+EndIf
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFor
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State 
+\backslash
+Return flat
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFunction
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Statex
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Function{Step}{$nfa$, $node$, $read$}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State $direct 
+\backslash
+gets 
+\backslash
+Call{SimpleStep}{nfa, node, read}$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State $map 
+\backslash
+gets Map(n 
+\backslash
+rightarrow step(nfa, n, 
+\backslash
+varepsilon) : n 
+\backslash
+in direct)$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State 
+\backslash
+Return 
+\backslash
+Call{ResolveConflicts}{map}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFunction
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Statex
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Function{PushStates}{nfa, dfa, start}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State $open 
+\backslash
+gets 
+\backslash
+{start
+\backslash
+}$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State $towards 
+\backslash
+gets 
+\backslash
+text{empty }Map
+\backslash
+left[readable 
+\backslash
+rightarrow Set
+\backslash
+left[NfaState
+\backslash
+right]
+\backslash
+right]$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+While{$open 
+\backslash
+neq 
+\backslash
+emptyset$}
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $first:open 
+\backslash
+gets open$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+ForAll{$state_{nfa} 
+\backslash
+in first$ and valid inputs $r$ from $state_{nfa}$}
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\backslash
+State $towards[r] 
+\backslash
+gets towards 
+\backslash
+cup 
+\backslash
+Call{step}{nfa, state_{nfa}, r}$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+EndFor
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+State $dfa.transitions, newnodes 
+\backslash
+gets 
+\backslash
+Call{Merge}{dfa.transitions, towards}$
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+Statex 
+\backslash
+Comment{Merge depends on the match strategy}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndWhile
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State 
+\backslash
+Return dfa
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFunction
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Statex
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Function{CreateDfa}{nfa}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State initialize empty dfa
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State $dfa.start 
+\backslash
+gets nfa.start 
+\backslash
+cup 
+\backslash
+Call{Step}{nfa, nfa.start, 
+\backslash
+varepsilon}$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State $dfa 
+\backslash
+gets 
+\backslash
+Call{PushStates}{nfa, dfa, dfa.start}$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State $dfa.ends 
+\backslash
+gets 
+\backslash
+{n
+\backslash
+in dfa.states : n
+\backslash
+cap nfa.ends 
+\backslash
+neq 
+\backslash
+emptyset
+\backslash
+}$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State 
+\backslash
+Return dfa
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFunction
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithmic}
+\end_layout
+
 \end_inset
 
-, priority) for (node, n, read, t, priority) in nfa.transitions
+
 \end_layout
 
 \end_inset
@@ -318,299 +752,6 @@ return set of all tagged nodes (n,
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float algorithm
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption
-
-\begin_layout Plain Layout
-resolve_conflicts(map)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-flat 
-\begin_inset Formula $\leftarrow$
-\end_inset
-
- deep union of keys of map
-\end_layout
-
-\begin_layout Plain Layout
-return flat if there are no conflicts
-\end_layout
-
-\begin_layout Plain Layout
-else:
-\end_layout
-
-\begin_layout Plain Layout
-for all 
-\begin_inset Formula $N_{1}=(n,m_{t_{1}},p_{1})$
-\end_inset
-
- in 
-\begin_inset Formula $flat$
-\end_inset
-
- and all 
-\begin_inset Formula $N_{2}=(n,m_{t_{2}},p_{2})$
-\end_inset
-
- in 
-\begin_inset Formula $flat\setminus\{N_{1}\}$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-if 
-\begin_inset Formula $p_{2}>p_{1}$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-return resolve_conflicts(remove 
-\begin_inset Formula $N_{1}$
-\end_inset
-
-from map) // Note that this kills off offspring as well
-\end_layout
-
-\begin_layout Plain Layout
-else
-\end_layout
-
-\begin_layout Plain Layout
-return resolve_conflicts(remove 
-\begin_inset Formula $N_{2}$
-\end_inset
-
-from map)
-\end_layout
-
-\begin_layout Plain Layout
-end
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float algorithm
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Caption
-
-\begin_layout Plain Layout
-step(nfa, node, read)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-direct 
-\begin_inset Formula $\leftarrow$
-\end_inset
-
-simple_step(nfa, node, read)
-\end_layout
-
-\begin_layout Plain Layout
-map 
-\begin_inset Formula $\leftarrow$
-\end_inset
-
-Map(n 
-\begin_inset Formula $\rightarrow$
-\end_inset
-
-step(nfa, n, 
-\begin_inset Formula $\varepsilon$
-\end_inset
-
-) for n in direct) // might recur infinitely as of now, um, lets say it's
- a lazy map
-\end_layout
-
-\begin_layout Plain Layout
-return resolve_conflicts(map)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float algorithm
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Caption
-
-\begin_layout Plain Layout
-push_states(nfa, dfa, open)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-return dfa if open is empty
-\end_layout
-
-\begin_layout Plain Layout
-else
-\end_layout
-
-\begin_layout Plain Layout
-first:rest 
-\begin_inset Formula $\leftarrow$
-\end_inset
-
- open
-\end_layout
-
-\begin_layout Plain Layout
-towards = Map[readable 
-\begin_inset Formula $\rightarrow$
-\end_inset
-
-Set[NfaState]]
-\end_layout
-
-\begin_layout Plain Layout
-for all nfa_state in first and all valid inputs r from nfa_state
-\end_layout
-
-\begin_layout Plain Layout
-towards[r] 
-\begin_inset Formula $\leftarrow$
-\end_inset
-
-towards[r] 
-\begin_inset Formula $\cup$
-\end_inset
-
- step(nfa_state)
-\end_layout
-
-\begin_layout Plain Layout
-end
-\end_layout
-
-\begin_layout Plain Layout
-dfa.transitions, new_nodes 
-\begin_inset Formula $\leftarrow$
-\end_inset
-
-
-\emph on
-merge
-\emph default
-(dfa.transitions, towards)
-\end_layout
-
-\begin_layout Plain Layout
-return push_states(nfa, dfa, open ++ new_nodes)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float algorithm
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption
-
-\begin_layout Plain Layout
-create_dfa(nfa)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-initialize dfa
-\end_layout
-
-\begin_layout Plain Layout
-dfa.start 
-\begin_inset Formula $\leftarrow$
-\end_inset
-
-nfa.start 
-\begin_inset Formula $\cup$
-\end_inset
-
- step(nfa, nfa.start, 
-\begin_inset Formula $\varepsilon$
-\end_inset
-
-)
-\end_layout
-
-\begin_layout Plain Layout
-dfa 
-\begin_inset Formula $\leftarrow$
-\end_inset
-
-push_states(nfa, dfa, [dfa.start])
-\end_layout
-
-\begin_layout Plain Layout
-dfa.ends 
-\begin_inset Formula $\leftarrow$
-\end_inset
-
-[n for n in dfa.states if 
-\begin_inset Formula $n\cap nfa.ends\neq\emptyset$
-\end_inset
-
-]
-\end_layout
-
-\end_inset
-
 
 \end_layout
 
