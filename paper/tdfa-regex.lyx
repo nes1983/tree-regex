@@ -6,6 +6,7 @@
 \begin_preamble
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
+\frenchspacing
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -74,14 +75,14 @@ The
 posix
 \shape default
  standard seems inconsistent in that it prescribes on one hand to prefer
- the longest and left-most match but the right-most combination no matter
- the length.
+ the longest and left-most overall match but the rightmost possible subgroup
+ within that match.
  While this seems reasonable if one is familiar with typical implementations,
  it can lead to unintuitive matches: 
 \end_layout
 
 \begin_layout Abstract
-Given the regexp
+For regexp
 \begin_inset Foot
 status open
 
@@ -95,11 +96,11 @@ Non-capturing groups will be used to simplify examples.
 \family typewriter
 (?:(a*)b)+
 \family default
- and the string 
+ and string 
 \family typewriter
-aaabb
+aaabb,
 \family default
- one might expect to match 
+ one might expect to the subgroup to match 
 \family typewriter
 aaa
 \family default
@@ -113,17 +114,27 @@ posix
 \end_layout
 
 \begin_layout Abstract
-The more intuitive match does not lead to efficiency problems.
- As we will show, the TDFA algorithm by Laurikari
+The more intuitive match does not lead to any asymptotic slowdown, as we
+ will show.
+ The TDFA by Laurikari
 \begin_inset CommandInset citation
 LatexCommand cite
 key "laurikari2000nfas"
 
 \end_inset
 
- can be modified using hierarchical commits to give an algorithm with only
- a linear slowdown in the depth of the capture group nesting in the worst
- case.
+ can be modified using our proposed 
+\shape smallcaps
+hierarchical commits
+\shape default
+ to lead to intuitive matches without slower asymptotic performance.
+\end_layout
+
+\begin_layout Abstract
+Additionally, we present a prototypical implementation with benchmarks,
+ which outperforms the Java regex implementation both asymptotically and
+ in practice.
+ In practice, we perceive an average speedup of XXX.
 \end_layout
 
 \begin_layout Section
@@ -138,8 +149,26 @@ key "laurikari2000nfas"
 
 \end_inset
 
- uses NFAs in which some transitions tag the resulting state.
- A tagged state 
+ uses 
+\begin_inset Quotes eld
+\end_inset
+
+Tagged NFAs
+\begin_inset Quotes erd
+\end_inset
+
+ in which some transitions tag the resulting state.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+What is a tag?
+\end_layout
+
+\end_inset
+
+A tagged state 
 \begin_inset Formula $s_{0}m_{0}^{0}$
 \end_inset
 
@@ -190,7 +219,7 @@ reference "sec:The-TNFA-algorithm"
 
 \end_inset
 
- the TNFA algorithm is presented so that the modifications in section 
+, the TNFA algorithm is presented so that the modifications in section 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sec:TNFA-with-hierarchical"
@@ -212,6 +241,10 @@ name "sec:The-TNFA-algorithm"
 \end_layout
 
 \begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
 In the TNFA algorithm, the state of the machine is not only determined by
  the position in the state graph, but also by a number of positions in the
  string that is read, that can later be used to construct the subgroups
@@ -219,96 +252,17 @@ In the TNFA algorithm, the state of the machine is not only determined by
  
 \end_layout
 
-\begin_layout Section
-TNFA with hierarchical commits
-\begin_inset CommandInset label
-LatexCommand label
-name "sec:TNFA-with-hierarchical"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-In order to get some more control over the overwriting of the tags, a separate
- 
-\family typewriter
-commit
-\family default
- step can be introduced.
- Each nesting then would need a separate copy of the temporary 
-\begin_inset Quotes eld
-\end_inset
-
-best
-\begin_inset Quotes erd
-\end_inset
-
- match for a given group.
- For example 
-\family typewriter
-(?:(?:(a+)b)+c)+
-\family default
- would need two additional copies of the innermost group, to handle conflicts.
- 
-\end_layout
-
-\begin_layout Standard
-The intuition is to notice that two tags -- the opening and the corresponding
- end tag -- always appear in order and the inner groups should not spill
- over the end of the outer group.
- After each closing tag then a commit is made, which handles whether the
- new or the old match is longer.
- 
-\end_layout
-
-\begin_layout Section
-Applications
-\end_layout
-
-\begin_layout Section
-Conclusion
-\end_layout
-
-\begin_layout Standard
-\begin_inset CommandInset bibtex
-LatexCommand bibtex
-bibfiles "biblio"
-options "plain"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section*
-Notes: 
-\end_layout
-
-\begin_layout Standard
-Pseudocode
-\end_layout
-
-\begin_layout Standard
-Beispiel(e) '(?:(?:(a+)b)+c)+'
-\end_layout
-
-\begin_layout Standard
-Algorithm:
-\end_layout
-
 \begin_layout Standard
 \begin_inset Float algorithm
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Caption
 
 \begin_layout Plain Layout
-step
+TDFA from TNFA
 \end_layout
 
 \end_inset
@@ -331,20 +285,24 @@ begin{algorithmic}[1]
 
 
 \backslash
-Function{SimpleStep}{$nfa$, $node$, $read$} 
+Function{SimpleStep}{$nfa$, $node$, $r$} 
 \end_layout
 
 \begin_layout Plain Layout
 
-
+	
 \backslash
 State 
 \backslash
 Return $
 \backslash
-{(n, t, priority) : (node, n, read, t, priority) 
+left
+\backslash
+{(n, m_{t_c}, priority): (node, n, r, t, priority) 
 \backslash
 in nfa.transitions
+\backslash
+right
 \backslash
 }$
 \end_layout
@@ -358,7 +316,7 @@ EndFunction
 
 \begin_layout Plain Layout
 
-
+										
 \backslash
 Statex
 \end_layout
@@ -387,7 +345,7 @@ text{ of } map$
 
 
 \backslash
-ForAll{conflicting $N_1 = (n, m_{t_1}, p_1), N_2 = (n, m_{t_2}, p_2) 
+ForAll{distict $N_1 = (n, m_{t_1}, p_1), N_2 = (n, m_{t_2}, p_2) 
 \backslash
 in flat$}
 \end_layout
@@ -454,7 +412,7 @@ EndFunction
 
 \begin_layout Plain Layout
 
-
+										
 \backslash
 Statex
 \end_layout
@@ -512,7 +470,7 @@ EndFunction
 
 \begin_layout Plain Layout
 
-
+										
 \backslash
 Statex
 \end_layout
@@ -620,11 +578,11 @@ Call{Merge}{dfa.transitions, towards}$
 
 \begin_layout Plain Layout
 
-	
+			
 \backslash
 Statex 
 \backslash
-Comment{Merge depends on the match strategy}
+Comment{Merge represents the match strategy}
 \end_layout
 
 \begin_layout Plain Layout
@@ -652,7 +610,7 @@ EndFunction
 
 \begin_layout Plain Layout
 
-
+										
 \backslash
 Statex
 \end_layout
@@ -751,8 +709,191 @@ end{algorithmic}
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Section
+TNFA with hierarchical commits
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:TNFA-with-hierarchical"
 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to get some more control over the overwriting of the tags, a separate
+ 
+\family typewriter
+commit
+\family default
+ step can be introduced.
+ Each nesting then would need a separate copy of the temporary 
+\begin_inset Quotes eld
+\end_inset
+
+best
+\begin_inset Quotes erd
+\end_inset
+
+ match for a given group.
+ For example 
+\family typewriter
+(((a+)b)+c)+
+\family default
+ would need two additional copies of the innermost group, to handle conflicts.
+ 
+\end_layout
+
+\begin_layout Standard
+The intuition is to notice that two tags -- the opening and the corresponding
+ end tag -- always appear in order and the inner groups should not spill
+ over the end of the outer group.
+ After each closing tag then a commit is made, which handles whether the
+ new or the old match is longer.
+ 
+\end_layout
+
+\begin_layout Paragraph*
+Example
+\end_layout
+
+\begin_layout Standard
+In the following, the regex 
+\family typewriter
+(?:(?:(a+)b)+c)+
+\family default
+ will be converted to a 
+\shape smallcaps
+dfa
+\shape default
+.
+ First, it is converted to a 
+\shape smallcaps
+nfa
+\shape default
+:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:stdexample"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename graphs/standard_example.svg
+	width 75text%
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As can be seen, the 
+\shape smallcaps
+dfa
+\shape default
+ start node is just 
+\begin_inset Formula $\{s_{1}\}$
+\end_inset
+
+, since no 
+\begin_inset Formula $\varepsilon$
+\end_inset
+
+-steps are possible.
+ Now the states are extended using a breadth first search: 
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula ${s_{1}}\xrightarrow{a}{s_{2}m_{t}^{0}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula ${s_{2}m_{t}^{0}}\xrightarrow{a}{s_{2}m_{t}^{0}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula ${s_{2}m_{t}^{0}}\xrightarrow{b}{s_{3}m_{t}^{0}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Applications
+\end_layout
+
+\begin_layout Standard
+This technique allows for programmers to extract parts of text with great
+ performance and flexibility regarding the extracted match.
+ One could imagine, that a programmer needs to extract a ideally complete
+ sample of formated text with optional parameters.
+ Here, 
+\family typewriter
+\shape smallcaps
+posix
+\family default
+\shape default
+ regex would fail to deliver the best match in most cases.
+ Such cases can occur in data mining, in bioinformatics, both of which are
+ handling massive data, so that efficiency can be a problem.
+\end_layout
+
+\begin_layout Section
+Conclusion
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "biblio"
+options "plain"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Notes: 
+\end_layout
+
+\begin_layout Standard
+Pseudocode
+\end_layout
+
+\begin_layout Standard
+Beispiel(e) '(?:(?:(a+)b)+c)+'
+\end_layout
+
+\begin_layout Standard
+Algorithm:
 \end_layout
 
 \end_body
