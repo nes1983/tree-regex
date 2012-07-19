@@ -298,11 +298,18 @@ name "sec:The-TNFA-algorithm"
 \end_layout
 
 \begin_layout Standard
-Our algorithm is a modification of Laurikari's powerset construction algorithm
- 
+Our algorithm is a modification of Laurikari's algorithm 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "laurikari2000nfas"
+
+\end_inset
+
+, which is itself a modified powerset construction algorithm 
+\begin_inset CommandInset citation
+LatexCommand cite
+after "p. 55"
+key "Sipser2005"
 
 \end_inset
 
