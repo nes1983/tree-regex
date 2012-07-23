@@ -78,23 +78,10 @@ posix
  the longest and left-most overall match but the rightmost possible subgroup
  within that match.
  While this seems reasonable if one is familiar with typical implementations,
- it can lead to unintuitive matches: 
-\end_layout
-
-\begin_layout Abstract
-For regexp
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Non-capturing groups will be used to simplify examples.
-\end_layout
-
-\end_inset
-
- 
+ it can lead to unintuitive matches.
+ For regexp
 \family typewriter
-(?:(a*)b)+
+ (?:(a*)b)+
 \family default
  and string 
 \family typewriter
@@ -139,6 +126,72 @@ Additionally, we present a prototypical implementation with benchmarks,
 
 \begin_layout Section
 Introduction
+\end_layout
+
+\begin_layout Standard
+The 
+\shape smallcaps
+posix
+\shape default
+ standard seems inconsistent in that it prescribes on the one hand to prefer
+ the longest and left-most overall match but the rightmost possible subgroup
+ within that match.
+ While this seems reasonable from an implementational point of view, it
+ can lead to unintuitive matches from a user's point of view.
+ 
+\end_layout
+
+\begin_layout Standard
+In the following example, 
+\begin_inset Quotes eld
+\end_inset
+
+?:
+\begin_inset Quotes erd
+\end_inset
+
+ is used to denote a non-capturing group.
+ In POSIX syntax, the bracket characters serve double duty: they both determine
+ the binding of operators, and they introduce a new capture group.
+ A capture group is a sub-part of the regex.
+ After matching the regex on some input, part of the input may match.
+ However, just a part of the match is captured by the capture group.
+ Modern regex libraries are able to return such submatches.
+ A non-capturing group means that we use the brackets only for binding,
+ not for defining a new capture group.
+ 
+\end_layout
+
+\begin_layout Standard
+Consider the example of regexp
+\family typewriter
+ (?:(a*)b)+
+\family default
+ and input string 
+\family typewriter
+aaabb.
+ Here,
+\family default
+ one might expect the capture group to match 
+\family typewriter
+aaa
+\family default
+, i.e.
+ the longest match, but by 
+\shape smallcaps
+posix
+\shape default
+ standard 1003.1, the empty string is the result instead, i.e.
+ the right-most matching set of characters.
+\end_layout
+
+\begin_layout Standard
+Performance-wise, trying to get the longest match in a back-tracking implementat
+ion means that all paths through the NFA must be tried exhaustively.
+ Fortunately, as we will demonstrate, the more intuitive matching characteristic
+s can be implemented as a slight modification to TDFAs at no asymptotic
+ cost.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -230,7 +283,7 @@ reference "sec:TNFA-with-hierarchical"
 \end_layout
 
 \begin_layout Section
-The TNFA algorithm
+The TDFA powerset construction algorithm
 \begin_inset CommandInset label
 LatexCommand label
 name "sec:The-TNFA-algorithm"
@@ -245,18 +298,46 @@ name "sec:The-TNFA-algorithm"
 \end_layout
 
 \begin_layout Standard
-In the TNFA algorithm, the state of the machine is not only determined by
- the position in the state graph, but also by a number of positions in the
- string that is read, that can later be used to construct the subgroups
+Our algorithm is a modification of Laurikari's algorithm 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "laurikari2000nfas"
+
+\end_inset
+
+, which is itself a modified powerset construction algorithm 
+\begin_inset CommandInset citation
+LatexCommand cite
+after "p. 55"
+key "Sipser2005"
+
+\end_inset
+
+.
+ For clarity, and because the original description contains a few errors,
+ we outline his algorithm here, omitting his proof for correctness and terminati
+on.
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+ In the TNFA algorithm, the state of the machine is not only determined
+ by the position in the state graph, but also by a number of positions in
+ the string that is read, that can later be used to construct the subgroups
  of the match.
  
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
 \begin_inset Float algorithm
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \begin_inset Caption
@@ -710,7 +791,7 @@ end{algorithmic}
 \end_layout
 
 \begin_layout Section
-TNFA with hierarchical commits
+TDFA with hierarchica l commits
 \begin_inset CommandInset label
 LatexCommand label
 name "sec:TNFA-with-hierarchical"
@@ -721,7 +802,86 @@ name "sec:TNFA-with-hierarchical"
 \end_layout
 
 \begin_layout Standard
-In order to get some more control over the overwriting of the tags, a separate
+The overall idea is simple: whenever the TDFA is reading in a run of characters
+ that belong to a capture group, we compare the currently read run to the
+ previously best one.
+ For example, when the TDFA produced by (?:(a*)b)* reads in the string aabaaab,
+ it will proceed as follows.
+ Upon reading the first b, it keeps the run 
+\begin_inset Quotes eld
+\end_inset
+
+aa
+\begin_inset Quotes erd
+\end_inset
+
+ as the currently best match for the only non-trivial capture group of the
+ regex, since the capture group had no better match before that.
+ Upon reading the second b, it will compare the now current run 
+\begin_inset Quotes eld
+\end_inset
+
+aaa
+\begin_inset Quotes erd
+\end_inset
+
+ to the previous one, 
+\begin_inset Quotes eld
+\end_inset
+
+aa
+\begin_inset Quotes erd
+\end_inset
+
+.
+ It will decide that the second one is longer, and choose that instead.
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Aaron: maybe better include the blackboard picture here, but improve it
+ into a complete example.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+To implement these comparisons, we introduce 
+\begin_inset Quotes eld
+\end_inset
+
+hierarchical commits
+\begin_inset Quotes erd
+\end_inset
+
+ into the TDFA.
+ We add hierarchical commits to the transition table of the TDFA, which
+ usually contains the information, into which state the TDFA should change
+ for any given state and input, plus a set of instructions that may be executed
+ to remember the capture group positions.
+ We introduce the new instruction 
+\begin_inset Quotes eld
+\end_inset
+
+commit(captureGroup, from, to)
+\begin_inset Quotes erd
+\end_inset
+
+.
+ It has the following semantics:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+if the current set of characters compare the current reading with the previously
+ longest read, keeping the longer one.
+ n order to get some more control over the overwriting of the tags, a separate
  
 \family typewriter
 commit
@@ -744,13 +904,18 @@ best
  
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 The intuition is to notice that two tags -- the opening and the corresponding
  end tag -- always appear in order and the inner groups should not spill
  over the end of the outer group.
  After each closing tag then a commit is made, which handles whether the
  new or the old match is longer.
  
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Paragraph*
@@ -772,24 +937,10 @@ dfa
 nfa
 \shape default
 :
-\end_layout
-
-\begin_layout Standard
 \begin_inset Float figure
-placement H
 wide false
 sideways false
 status collapsed
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:stdexample"
-
-\end_inset
-
-
-\end_layout
 
 \begin_layout Plain Layout
 \align center
@@ -799,6 +950,22 @@ name "fig:stdexample"
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+NFA about to be transformed.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
 
 \end_layout
 
@@ -845,11 +1012,11 @@ dfa
 
 \end_layout
 
-\begin_layout Section
-Applications
-\end_layout
-
 \begin_layout Standard
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
 This technique allows for programmers to extract parts of text with great
  performance and flexibility regarding the extracted match.
  One could imagine, that a programmer needs to extract a ideally complete
@@ -865,8 +1032,60 @@ posix
  handling massive data, so that efficiency can be a problem.
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
-Conclusion
+Benchmarks
+\end_layout
+
+\begin_layout Section
+Conclusions
+\end_layout
+
+\begin_layout Section
+Open questions
+\end_layout
+
+\begin_layout Standard
+The cost of matching an input string of length 
+\begin_inset Formula $n$
+\end_inset
+
+ with a regex of length 
+\begin_inset Formula $r$
+\end_inset
+
+ is 
+\begin_inset Formula $O(2^{r}+n)$
+\end_inset
+
+.
+ Clearly, for small 
+\begin_inset Formula $n$
+\end_inset
+
+ and big 
+\begin_inset Formula $r$
+\end_inset
+
+, Thompson's algorithm 
+\begin_inset CommandInset citation
+LatexCommand cite
+after "p. 293"
+key "Sedgewick1990"
+
+\end_inset
+
+ at cost 
+\begin_inset Formula $O(nr)$
+\end_inset
+
+ is preferable.
+ However, it is still an open question whether Thompson's algorithm can
+ be adapted to subgroup matching.
 \end_layout
 
 \begin_layout Standard
