@@ -2,13 +2,18 @@
 \lyxformat 413
 \begin_document
 \begin_header
-\textclass article
+\textclass amsart
 \begin_preamble
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 \frenchspacing
 \end_preamble
 \use_default_options true
+\begin_modules
+theorems-ams
+eqs-within-sections
+figs-within-sections
+\end_modules
 \maintain_unincluded_children false
 \language english
 \language_package default
@@ -294,10 +299,20 @@ name "sec:The-TNFA-algorithm"
 \end_layout
 
 \begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\naturals}{\mathbb{N}}
+\end_inset
 
-\end_layout
 
-\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\integers}{\mathbb{Z}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\pos}{\mathbf{\mathbf{p}}}
+\end_inset
+
 Our algorithm is a modification of Laurikari's algorithm 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -330,14 +345,58 @@ status collapsed
 
 \end_inset
 
+ Our representation closely follows the one by Sipser 
+\begin_inset CommandInset citation
+LatexCommand cite
+after "p. 55"
+key "Sipser2005"
 
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Our algorithm creates instructions that are executed at runtime, i.e.
+ during the interpretation of the TDFA.
+ There are two possible instructions for 
+\begin_inset Formula $n,m\in\naturals$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Description
+\begin_inset Formula $n\leftarrow\mathbf{p}$
+\end_inset
+
+ Stores the current position in the input string into memory location 
+\begin_inset Formula $n$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+\begin_inset Formula $n\leftarrow m$
+\end_inset
+
+ Stores the contents of memory location 
+\begin_inset Formula $m$
+\end_inset
+
+ into memory location 
+\begin_inset Formula $n$
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
 \begin_inset Float algorithm
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Caption
@@ -790,6 +849,396 @@ end{algorithmic}
 
 \end_layout
 
+\begin_layout Definition
+For 
+\begin_inset Formula $I\subset\naturals$
+\end_inset
+
+ and 
+\begin_inset Formula $n\in\naturals$
+\end_inset
+
+, DFA state
+\begin_inset Formula $\{(q_{i},(a_{ij})_{j=1..n}):i\in I\}$
+\end_inset
+
+ is 
+\emph on
+mappable
+\emph default
+ to another DFA state 
+\begin_inset Formula $\{(q_{i},(b_{ij})_{j=1..n}):i\in I\}$
+\end_inset
+
+ iff there is a bijection 
+\begin_inset Formula $\nu$
+\end_inset
+
+ such that 
+\begin_inset Formula $\forall i\in I,\, j=1..n:\,(a_{ij})=(\nu(b_{ij}))$
+\end_inset
+
+.
+ Bijection 
+\begin_inset Formula $\nu$
+\end_inset
+
+ is called the 
+\emph on
+mapping
+\emph default
+.
+\begin_inset Newline newline
+\end_inset
+
+For example, 
+\begin_inset Formula $\{(q_{0},[4,3]),\,(q_{1},[2,1]),\,(q_{3},[2,3])\}$
+\end_inset
+
+ is mappable to 
+\begin_inset Formula $\{(q_{0},[0,-2]),\,(q_{1},[2,1]),\,(q_{3},[2,-2])\}$
+\end_inset
+
+ using mapping 
+\begin_inset Formula $1\mapsto1,\,3\mapsto-2,\,4\mapsto0$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Definition
+Let us first consider the caase where 
+\begin_inset Formula $N$
+\end_inset
+
+ has no 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+ arrows and no tags.
+ Then we can construct the new transition function 
+\begin_inset Formula $\delta'$
+\end_inset
+
+ as follows:
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula 
+\[
+\delta'(R,a)=\bigcup_{r\in R}\delta(r,a)\mbox{.}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+Now we need to consider the 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+ arrows, some of which contain tags.
+ We use the following notation:
+\end_layout
+
+\begin_layout Definition
+For any state 
+\begin_inset Formula $R$
+\end_inset
+
+ of 
+\begin_inset Formula $M$
+\end_inset
+
+ we define 
+\begin_inset Formula $E(R)$
+\end_inset
+
+ to be the collection of states
+\end_layout
+
+\begin_layout Definition
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout LyX-Code
+Name:   
+\begin_inset Formula $\bar{e}(q,t)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+Input:  NFA state 
+\begin_inset Formula $q$
+\end_inset
+
+, list 
+\begin_inset Formula $t$
+\end_inset
+
+, set 
+\begin_inset Formula $R$
+\end_inset
+
+ (initially empty)
+\end_layout
+
+\begin_layout LyX-Code
+Output: set of tagged fingers that can be reached from 
+\begin_inset Formula $q$
+\end_inset
+
+ united with 
+\begin_inset Formula $R$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+return 
+\begin_inset Formula $R$
+\end_inset
+
+ if 
+\begin_inset Formula $q\in R$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+For all 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+-reachable states 
+\begin_inset Formula $q'$
+\end_inset
+
+ do
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+1.
+ Resolve conflicts:
+\end_layout
+
+\begin_layout LyX-Code
+if there is a 
+\begin_inset Formula $(q',\hat{t})\in R$
+\end_inset
+
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+and the transition from 
+\begin_inset Formula $q$
+\end_inset
+
+ to 
+\begin_inset Formula $q'$
+\end_inset
+
+ has negative priority
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+return 
+\begin_inset Formula $R$
+\end_inset
+
+ 
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout LyX-Code
+end if
+\end_layout
+
+\begin_layout LyX-Code
+2.
+ Build closure:
+\end_layout
+
+\begin_layout LyX-Code
+if the transition from 
+\begin_inset Formula $q$
+\end_inset
+
+ to 
+\begin_inset Formula $q'$
+\end_inset
+
+ is tagged with tag 
+\begin_inset Formula $\tau_{k}$
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+let 
+\begin_inset Formula $t'$
+\end_inset
+
+ be 
+\begin_inset Formula $[t_{1},\dots,t_{k-1},z,t_{k+1},\dots,t_{n}]$
+\end_inset
+
+, where 
+\begin_inset Formula $z\in\naturals$
+\end_inset
+
+ is unused.
+\end_layout
+
+\begin_layout LyX-Code
+It is unused if it doesn't yet occur in any DFA state,
+\end_layout
+
+\begin_layout LyX-Code
+or any 
+\begin_inset Formula $t'$
+\end_inset
+
+ being created.
+\end_layout
+
+\begin_layout LyX-Code
+set 
+\begin_inset Formula $R'$
+\end_inset
+
+ 
+\begin_inset Formula $\leftarrow$
+\end_inset
+
+
+\begin_inset Formula $\bar{e}(q',t',R)$
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+else
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+set 
+\begin_inset Formula $R'$
+\end_inset
+
+ 
+\begin_inset Formula $\leftarrow$
+\end_inset
+
+
+\begin_inset Formula $\bar{e}(q',t,R)$
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+end if
+\end_layout
+
+\begin_layout LyX-Code
+3.
+ add all elements of 
+\begin_inset Formula $R'$
+\end_inset
+
+ to 
+\begin_inset Formula $R$
+\end_inset
+
+, overwriting with 
+\begin_inset Formula $R'$
+\end_inset
+
+ taking precedence.
+\end_layout
+
+\begin_layout LyX-Code
+set 
+\begin_inset Formula $R$
+\end_inset
+
+ 
+\begin_inset Formula $\leftarrow$
+\end_inset
+
+
+\begin_inset Formula $(R'\cup R)\setminus\{(\hat{q},\hat{t})\in R':\exists(\hat{q},\tilde{t})\in R\}$
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+end for
+\end_layout
+
+\begin_layout LyX-Code
+return 
+\begin_inset Formula $R$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout LyX-Code
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Compute the closure of state 
+\begin_inset Formula $M$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+=
+\end_layout
+
 \begin_layout Section
 TDFA with hierarchica l commits
 \begin_inset CommandInset label
@@ -1113,6 +1562,10 @@ Beispiel(e) '(?:(?:(a+)b)+c)+'
 
 \begin_layout Standard
 Algorithm:
+\end_layout
+
+\begin_layout Standard
+Definition:
 \end_layout
 
 \end_body
