@@ -272,6 +272,63 @@ class TNFAToTDFA {
 
 	}
 
+	public static class NewTest {
+
+		TNFAToTDFA nfa2dfa;
+
+		State s0;
+		State s1;
+		State s2;
+		Tag t0;
+		TNFA tnfa;
+
+		TNFA makeTheNFA() {
+			State.resetCount();
+
+			s0 = State.get();
+			s1 = State.get();
+			s2 = State.get();
+
+			final TNFA tnfa = mock(TNFA.class);
+
+			t0 = mock(Tag.class);
+
+			when(t0.toString()).thenReturn("t0");
+			when(t0.getGroup()).thenReturn(1);
+
+			when(tnfa.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
+			when(tnfa.getInitialState()).thenReturn(s0);
+			when(tnfa.availableTransitionsFor(eq(s0), isNull(Character.class)))
+					.thenReturn(
+							Arrays.asList(new TransitionTriple(s1, 1, t0),
+									new TransitionTriple(s0, 0, Tag.NONE)));
+			when(tnfa.availableTransitionsFor(eq(s0), eq('a'))).thenReturn(
+					Arrays.asList(new TransitionTriple(s0, 0, Tag.NONE)));
+			when(tnfa.availableTransitionsFor(s1, 'a')).thenReturn(
+					Arrays.asList(new TransitionTriple(s2, 1, Tag.NONE),
+							new TransitionTriple(s1, 0, Tag.NONE)));
+			when(tnfa.availableTransitionsFor(s2, 'a')).thenReturn(new ArrayList());
+			when(tnfa.isAccepting(eq(s2))).thenReturn(true);
+			when(tnfa.isAccepting(eq(s1))).thenReturn(false);
+			when(tnfa.isAccepting(eq(s0))).thenReturn(false);
+			return tnfa;
+		}
+
+		@Before
+		public void setUp() {
+			tnfa = makeTheNFA();
+			nfa2dfa = TNFAToTDFA.make(tnfa);
+		}
+
+		@Test
+		public void test() {
+			final Set<StateWithMemoryLocation> res = nfa2dfa.e(s0, new int[] { -1, -2,
+					-3, -4, -5, -6 });
+			assertEquals(res.toString(),
+					"[q1[-1, -2, 0, -4, -5, -6], q0[-1, -2, -3, -4, -5, -6]]");
+		}
+	}
+
 	public static class NFA2DFATest {
 
 		TNFA tnfa;
@@ -377,9 +434,66 @@ class TNFAToTDFA {
 
 	}
 
+	static class StateWithMemoryLocation {
+		final int[] memoryLocation;
+		final State state;
+
+		StateWithMemoryLocation(final State state, final int[] memoryLocation) {
+			this.memoryLocation = memoryLocation;
+			this.state = state;
+		}
+
+		@Override
+		public boolean equals(final Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final StateWithMemoryLocation other = (StateWithMemoryLocation) obj;
+			if (state == null) {
+				if (other.state != null) {
+					return false;
+				}
+			} else if (!state.equals(other.state)) {
+				return false;
+			}
+			return true;
+		}
+
+		public int[] getMemoryLocation() {
+			return memoryLocation;
+		}
+
+		public State getState() {
+			return state;
+		}
+
+		@Override
+		public int hashCode() {
+			return ((state == null) ? 0 : state.hashCode());
+		}
+
+		@Override
+		public String toString() {
+			return "" + state + "" + Arrays.toString(memoryLocation);
+		}
+
+	}
+
+	private static final int HIGH = 0;
+
+	private static final int LOW = 0;
+
 	public static TNFAToTDFA make(final TNFA tnfa) {
 		return new TNFAToTDFA(tnfa);
 	}
+
+	private int currentPos = -1;
 
 	final Instruction.InstructionMaker instructionMaker = Instruction.InstructionMaker
 			.get();
@@ -567,6 +681,66 @@ class TNFAToTDFA {
 		return initState;
 	}
 
+	/**
+	 * Niko and Aaron's closure.
+	 * 
+	 * @param q
+	 * @param l
+	 */
+	Set<StateWithMemoryLocation> e(State q, int[] l) {
+		final Set<StateWithMemoryLocation> R = new LinkedHashSet<>();
+
+		final Deque<StateWithMemoryLocation> stack = new ArrayDeque<>();
+		stack.push(new StateWithMemoryLocation(q, l));
+
+		while (!stack.isEmpty()) {
+			{
+				final StateWithMemoryLocation ql = stack.pop();
+				q = ql.getState();
+				l = ql.getMemoryLocation();
+				final StateWithMemoryLocation probe = new StateWithMemoryLocation(q, null);
+				System.out.println("" + q + " " + Arrays.toString(l) + " " + R);
+				if (R.contains(probe)) {
+					if (true) {
+
+					}
+					continue;
+				}
+			}
+
+			nextTriple: for (final TransitionTriple triple : tnfa
+					.availableTransitionsFor(q, null)) {
+				final State qDash = triple.state;
+
+				// Step 1.
+				final StateWithMemoryLocation probe = new StateWithMemoryLocation(qDash,
+						null);
+				if (R.contains(probe) && triple.priority == LOW) {
+					continue nextTriple;
+				}
+
+				// Step 2.
+				final Tag tau = triple.tag;
+				int[] tdash;
+				if (!tau.equals(Tag.NONE)) {
+					final int pos = positionFor(tau);
+					tdash = Arrays.copyOf(l, l.length);
+					tdash[pos] = nextInt();
+				} else {
+					tdash = l;
+				}
+				final StateWithMemoryLocation newState = new StateWithMemoryLocation(
+						triple.getState(), tdash);
+
+				// Step 3
+				R.remove(newState);
+				R.add(newState);
+				stack.push(newState);
+			}
+		}
+		return Collections.unmodifiableSet(R);
+	}
+
 	private Set<MapItem> extractMIs(final Map<State, SortedSet<MapItem>> oldState) {
 		final Set<MapItem> oldMIs = new LinkedHashSet<>();
 		for (final SortedSet<MapItem> mis : oldState.values()) {
@@ -678,6 +852,18 @@ class TNFAToTDFA {
 		final Set<MapItem> newMIs = extractMIs(newState);
 		newMIs.removeAll(oldMIs);
 		return Collections.unmodifiableSet(newMIs);
+	}
+
+	int nextInt() {
+		return ++currentPos;
+	}
+
+	private int positionFor(final Tag tau) {
+		int r = 2 * tau.getGroup();
+		if (tau.isEndTag()) {
+			r += 1;
+		}
+		return r;
 	}
 
 	/**
