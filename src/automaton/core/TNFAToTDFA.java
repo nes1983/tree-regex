@@ -445,7 +445,11 @@ class TNFAToTDFA {
 						if (toBeRemoved != null) {
 							k.remove(toBeRemoved);
 						}
-						final Set<MapItem> range = getSame(closure, tag);
+						final Set<MapItem> range = null;// getSame(closure,
+														// tag);
+						if (true) {
+							throw new AssertionError("end of editing.");
+						}
 						final int x = minimumX(kk, tag, range);
 
 						kk.add(new MapItem(tag, x));
