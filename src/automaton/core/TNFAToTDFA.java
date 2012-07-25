@@ -36,10 +36,23 @@ import automaton.core.Tag.MarkerTag;
 class TNFAToTDFA {
 
 	static class DFAState {
-		final Collection<Pr<State, SortedSet<MapItem>>> madeUpOf;
+		public static String toString(final Map<State, int[]> states) {
+			final StringBuilder sb = new StringBuilder();
+			for (final Map.Entry<State, int[]> el : states.entrySet()) {
+				sb.append(el.getKey());
+				sb.append("->");
+				sb.append(Arrays.toString(el.getValue()));
+				sb.append(", ");
+			}
+			sb.delete(sb.length() - 2, sb.length());
+			return sb.toString();
+		}
 
-		DFAState(final Collection<Pr<State, SortedSet<MapItem>>> madeUpOf) {
-			this.madeUpOf = madeUpOf;
+		final Map<State, int[]> innerStates;
+
+		public DFAState(final Map<State, int[]> innerStates) {
+			super();
+			this.innerStates = innerStates;
 		}
 
 		@Override
@@ -54,6 +67,52 @@ class TNFAToTDFA {
 				return false;
 			}
 			final DFAState other = (DFAState) obj;
+			if (innerStates == null) {
+				if (other.innerStates != null) {
+					return false;
+				}
+			} else if (!innerStates.keySet().equals(other.innerStates.keySet())) {
+				return false;
+			}
+
+			return true;
+		}
+
+		@Override
+		public int hashCode() {
+			if (innerStates == null) {
+				return 1;
+			}
+
+			return innerStates.keySet().hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return toString(innerStates);
+		}
+
+	}
+
+	static class DFAState2 {
+		final Collection<Pr<State, SortedSet<MapItem>>> madeUpOf;
+
+		DFAState2(final Collection<Pr<State, SortedSet<MapItem>>> madeUpOf) {
+			this.madeUpOf = madeUpOf;
+		}
+
+		@Override
+		public boolean equals(final Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final DFAState2 other = (DFAState2) obj;
 			if (madeUpOf == null) {
 				if (other.madeUpOf != null) {
 					return false;
@@ -126,23 +185,26 @@ class TNFAToTDFA {
 			nfa2dfa = TNFAToTDFA.make(tnfa);
 		}
 
-		@Test
-		public void testClosure() {
-			final Map<State, SortedSet<MapItem>> initState = nfa2dfa
-					.convertToDfaState(tnfa.getInitialState());
-			assertThat(initState.toString(), is("{q0=[]}"));
-			final Map<State, SortedSet<MapItem>> withTags = nfa2dfa.closure(initState);
-			final Iterator<Entry<State, SortedSet<MapItem>>> iter = withTags.entrySet()
-					.iterator();
-			final Entry<State, SortedSet<MapItem>> e1 = iter.next();
-			final Entry<State, SortedSet<MapItem>> e2 = iter.next();
-			assertFalse(e1.getValue() == e2.getValue());
-			assertThat(withTags.size(), is(2));
-			assertThat(withTags.entrySet().iterator().next().getValue().isEmpty(),
-					is(true));
-			assertThat(withTags.toString(), is("{q0=[], q1=[MapItem[0, t0]]}"));
-
-		}
+		// @Test
+		// public void testClosure() {
+		// final Map<State, SortedSet<MapItem>> initState = //nfa2dfa
+		// // .convertToDfaState(tnfa.getInitialState());
+		// null;
+		// assertThat(initState.toString(), is("{q0=[]}"));
+		// final Map<State, SortedSet<MapItem>> withTags =
+		// nfa2dfa.closure(initState);
+		// final Iterator<Entry<State, SortedSet<MapItem>>> iter =
+		// withTags.entrySet()
+		// .iterator();
+		// final Entry<State, SortedSet<MapItem>> e1 = iter.next();
+		// final Entry<State, SortedSet<MapItem>> e2 = iter.next();
+		// assertFalse(e1.getValue() == e2.getValue());
+		// assertThat(withTags.size(), is(2));
+		// assertThat(withTags.entrySet().iterator().next().getValue().isEmpty(),
+		// is(true));
+		// assertThat(withTags.toString(), is("{q0=[], q1=[MapItem[0, t0]]}"));
+		//
+		// }
 
 		@Test
 		public void testClosure2() {
@@ -311,6 +373,7 @@ class TNFAToTDFA {
 			when(tnfa.isAccepting(eq(s2))).thenReturn(true);
 			when(tnfa.isAccepting(eq(s1))).thenReturn(false);
 			when(tnfa.isAccepting(eq(s0))).thenReturn(false);
+			when(tnfa.allTags()).thenReturn(Arrays.asList(t0));
 			return tnfa;
 		}
 
@@ -322,10 +385,22 @@ class TNFAToTDFA {
 
 		@Test
 		public void test() {
-			final Set<StateWithMemoryLocation> res = nfa2dfa.e(s0, new int[] { -1, -2,
-					-3, -4, -5, -6 });
-			assertEquals(res.toString(),
-					"[q1[-1, -2, 0, -4, -5, -6], q0[-1, -2, -3, -4, -5, -6]]");
+			final Map<State, int[]> initState = nfa2dfa.convertToDfaState(tnfa
+					.getInitialState());
+			final Map<State, int[]> res = nfa2dfa.e(initState);
+			assertEquals("q1->[0, -2], q0->[-1, -2]", DFAState.toString(res));
+		}
+
+		@Test
+		public void testInitialState() {
+			assertEquals("[t0]", tnfa.allTags().toString());
+			final Map<State, int[]> converted = nfa2dfa.convertToDfaState(tnfa
+					.getInitialState());
+			assertThat(converted.size(), is(1));
+			final int[] ary = converted.values().iterator().next();
+			assertEquals("[-1, -2]", Arrays.toString(ary));
+			final State state = converted.keySet().iterator().next();
+			assertEquals("q0", state.toString());
 		}
 	}
 
@@ -434,7 +509,7 @@ class TNFAToTDFA {
 
 	}
 
-	static class StateWithMemoryLocation {
+	static class StateWithMemoryLocation implements Map.Entry<State, int[]> {
 		final int[] memoryLocation;
 		final State state;
 
@@ -465,6 +540,10 @@ class TNFAToTDFA {
 			return true;
 		}
 
+		public State getKey() {
+			return state;
+		}
+
 		public int[] getMemoryLocation() {
 			return memoryLocation;
 		}
@@ -473,9 +552,17 @@ class TNFAToTDFA {
 			return state;
 		}
 
+		public int[] getValue() {
+			return memoryLocation;
+		}
+
 		@Override
 		public int hashCode() {
 			return ((state == null) ? 0 : state.hashCode());
+		}
+
+		public int[] setValue(final int[] value) {
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
@@ -597,8 +684,13 @@ class TNFAToTDFA {
 
 	public TDFA convert() {
 		final State s = tnfa.getInitialState();
-		final Map<State, SortedSet<MapItem>> initState = convertToDfaState(s);
-		return convert(initState);
+		if (true) {
+			throw new AssertionError();
+		}
+		return null;
+		// final Map<State, SortedSet<MapItem>> initState =
+		// convertToDfaState(s);
+		// return convert(initState);
 	}
 
 	/**
@@ -675,37 +767,43 @@ class TNFAToTDFA {
 
 	}
 
-	Map<State, SortedSet<MapItem>> convertToDfaState(final State s) {
-		final Map<State, SortedSet<MapItem>> initState = new HashMap<>();
-		initState.put(s, new TreeSet<MapItem>());
+	// Map<State, SortedSet<MapItem>> convertToDfaState(final State s) {
+	// final Map<State, SortedSet<MapItem>> initState = new HashMap<>();
+	// initState.put(s, new TreeSet<MapItem>());
+	// return initState;
+	// }
+
+	/**
+	 * Used to create the initial state of the DFA.
+	 */
+	Map<State, int[]> convertToDfaState(final State s) {
+		final Map<State, int[]> initState = new HashMap<>();
+		final int numTags = tnfa.allTags().size();
+		final int[] initialMemoryLocations = makeInitialMemoryLocations(numTags);
+		initState.put(s, initialMemoryLocations);
 		return initState;
 	}
 
 	/**
 	 * Niko and Aaron's closure.
 	 * 
-	 * @param q
-	 * @param l
 	 */
-	Set<StateWithMemoryLocation> e(State q, int[] l) {
-		final Set<StateWithMemoryLocation> R = new LinkedHashSet<>();
+	Map<State, int[]> e(final Map<State, int[]> startState) {
+		final Map<State, int[]> R = new LinkedHashMap<>();
 
-		final Deque<StateWithMemoryLocation> stack = new ArrayDeque<>();
-		stack.push(new StateWithMemoryLocation(q, l));
+		final Deque<Map.Entry<State, int[]>> stack = new ArrayDeque<>();
+		for (final Map.Entry<State, int[]> i : startState.entrySet()) {
+			stack.push(i);
+		}
 
 		while (!stack.isEmpty()) {
-			{
-				final StateWithMemoryLocation ql = stack.pop();
-				q = ql.getState();
-				l = ql.getMemoryLocation();
-				final StateWithMemoryLocation probe = new StateWithMemoryLocation(q, null);
-				System.out.println("" + q + " " + Arrays.toString(l) + " " + R);
-				if (R.contains(probe)) {
-					if (true) {
 
-					}
-					continue;
-				}
+			final Entry<State, int[]> s = stack.pop();
+			final State q = s.getKey();
+			final int[] l = s.getValue();
+
+			if (R.containsKey(s.getKey())) {
+				continue;
 			}
 
 			nextTriple: for (final TransitionTriple triple : tnfa
@@ -713,10 +811,10 @@ class TNFAToTDFA {
 				final State qDash = triple.state;
 
 				// Step 1.
-				final StateWithMemoryLocation probe = new StateWithMemoryLocation(qDash,
-						null);
-				if (R.contains(probe) && triple.priority == LOW) {
+				if (R.containsKey(qDash) && triple.priority == LOW) {
 					continue nextTriple;
+				} else if (R.containsKey(qDash)) {
+					assert triple.priority == HIGH;
 				}
 
 				// Step 2.
@@ -729,16 +827,18 @@ class TNFAToTDFA {
 				} else {
 					tdash = l;
 				}
-				final StateWithMemoryLocation newState = new StateWithMemoryLocation(
-						triple.getState(), tdash);
+				// final StateWithMemoryLocation newState = new
+				// StateWithMemoryLocation(
+				// triple.getState(), tdash);
 
 				// Step 3
-				R.remove(newState);
-				R.add(newState);
-				stack.push(newState);
+				R.remove(triple.getState());
+				R.put(triple.getState(), tdash);
+
+				stack.push(new StateWithMemoryLocation(triple.getState(), tdash));
 			}
 		}
-		return Collections.unmodifiableSet(R);
+		return Collections.unmodifiableMap(R);
 	}
 
 	private Set<MapItem> extractMIs(final Map<State, SortedSet<MapItem>> oldState) {
@@ -765,10 +865,6 @@ class TNFAToTDFA {
 		return closure;
 	}
 
-	char[] inputRangeExemplaries() {
-		throw null;
-	}
-
 	/**
 	 * Return a mapping from an existing state to a mapped state, if one exists.
 	 * Otherwise, null.
@@ -786,6 +882,14 @@ class TNFAToTDFA {
 			instructionMaker.reorder(e.getKey(), e.getValue());
 		}
 		return Collections.unmodifiableCollection(ret);
+	}
+
+	private int[] makeInitialMemoryLocations(final int numTags) {
+		final int[] ret = new int[numTags * 2];
+		for (int i = 0; i < ret.length; i++) {
+			ret[i] = -1 * i - 1;
+		}
+		return ret;
 	}
 
 	/**
@@ -859,7 +963,7 @@ class TNFAToTDFA {
 	}
 
 	private int positionFor(final Tag tau) {
-		int r = 2 * tau.getGroup();
+		int r = 2 * tau.getGroup() - 2;
 		if (tau.isEndTag()) {
 			r += 1;
 		}

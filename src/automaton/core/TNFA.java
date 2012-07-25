@@ -21,18 +21,16 @@ interface TNFA {
 			TNFATransitionTable.Builder transitionTableBuilder = TNFATransitionTable
 					.builder();
 
-			public void addEndTagTransition(final Collection<State> from,
-					final State to, final CaptureGroup captureGroup,
-					final int priority) {
-				transitionTableBuilder.addEndTagTransition(from, to,
-						captureGroup, priority);
+			public void addEndTagTransition(final Collection<State> from, final State to,
+					final CaptureGroup captureGroup, final int priority) {
+				transitionTableBuilder.addEndTagTransition(from, to, captureGroup,
+						priority);
 			}
 
 			public void addStartTagTransition(final Collection<State> from,
-					final State to, final CaptureGroup captureGroup,
-					final int priority) {
-				transitionTableBuilder.addStartTagTransition(from, to,
-						captureGroup, priority);
+					final State to, final CaptureGroup captureGroup, final int priority) {
+				transitionTableBuilder.addStartTagTransition(from, to, captureGroup,
+						priority);
 			}
 
 			public void addUntaggedTransition(final InputRange inputRange,
@@ -44,8 +42,7 @@ interface TNFA {
 			}
 
 			public void addUntaggedTransition(final InputRange any,
-					final Collection<State> from, final State to,
-					final int priority) {
+					final Collection<State> from, final State to, final int priority) {
 				assert any != null && from != null && to != null;
 				for (final State f : from) {
 					addUntaggedTransition(any, f, to, priority);
@@ -56,13 +53,12 @@ interface TNFA {
 					final State from, final State to, final int priority) {
 				assert from != null;
 				assert to != null;
-				transitionTableBuilder.put(from, inputRange, to, priority,
-						Tag.NONE);
+				transitionTableBuilder.put(from, inputRange, to, priority, Tag.NONE);
 			}
 
 			public RealNFA build() {
-				return new RealNFA(transitionTableBuilder.build(),
-						initialState, Collections.unmodifiableSet(finalStates));
+				return new RealNFA(transitionTableBuilder.build(), initialState,
+						Collections.unmodifiableSet(finalStates));
 			}
 
 			public CaptureGroup makeCaptureGroup() {
@@ -78,9 +74,8 @@ interface TNFA {
 				return State.get();
 			}
 
-			public void makeUntaggedEpsilonTransitionFromTo(
-					final Collection<State> from, final Collection<State> to,
-					final int priority) {
+			public void makeUntaggedEpsilonTransitionFromTo(final Collection<State> from,
+					final Collection<State> to, final int priority) {
 				addUntaggedTransition(InputRange.EPSILON, from, to, priority);
 			}
 
@@ -99,8 +94,8 @@ interface TNFA {
 
 		final TNFATransitionTable transitionTable;
 
-		RealNFA(final TNFATransitionTable transitionTable,
-				final State initialState, final Set<State> finalStates) {
+		RealNFA(final TNFATransitionTable transitionTable, final State initialState,
+				final Set<State> finalStates) {
 			super();
 			this.transitionTable = transitionTable;
 			this.initialState = initialState;
@@ -111,8 +106,12 @@ interface TNFA {
 			return transitionTable.allInputRanges();
 		}
 
-		public Collection<TransitionTriple> availableTransitionsFor(
-				final State state, final Character input) {
+		public Collection<Tag> allTags() {
+			return transitionTable.allTags();
+		}
+
+		public Collection<TransitionTriple> availableTransitionsFor(final State state,
+				final Character input) {
 			return transitionTable.nextAvailableTransitions(state, input);
 		}
 
@@ -135,6 +134,8 @@ interface TNFA {
 	}
 
 	Collection<InputRange> allInputRanges();
+
+	Collection<Tag> allTags();
 
 	public Collection<TransitionTriple> availableTransitionsFor(State state,
 			Character input);

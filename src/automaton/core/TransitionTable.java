@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -18,6 +20,7 @@ import java.util.TreeMap;
 import org.junit.Before;
 import org.junit.Test;
 
+import automaton.core.Tag.MarkerTag;
 import automaton.core.TransitionTable.RealTransitionTable.TNFATransitionTable;
 import automaton.core.TransitionTable.RealTransitionTable.TNFATransitionTable.Builder;
 import automaton.core.TransitionTable.TDFATransitionTable.Builder.Entry;
@@ -90,10 +93,9 @@ interface TransitionTable {
 
 		@Before
 		public void setUp() {
-			table = new TDFATransitionTable(new char[] { 'c', 'l' },
-					new char[] { 'k', 'm' }, new int[] { s1, s2 }, new int[] {
-							s3, s4 }, new List[] { Collections.EMPTY_LIST,
-							Collections.EMPTY_LIST });
+			table = new TDFATransitionTable(new char[] { 'c', 'l' }, new char[] { 'k',
+					'm' }, new int[] { s1, s2 }, new int[] { s3, s4 }, new List[] {
+					Collections.EMPTY_LIST, Collections.EMPTY_LIST });
 		}
 
 		@Test
@@ -161,8 +163,7 @@ interface TransitionTable {
 		List<Instruction> instructions;
 		int nextState;
 
-		public NextState(final int nextState,
-				final List<Instruction> instructions) {
+		public NextState(final int nextState, final List<Instruction> instructions) {
 			super();
 			this.nextState = nextState;
 			this.instructions = instructions;
@@ -239,12 +240,10 @@ interface TransitionTable {
 					}
 				}
 
-				public void addStartTagTransition(
-						final Collection<State> froms, final State to,
-						final CaptureGroup cg, final int priority) {
+				public void addStartTagTransition(final Collection<State> froms,
+						final State to, final CaptureGroup cg, final int priority) {
 					for (final State from : froms) {
-						put(from, InputRange.EPSILON, to, priority,
-								cg.getStartTag());
+						put(from, InputRange.EPSILON, to, priority, cg.getStartTag());
 					}
 				}
 
@@ -259,13 +258,11 @@ interface TransitionTable {
 					return captureGroupMaker.next();
 				}
 
-				public void put(final State startingState,
-						final InputRange range, final State endingState,
-						final int priority, final Tag tag) {
+				public void put(final State startingState, final InputRange range,
+						final State endingState, final int priority, final Tag tag) {
 					// TODO Some overlapping tests
 					assert startingState != null && range != null;
-					final Pair<State, InputRange> key = new Pair<>(
-							startingState, range);
+					final Pair<State, InputRange> key = new Pair<>(startingState, range);
 
 					Collection<TransitionTriple> col = transitions.get(key);
 					if (col == null) {
@@ -294,6 +291,19 @@ interface TransitionTable {
 				return ret;
 			}
 
+			public Collection<Tag> allTags() {
+				final Set<Tag> ret = new LinkedHashSet<>();
+				for (final Collection<TransitionTriple> triples : transitions.values()) {
+					for (final TransitionTriple triple : triples) {
+						final Tag tag = triple.getTag();
+						if (!(tag instanceof MarkerTag)) {
+							ret.add(tag);
+						}
+					}
+				}
+				return ret;
+			}
+
 			public Collection<TransitionTriple> nextAvailableTransitions(
 					final State state, final Character input) {
 				final Collection<TransitionTriple> ret = getEntry(state, input);
@@ -309,13 +319,11 @@ interface TransitionTable {
 				assert false; // TODO delete.
 				throw new RuntimeException("Not implemented");
 			}
-
 		}
 
 		final NavigableMap<Pair<State, InputRange>, T> transitions;
 
-		RealTransitionTable(
-				final NavigableMap<Pair<State, InputRange>, T> transitions) {
+		RealTransitionTable(final NavigableMap<Pair<State, InputRange>, T> transitions) {
 			super();
 			this.transitions = transitions;
 		}
@@ -334,10 +342,9 @@ interface TransitionTable {
 		 *         {@link SequenceOfInstructions}. Null if there isn't one.
 		 */
 		T getEntry(final State state, final Character character) {
-			final InputRange searched = character != null ? InputRange.make(
-					character, character) : InputRange.EPSILON;
-			final Pair<State, InputRange> searchMarker = new Pair<>(state,
-					searched);
+			final InputRange searched = character != null ? InputRange.make(character,
+					character) : InputRange.EPSILON;
+			final Pair<State, InputRange> searchMarker = new Pair<>(state, searched);
 			final SortedMap<Pair<State, InputRange>, T> tail = transitions
 					.descendingMap().tailMap(searchMarker); // headMap and
 															// tailMap are
@@ -392,8 +399,8 @@ interface TransitionTable {
 
 				@Override
 				public String toString() {
-					return "q" + state + "-" + from + "-" + to + " -> q"
-							+ newState + " " + instructions;
+					return "q" + state + "-" + from + "-" + to + " -> q" + newState + " "
+							+ instructions;
 				}
 
 			}
@@ -421,15 +428,13 @@ interface TransitionTable {
 			final Mapping mapping = new Mapping();
 			final List<Entry> transitions = new ArrayList<>();
 
-			public void addTransition(
-					final Map<State, SortedSet<MapItem>> fromState,
+			public void addTransition(final Map<State, SortedSet<MapItem>> fromState,
 					final InputRange inputRange,
 					final Map<State, SortedSet<MapItem>> newState,
 					final List<Instruction> instructions) {
 
-				final Entry e = new Entry(inputRange.getFrom(),
-						inputRange.getTo(), instructions,
-						mapping.lookup(fromState), mapping.lookup(newState));
+				final Entry e = new Entry(inputRange.getFrom(), inputRange.getTo(),
+						instructions, mapping.lookup(fromState), mapping.lookup(newState));
 				transitions.add(e);
 			}
 
@@ -463,13 +468,11 @@ interface TransitionTable {
 		final int[] states;
 		final char[] tos;
 
-		TDFATransitionTable(final char[] froms, final char[] tos,
-				final int[] states, final int[] newStates,
-				final List<Instruction>[] instructions) {
+		TDFATransitionTable(final char[] froms, final char[] tos, final int[] states,
+				final int[] newStates, final List<Instruction>[] instructions) {
 			this.size = froms.length;
-			assert tos.length == size && states.length == size
-					&& froms.length == size && newStates.length == size
-					&& instructions.length == size;
+			assert tos.length == size && states.length == size && froms.length == size
+					&& newStates.length == size && instructions.length == size;
 			this.froms = froms;
 			this.tos = tos;
 			this.states = states;
@@ -485,8 +488,7 @@ interface TransitionTable {
 			return Character.compare(input, froms[x]);
 		}
 
-		public NextState newStateAndInstructions(final int state,
-				final char input) {
+		public NextState newStateAndInstructions(final int state, final char input) {
 			int l = 0;
 			int r = size - 1;
 			int x = -1;
@@ -526,8 +528,8 @@ interface TransitionTable {
 		public String toString() {
 			final StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < size; i++) {
-				final Entry e = new Builder.Entry(froms[i], tos[i],
-						instructions[i], states[i], newStates[i]);
+				final Entry e = new Builder.Entry(froms[i], tos[i], instructions[i],
+						states[i], newStates[i]);
 				sb.append(e.toString());
 				sb.append('\n');
 			}
@@ -576,20 +578,20 @@ interface TransitionTable {
 			final TNFATransitionTable t = tb.build();
 
 			// Verify existing transitions
-			assertThat(t.nextAvailableTransitions(q1, 'c').iterator().next()
-					.getState(), is(q3));
+			assertThat(t.nextAvailableTransitions(q1, 'c').iterator().next().getState(),
+					is(q3));
 
-			assertThat(t.nextAvailableTransitions(q2, 'z').iterator().next()
-					.getState(), is(q4));
+			assertThat(t.nextAvailableTransitions(q2, 'z').iterator().next().getState(),
+					is(q4));
 
-			assertThat(t.nextAvailableTransitions(q0, 'k').iterator().next()
-					.getState(), is(q5));
-			assertThat(t.nextAvailableTransitions(q0, 'a').iterator().next()
-					.getState(), is(q6));
-			assertThat(t.nextAvailableTransitions(q1, 'y').iterator().next()
-					.getState(), is(q7));
-			assertThat(t.nextAvailableTransitions(q2, 'o').iterator().next()
-					.getState(), is(q8));
+			assertThat(t.nextAvailableTransitions(q0, 'k').iterator().next().getState(),
+					is(q5));
+			assertThat(t.nextAvailableTransitions(q0, 'a').iterator().next().getState(),
+					is(q6));
+			assertThat(t.nextAvailableTransitions(q1, 'y').iterator().next().getState(),
+					is(q7));
+			assertThat(t.nextAvailableTransitions(q2, 'o').iterator().next().getState(),
+					is(q8));
 
 			// Verify missing transitions
 			// assertThat(t.getState(q4, 'c'), is(nullValue()));
@@ -635,16 +637,16 @@ interface TransitionTable {
 			final TNFATransitionTable t = tb.build();
 			// Verify existing transitions
 
-			assertThat(t.nextAvailableTransitions(q1, 'z').iterator().next()
-					.getState(), is(q7));
-			assertThat(t.nextAvailableTransitions(q0, 'k').iterator().next()
-					.getState(), is(q5));
-			assertThat(t.nextAvailableTransitions(q0, 'a').iterator().next()
-					.getState(), is(q6));
-			assertThat(t.nextAvailableTransitions(q1, 'y').iterator().next()
-					.getState(), is(q7));
-			assertThat(t.nextAvailableTransitions(q2, 'o').iterator().next()
-					.getState(), is(q8));
+			assertThat(t.nextAvailableTransitions(q1, 'z').iterator().next().getState(),
+					is(q7));
+			assertThat(t.nextAvailableTransitions(q0, 'k').iterator().next().getState(),
+					is(q5));
+			assertThat(t.nextAvailableTransitions(q0, 'a').iterator().next().getState(),
+					is(q6));
+			assertThat(t.nextAvailableTransitions(q1, 'y').iterator().next().getState(),
+					is(q7));
+			assertThat(t.nextAvailableTransitions(q2, 'o').iterator().next().getState(),
+					is(q8));
 
 			// Verify missing transitions
 			// assertThat(t.getState(q4, 'c'), is(nullValue()));
@@ -669,8 +671,8 @@ interface TransitionTable {
 
 			final TNFATransitionTable t = tb.build();
 
-			assertThat(t.nextAvailableTransitions(q0, 'c').iterator().next()
-					.getState(), is(q1));
+			assertThat(t.nextAvailableTransitions(q0, 'c').iterator().next().getState(),
+					is(q1));
 
 		}
 
