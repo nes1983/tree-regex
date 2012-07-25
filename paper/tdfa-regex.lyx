@@ -1049,15 +1049,16 @@ and the transition from
 \begin_inset Formula $q'$
 \end_inset
 
- has negative priority
+ has negative priority then
 \end_layout
 
 \begin_deeper
 \begin_layout LyX-Code
-return 
-\begin_inset Formula $R$
+continue with the next 
+\begin_inset Formula $q'$
 \end_inset
 
+ in the for loop.
  
 \end_layout
 
