@@ -1650,7 +1650,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename graphs/lehrer_match.svg
+	filename graphs/lehrer_match.pdf
 	width 100text%
 
 \end_inset
@@ -1660,7 +1660,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename graphs/lehrer_after.svg
+	filename graphs/lehrer_after.pdf
 	width 100text%
 
 \end_inset
