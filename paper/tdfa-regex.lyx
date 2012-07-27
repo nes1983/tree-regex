@@ -953,10 +953,36 @@ For any state
 \end_inset
 
  we define 
-\begin_inset Formula $E(R)$
+\begin_inset Formula $E(R)=\bigcup_{(r,t)\in R}e(q,t)$
 \end_inset
 
- to be the collection of states
+ to be a set of pairs.
+ The first elements of the pairs are the states that can be reached from
+ 
+\begin_inset Formula $R$
+\end_inset
+
+ by going along only 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+-arrows, including the members of 
+\begin_inset Formula $R$
+\end_inset
+
+ themselves.
+ The second element of each pair denotes the memory locations of all tags
+ for their corresponding NFA state.
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Still a bit cryptic.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Definition
@@ -967,38 +993,52 @@ status open
 
 \begin_layout LyX-Code
 Name:   
-\begin_inset Formula $\bar{e}(q,t)$
+\begin_inset Formula $e(q,t)$
 \end_inset
 
 
 \end_layout
 
+\begin_layout LyX-Code
+Global variables: a result list 
+\begin_inset Formula $R$
+\end_inset
+
+ (initially empty), 
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+integer counter 
+\begin_inset Formula $c$
+\end_inset
+
+ (initially 
+\begin_inset Formula $0$
+\end_inset
+
+)
+\end_layout
+
+\end_deeper
 \begin_layout LyX-Code
 Input:  NFA state 
 \begin_inset Formula $q$
 \end_inset
 
-, list 
+, list of integers 
 \begin_inset Formula $t$
 \end_inset
 
-, set 
-\begin_inset Formula $R$
-\end_inset
 
- (initially empty)
 \end_layout
 
 \begin_layout LyX-Code
-Output: set of tagged fingers that can be reached from 
-\begin_inset Formula $q$
-\end_inset
-
- united with 
+Output: 
 \begin_inset Formula $R$
 \end_inset
 
-
+ is the new DFA state
 \end_layout
 
 \begin_layout LyX-Code
@@ -1014,15 +1054,22 @@ return
 \end_layout
 
 \begin_layout LyX-Code
-For all 
-\begin_inset Formula $\epsilon$
-\end_inset
-
--reachable states 
+For all NFA states 
 \begin_inset Formula $q'$
 \end_inset
 
- do
+ that can be reached from 
+\begin_inset Formula $q$
+\end_inset
+
+ by traveling along exactly one 
+\end_layout
+
+\begin_layout LyX-Code
+\begin_inset Formula $\epsilon$
+\end_inset
+
+-arrow do
 \end_layout
 
 \begin_deeper
@@ -1096,26 +1143,18 @@ let
 \end_inset
 
  be 
-\begin_inset Formula $[t_{1},\dots,t_{k-1},z,t_{k+1},\dots,t_{n}]$
+\begin_inset Formula $[t_{1},\dots,t_{k-1},c,t_{k+1},\dots,t_{n}]$
 \end_inset
 
-, where 
-\begin_inset Formula $z\in\naturals$
-\end_inset
 
- is unused.
 \end_layout
 
 \begin_layout LyX-Code
-It is unused if it doesn't yet occur in any DFA state,
-\end_layout
-
-\begin_layout LyX-Code
-or any 
-\begin_inset Formula $t'$
+increment 
+\begin_inset Formula $c$
 \end_inset
 
- being created.
+
 \end_layout
 
 \begin_layout LyX-Code
@@ -1128,7 +1167,7 @@ set
 \end_inset
 
 
-\begin_inset Formula $\bar{e}(q',t',R)$
+\begin_inset Formula $e(q',t')$
 \end_inset
 
 
@@ -1150,7 +1189,7 @@ set
 \end_inset
 
 
-\begin_inset Formula $\bar{e}(q',t,R)$
+\begin_inset Formula $e(q',t)$
 \end_inset
 
 
@@ -1175,7 +1214,17 @@ end if
 \begin_inset Formula $R'$
 \end_inset
 
- taking precedence.
+ taking precedence:
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Are conflicts still solved?
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout LyX-Code
@@ -1231,13 +1280,20 @@ Compute the closure of state
 
 \end_layout
 
-\begin_layout Plain Layout
+\end_inset
+
 
 \end_layout
 
+\begin_layout Definition
+\begin_inset Formula 
+\[
+\delta^{\star}(R,a)=\{q\in Q:q\in E(\delta(r,a))\text{ for some }r\in R\}
+\]
+
 \end_inset
 
-=
+
 \end_layout
 
 \begin_layout Section
