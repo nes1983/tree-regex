@@ -7,7 +7,7 @@ import static org.mockito.Mockito.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +20,7 @@ import java.util.TreeMap;
 import org.junit.Before;
 import org.junit.Test;
 
+import automaton.core.TNFAToTDFA.DFAState;
 import automaton.core.Tag.MarkerTag;
 import automaton.core.TransitionTable.RealTransitionTable.TNFATransitionTable;
 import automaton.core.TransitionTable.RealTransitionTable.TNFATransitionTable.Builder;
@@ -144,14 +145,14 @@ interface TransitionTable {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		@Test
 		public void testBuilder() {
-			final Map q0 = mock(Map.class);
-			final Map q1 = mock(Map.class);
+			final DFAState q0 = mock(DFAState.class);
+			final DFAState q1 = mock(DFAState.class);
 
 			builder.addTransition(q0, new InputRange('a', 'c'), q1,
 					(List) Collections.emptyList());
 
 			final TDFATransitionTable dfa = builder.build();
-			assertThat(dfa.toString(), is("q0-a-c -> q1"));
+			assertThat(dfa.toString(), is("q0-a-c -> q1 []\n"));
 			final NextState pr = dfa.newStateAndInstructions(0, 'b');
 			assertThat(pr.getNextState(), is(1));
 			assertThat(pr.getInstructions(), is(Collections.EMPTY_LIST));
@@ -408,9 +409,9 @@ interface TransitionTable {
 			static class Mapping {
 				int lastCreatedState = -1;
 
-				final Map<Map<State, SortedSet<MapItem>>, Integer> mapping = new HashMap<>();
+				final Map<DFAState, Integer> mapping = new LinkedHashMap<>();
 
-				public int lookup(final Map<State, SortedSet<MapItem>> state) {
+				public int lookup(final DFAState state) {
 					final Integer to = mapping.get(state);
 					if (to != null) {
 						return to;
@@ -418,6 +419,20 @@ interface TransitionTable {
 					final int next = next();
 					mapping.put(state, next);
 					return next;
+				}
+
+				public int lookup(final Map<State, SortedSet<MapItem>> state) {
+					if (true) {
+						throw new RuntimeException("deprecated");
+						// final Integer to = mapping.get(state);
+						// if (to != null) {
+						// return to;
+						// }
+						// final int next = next();
+						// mapping.put(state, next);
+						// return next;
+					}
+					return 0;
 				}
 
 				int next() {
@@ -428,13 +443,11 @@ interface TransitionTable {
 			final Mapping mapping = new Mapping();
 			final List<Entry> transitions = new ArrayList<>();
 
-			public void addTransition(final Map<State, SortedSet<MapItem>> fromState,
-					final InputRange inputRange,
-					final Map<State, SortedSet<MapItem>> newState,
-					final List<Instruction> instructions) {
+			public void addTransition(final DFAState t, final InputRange inputRange,
+					final DFAState newState, final List<Instruction> instructions) {
 
 				final Entry e = new Entry(inputRange.getFrom(), inputRange.getTo(),
-						instructions, mapping.lookup(fromState), mapping.lookup(newState));
+						instructions, mapping.lookup(t), mapping.lookup(newState));
 				transitions.add(e);
 			}
 

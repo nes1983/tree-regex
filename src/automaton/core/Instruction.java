@@ -63,14 +63,23 @@ interface Instruction {
 			return ++id;
 		}
 
+		public Instruction reorder(final int i, final int j) {
+			throw new RuntimeException("Not implemented");
+		}
+
 		public Instruction reorder(final MapItem from, final MapItem to) {
 			return CopyInstruction.make(lookup(from.getTag()), from.getPos(),
 					lookup(to.getTag()), to.getPos());
 		}
 
+		public Instruction storePos(final int i) {
+			throw new RuntimeException("Not implemented");
+		}
+
 		public Instruction storePos(final MapItem mapItem) {
 			return SetInstruction.make(lookup(mapItem.getTag()), mapItem.getPos());
 		}
+
 	}
 
 	static class SetInstruction implements Instruction {
