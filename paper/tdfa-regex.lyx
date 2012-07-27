@@ -1380,12 +1380,24 @@ name "sec:TNFA-with-hierarchical"
 \end_layout
 
 \begin_layout Standard
+A run is a pair 
+\begin_inset Formula $(a,b)\in\naturals^{2}$
+\end_inset
+
+, where 
+\begin_inset Formula $a$
+\end_inset
+
+ stands for the starting position of a run in a string,
+\end_layout
+
+\begin_layout Standard
 The overall idea is simple: whenever the TDFA is reading in a run of characters
  that belong to a capture group, we compare the currently read run to the
  previously best one.
- For example, when the TDFA produced by (?:(a*)b)* reads in the string aabaaab,
+ For example, when the TDFA produced by ((a+)b|a)+ reads in the string aabaaa,
  it will proceed as follows.
- Upon reading the first b, it keeps the run 
+ Upon reading b, it keeps the run 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1393,9 +1405,10 @@ aa
 \begin_inset Quotes erd
 \end_inset
 
- as the currently best match for the only non-trivial capture group of the
- regex, since the capture group had no better match before that.
- Upon reading the second b, it will compare the now current run 
+ as the currently best match for the inner capture group of the regex, since
+ that capture group had no better match before that.
+ Then it will try to generate a longer match for this capture group, reading
+ 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1403,7 +1416,16 @@ aaa
 \begin_inset Quotes erd
 \end_inset
 
- to the previous one, 
+, but since there is no 
+\begin_inset Quotes eld
+\end_inset
+
+b
+\begin_inset Quotes erd
+\end_inset
+
+ in the end of the string, it will not commit, therefore leaving the best
+ match at 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1412,7 +1434,31 @@ aa
 \end_inset
 
 .
- It will decide that the second one is longer, and choose that instead.
+ On the other hand, if the string was indeed 
+\begin_inset Quotes eld
+\end_inset
+
+aabaaab
+\begin_inset Quotes erd
+\end_inset
+
+, the commit would take place and since 
+\begin_inset Quotes eld
+\end_inset
+
+aaa
+\begin_inset Quotes erd
+\end_inset
+
+ is longer than 
+\begin_inset Quotes eld
+\end_inset
+
+aa
+\begin_inset Quotes erd
+\end_inset
+
+, the commit would overwrite the old one.
 \begin_inset Note Note
 status collapsed
 
@@ -1436,25 +1482,96 @@ hierarchical commits
 \end_inset
 
  into the TDFA.
- We add hierarchical commits to the transition table of the TDFA, which
- usually contains the information, into which state the TDFA should change
- for any given state and input, plus a set of instructions that may be executed
- to remember the capture group positions.
- We introduce the new instruction 
-\begin_inset Quotes eld
-\end_inset
-
-commit(captureGroup, from, to)
-\begin_inset Quotes erd
-\end_inset
-
+ Since capture groups are nested, they form a tree.
+ Every node of this tree stands for one capture group, and we shall call
+ it a 
+\emph on
+hierarchy node
+\emph default
 .
- It has the following semantics:
+ In it, we store all runs that this capture group matches.
+ The subnodes of a hierarchy nodes correspond to the submatches of its capture
+ group.We will shortly discuss how to construct a TDFA that includes instructions
+ that 
+\emph on
+commit
+\emph default
+ submatches into the hierarchy nodes..
+ Once we have the instructions, during interpretation of the TDFA, whenever
+ we encounter an input character that closes a capture group, the TDFA will
+ 
+\emph on
+commit
+\emph default
+ that capture group.
+ To commit a substring into a hierarchy node has the following semantics.
+\end_layout
+
+\begin_layout Standard
+A hierarchy node, as a tree node, has a corresponding subtree.
+ The data in this subtree represents precisely the subtree of the AST that
+ is currently being matched.
+ Upon commit of the hierarchy node, it constructs this AST subtree, and
+ stores it as a previous match.
+ Iteratively, this produces all matches of all capture groups.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename graphs/lehrer_match.svg
+	width 100text%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename graphs/lehrer_after.svg
+	width 100text%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Matching 
+\family typewriter
+(
+\backslash
+w+) (
+\backslash
+w+)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
 \begin_inset Note Comment
-status collapsed
+status open
 
 \begin_layout Plain Layout
 if the current set of characters compare the current reading with the previously
