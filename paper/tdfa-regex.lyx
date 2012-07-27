@@ -86,11 +86,23 @@ posix
  it can lead to unintuitive matches.
  For regexp
 \family typewriter
- (?:(a*)b)+
+ ((a*)b)+
 \family default
  and string 
 \family typewriter
-aaabb,
+aaabb
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+
+\family typewriter
+"aaabb" =~ "((a*)b)+" :: [[String]]
+\end_layout
+
+\end_inset
+
+,
 \family default
  one might expect to the subgroup to match 
 \family typewriter
@@ -285,6 +297,22 @@ reference "sec:TNFA-with-hierarchical"
 \end_inset
 
  can be understood more easily.
+\end_layout
+
+\begin_layout Subsection
+Motivation
+\end_layout
+
+\begin_layout Standard
+"Tom Lehrer Tel 007 -" =~ "^([a-zA-Z ]+) ((Tel [0-9
+\backslash
+
+\backslash
+-]+|
+\backslash
+
+\backslash
+-) ?)*" :: [[String]]
 \end_layout
 
 \begin_layout Section
@@ -1022,12 +1050,8 @@ integer counter
 
 \end_deeper
 \begin_layout LyX-Code
-Input:  NFA state 
-\begin_inset Formula $q$
-\end_inset
-
-, list of integers 
-\begin_inset Formula $t$
+Input:  DFA state 
+\begin_inset Formula $Q$
 \end_inset
 
 
@@ -1042,15 +1066,35 @@ Output:
 \end_layout
 
 \begin_layout LyX-Code
-return 
-\begin_inset Formula $R$
+
+\end_layout
+
+\begin_layout LyX-Code
+For all 
+\begin_inset Formula $(q',t')\in AARON!$
 \end_inset
 
- if 
-\begin_inset Formula $q\in R$
+, where 
+\begin_inset Formula $q'$
 \end_inset
 
+ is reached by a depth first search starting from all 
+\begin_inset Formula $q$
+\end_inset
 
+ where 
+\begin_inset Formula $(q,t)\in Q$
+\end_inset
+
+ that are reached by depth first search along 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+-arrows, starting from 
+\begin_inset Formula $q$
+\end_inset
+
+ 
 \end_layout
 
 \begin_layout LyX-Code
@@ -1121,7 +1165,35 @@ end if
 \end_layout
 
 \begin_layout LyX-Code
-if the transition from 
+if 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\backslash
+bigcup_{(r,t)
+\backslash
+in R}
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+the transition from 
 \begin_inset Formula $q$
 \end_inset
 
