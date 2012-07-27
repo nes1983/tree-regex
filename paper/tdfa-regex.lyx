@@ -304,7 +304,102 @@ Motivation
 \end_layout
 
 \begin_layout Standard
-"Tom Lehrer Tel 007 -" =~ "^([a-zA-Z ]+) ((Tel [0-9
+This is the age of big data, and the first step of processing big data is
+ often to parse strings.
+ As an example, consider log files..
+ What makes data huge is typically repetition.
+ As Jacobs
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Jacobs2009"
+
+\end_inset
+
+ noted, 
+\begin_inset Quotes eld
+\end_inset
+
+What makes most big data big is repeated observations over time and/ or
+ space,
+\begin_inset Quotes erd
+\end_inset
+
+ and thus log files grow large frequently.
+ At the same time, they provide important insight into the process that
+ they are logging, so their parsing and understanding is important.
+ 
+\end_layout
+
+\begin_layout Standard
+Regular expressions make for scalable and efficient lightweight parsers.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Karttunen1996"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+Regular expression's parsing abilities have evoked Meiners to declare that
+ for intrusion detection, 
+\begin_inset Quotes eld
+\end_inset
+
+fast and scalable RE matching is now a core network security issue.
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Meiners2010"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For example, Arasu et al.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Arasu2012"
+
+\end_inset
+
+ demonstrate how regular expressions are used in Bing to validate data,
+ by checking whether the names of digital cameras in their database are
+ valid.
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Parsing example!
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The posix default is for matches to be as long as possible.
+ This makes sense in the context of lightweight parsing: in case there are
+ many ways to match subgroups, the shortest ones are often degenerate.
+ As an example, parsing a list of names with several telephone numbers for
+ each name might contain a 
+\begin_inset Quotes eld
+\end_inset
+
+-
+\begin_inset Quotes erd
+\end_inset
+
+ to indicate a missing phone number.
+ Now, if we parse the telephone numbers of Tom Lehrer using regular expressions,
+ "Tom Lehrer Tel 007 -" =~ "^([a-zA-Z ]+) ((Tel [0-9
 \backslash
 
 \backslash
@@ -312,7 +407,38 @@ Motivation
 \backslash
 
 \backslash
--) ?)*" :: [[String]]
+-) ?)*", we find that his telephone number is 
+\begin_inset Quotes eld
+\end_inset
+
+-
+\begin_inset Quotes erd
+\end_inset
+
+, whereas 
+\begin_inset Quotes eld
+\end_inset
+
+007
+\begin_inset Quotes erd
+\end_inset
+
+ would clearly be the better match.
+ 
+\end_layout
+
+\begin_layout Standard
+Hierarchical commits help the developer avoid degenerate matches by prefering
+ longer matches, and lead to more intuitive subgroup matches.
+ At the top level, posix prescribes to match the leftmost longest match.
+ At the capture group level, posix prescribes the last match, regardless
+ of size.
+ Hierarchical commits, instead, choose the longest.
+ As an extension, they can even be used to extract 
+\emph on
+all
+\emph default
+ matches.
 \end_layout
 
 \begin_layout Section

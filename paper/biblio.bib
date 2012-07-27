@@ -2,12 +2,89 @@
 %% http://bibdesk.sourceforge.net/
 
 
-%% Created for Niko Schwarz at 2012-07-19 12:06:15 +0200 
+%% Created for Niko Schwarz at 2012-07-27 21:08:59 +0200 
 
 
 %% Saved with string encoding Unicode (UTF-8) 
 
 
+
+@inproceedings{Meiners2010,
+	Abstract = {Regular expression ({RE}) matching is a core component of deep packet inspection in modern networking and security devices. In this paper, we propose the first hardware-based {RE} matching approach that uses Ternary Content Addressable Memories ({TCAMs}), which are off-the-shelf chips and have been widely deployed in modern networking devices for packet classification. We propose three novel techniques to reduce {TCAM} space and improve {RE} matching speed: transition sharing, table consolidation, and variable striding. We tested our techniques on 8 real-world {RE} sets, and our results show that small {TCAMs} can be used to store large {DFAs} and achieve potentially high {RE} matching throughtput. For space, we were able to store each of the corresponding 8 {DFAs} with as many as 25,000 states in a {0.59Mb} {TCAM} chip where the number of {TCAM} bits required per {DFA} state were 12, 12, 12, 13, 14, 26, 28, and 42. Using a different {TCAM} encoding scheme that facilitates processing multiple characters per transition, we were able to achieve potential {RE} matching throughputs of between 10 and 19 Gbps for each of the 8 {DFAs} using only a single 2.36 Mb {TCAM} chip.},
+	Address = {Berkeley, CA, USA},
+	Author = {Meiners, Chad R. and Patel, Jignesh and Norige, Eric and Torng, Eric and Liu, Alex X.},
+	Booktitle = {Proceedings of the 19th USENIX conference on Security},
+	Citeulike-Article-Id = {10953053},
+	Citeulike-Linkout-0 = {http://portal.acm.org/citation.cfm?id=1929831},
+	Date-Added = {2012-07-27 19:08:58 +0000},
+	Date-Modified = {2012-07-27 19:08:58 +0000},
+	Isbn = {888-7-6666-5555-4},
+	Keywords = {regex},
+	Location = {Washington, DC},
+	Pages = {8},
+	Posted-At = {2012-07-27 20:08:51},
+	Priority = {2},
+	Publisher = {USENIX Association},
+	Series = {USENIX Security'10},
+	Title = {Fast regular expression matching using small {TCAMs} for network intrusion detection and prevention systems},
+	Url = {http://portal.acm.org/citation.cfm?id=1929831},
+	Year = {2010},
+	Bdsk-Url-1 = {http://portal.acm.org/citation.cfm?id=1929831}}
+
+@inproceedings{Karttunen1996,
+	Abstract = {Many of the processing steps in natural language engineering can be performed using finite state transducers. An optimal way to create such transducers is to compile them from regular expressions. This paper is an introduction to the regular expression calculus, extended with certain operators that have proved very useful in natural language applications ranging from tokenization to light parsing. The examples in the paper illustrate in concrete detail some of these applications.},
+	Author = {Karttunen, L. and Chanod, J. P. and Grefenstette, G. and Schiller, A. and February, Received},
+	Booktitle = {Natural Language Engineering},
+	Citeulike-Article-Id = {10953045},
+	Citeulike-Linkout-0 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.28.4880},
+	Date-Added = {2012-07-27 19:01:06 +0000},
+	Date-Modified = {2012-07-27 19:01:46 +0000},
+	Keywords = {regex},
+	Pages = {305--328},
+	Posted-At = {2012-07-27 20:01:01},
+	Priority = {2},
+	Title = {Regular Expressions for Language Engineering},
+	Url = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.28.4880},
+	Year = {1996},
+	Bdsk-Url-1 = {http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.28.4880}}
+
+@article{Arasu2012,
+	Author = {Arvind Arasu and Surajit Chaudhuri and Zhimin Chen and Kris Ganjam and Raghav Kaushik and Vivek R. Narasayya},
+	Bibsource = {DBLP, http://dblp.uni-trier.de},
+	Date-Added = {2012-07-27 16:19:24 +0000},
+	Date-Modified = {2012-07-27 16:19:36 +0000},
+	Ee = {http://sites.computer.org/debull/A12june/cleaning.pdf},
+	Journal = {IEEE Data Eng. Bull.},
+	Number = {2},
+	Pages = {14-23},
+	Title = {Experiences with using Data Cleaning Technology for Bing Services},
+	Volume = {35},
+	Year = {2012}}
+
+@article{Jacobs2009,
+	Abstract = {Scale up your datasets enough and your apps come undone. What are the typical problems and where do the bottlenecks surface?},
+	Address = {New York, NY, USA},
+	Author = {Jacobs, Adam},
+	Citeulike-Article-Id = {5249602},
+	Citeulike-Linkout-0 = {http://portal.acm.org/citation.cfm?id=1536616.1536632},
+	Citeulike-Linkout-1 = {http://dx.doi.org/10.1145/1536616.1536632},
+	Date-Added = {2012-07-27 15:44:18 +0000},
+	Date-Modified = {2012-07-27 15:44:18 +0000},
+	Doi = {10.1145/1536616.1536632},
+	Issn = {0001-0782},
+	Journal = {Commun. ACM},
+	Keywords = {regex},
+	Month = aug,
+	Number = {8},
+	Pages = {36--44},
+	Posted-At = {2012-07-27 16:43:22},
+	Priority = {2},
+	Publisher = {ACM},
+	Title = {The pathologies of big data},
+	Url = {http://dx.doi.org/10.1145/1536616.1536632},
+	Volume = {52},
+	Year = {2009},
+	Bdsk-Url-1 = {http://dx.doi.org/10.1145/1536616.1536632}}
 
 @book{Sipser2005,
 	Abstract = {{"Intended as an upper-level undergraduate or introductory graduate text in computer science theory," this book lucidly covers the key concepts and theorems of the theory of computation. The presentation is remarkably clear; for example, the "proof idea," which offers the reader an intuitive feel for how the proof was constructed, accompanies many of the theorems and a proof. <I>Introduction to the Theory of Computation</I> covers the usual topics for this type of text plus it features a solid section on complexity theory--including an entire chapter on space complexity. The final chapter introduces more advanced topics, such as the discussion of complexity classes associated with probabilistic algorithms.} {This highly anticipated revision builds upon the strengths of the previous edition. Sipser's candid, crystal-clear style allows students at every level to understand and enjoy this field.}},
