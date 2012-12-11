@@ -1291,35 +1291,7 @@ end if
 \end_layout
 
 \begin_layout LyX-Code
-if 
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\strikeout off
-\uuline off
-\uwave off
-\noun off
-\color none
-
-\backslash
-bigcup_{(r,t)
-\backslash
-in R}
-\family default
-\series default
-\shape default
-\size default
-\emph default
-\bar default
-\strikeout default
-\uuline default
-\uwave default
-\noun default
-\color inherit
-the transition from 
+if the transition from 
 \begin_inset Formula $q$
 \end_inset
 
