@@ -21,6 +21,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ch.unibe.scg.regex.Tag.MarkerTag;
+import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 
 class TNFAToTDFA {
@@ -431,7 +432,7 @@ class TNFAToTDFA {
   Map<State, SortedSet<MapItem>> closure(final Map<State, SortedSet<MapItem>> S) {
     final Deque<Triple> stack = new ArrayDeque<>();
     for (final Entry<State, SortedSet<MapItem>> pr : S.entrySet()) {
-      stack.push(new Triple(pr.getKey(), 0, pr.getValue()));
+      stack.push(new Triple(pr.getKey(), Priority.NORMAL, pr.getValue()));
     }
     final NavigableSet<Triple> closure = initClosure(S);
     while (!stack.isEmpty()) {
@@ -466,7 +467,7 @@ class TNFAToTDFA {
 
         {
           final State u = transition.getState();
-          final Triple fromElement = new Triple(u, Integer.MIN_VALUE, null);
+          final Triple fromElement = new Triple(u, Priority.NORMAL, null);
           final Triple toElement = new Triple(u, transition.getPriority(), null);
           final SortedSet<Triple> removeThem = closure.subSet(fromElement, toElement);
           closure.removeAll(removeThem);
@@ -474,7 +475,7 @@ class TNFAToTDFA {
 
         {
           final State u = transition.getState();
-          final int priority = transition.getPriority();
+          final Priority priority = transition.getPriority();
           final Triple t = new Triple(u, priority, Collections.unmodifiableSortedSet(kk));
           if (!closure.contains(t)) {
             closure.add(t);
@@ -597,10 +598,10 @@ class TNFAToTDFA {
         final State qDash = triple.state;
 
         // Step 1.
-        if (R.containsKey(qDash) && triple.priority == LOW) {
+        if (R.containsKey(qDash) && triple.priority.equals(Priority.LOW)) {
           continue nextTriple;
         } else if (R.containsKey(qDash)) {
-          assert triple.priority == HIGH;
+          assert triple.priority.equals(Priority.NORMAL);
         }
 
         // Step 2.
@@ -682,7 +683,7 @@ class TNFAToTDFA {
   NavigableSet<Triple> initClosure(final Map<State, SortedSet<MapItem>> S) {
     final NavigableSet<Triple> closure = new TreeSet<>();
     for (final Entry<State, SortedSet<MapItem>> pr : S.entrySet()) {
-      closure.add(new Triple(pr.getKey(), 0, pr.getValue()));
+      closure.add(new Triple(pr.getKey(), Priority.NORMAL, pr.getValue()));
     }
     return closure;
   }
@@ -892,10 +893,10 @@ class TNFAToTDFA {
 
 class Triple implements Comparable<Triple> {
   public final SortedSet<MapItem> mapItems;
-  public final int priority;
+  public final Priority priority;
   public final State state;
 
-  public Triple(final State state, final int priority, final SortedSet<MapItem> mapItems) {
+  public Triple(final State state, final Priority priority, final SortedSet<MapItem> mapItems) {
     this.state = state;
     this.priority = priority;
     this.mapItems = mapItems;
@@ -906,7 +907,7 @@ class Triple implements Comparable<Triple> {
     if (cmp != 0) {
       return cmp;
     }
-    return Integer.compare(priority, o.priority);
+    return priority.compareTo(o.priority);
   }
 
   @Override
@@ -946,7 +947,7 @@ class Triple implements Comparable<Triple> {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((mapItems == null) ? 0 : mapItems.hashCode());
-    result = prime * result + priority;
+    result = prime * result + ((priority == null) ? 0 : priority.hashCode());
     result = prime * result + ((state == null) ? 0 : state.hashCode());
     return result;
   }
