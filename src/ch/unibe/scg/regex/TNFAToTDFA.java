@@ -380,10 +380,6 @@ class TNFAToTDFA {
 
   }
 
-  private static final int HIGH = 0;
-
-  private static final int LOW = 0;
-
   public static TNFAToTDFA make(final TNFA tnfa) {
     return new TNFAToTDFA(tnfa);
   }

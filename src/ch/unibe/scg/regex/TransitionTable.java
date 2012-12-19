@@ -2,7 +2,6 @@ package ch.unibe.scg.regex;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,10 +21,8 @@ import org.junit.Test;
 
 import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
 import ch.unibe.scg.regex.Tag.MarkerTag;
-import ch.unibe.scg.regex.TransitionTable.RealTransitionTable;
-import ch.unibe.scg.regex.TransitionTable.RealTransitionTable.TNFATransitionTable;
-import ch.unibe.scg.regex.TransitionTable.RealTransitionTable.TNFATransitionTable.Builder;
 import ch.unibe.scg.regex.TransitionTable.TDFATransitionTable.Builder.Entry;
+import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 
 /**
@@ -164,14 +161,14 @@ interface TransitionTable {
             new TreeMap<>();
 
         public void addEndTagTransition(final Collection<State> froms, final State to,
-            final CaptureGroup captureGroup, final int priority) {
+            final CaptureGroup captureGroup, final Priority priority) {
           for (final State from : froms) {
             put(from, InputRange.EPSILON, to, priority, captureGroup.getEndTag());
           }
         }
 
         public void addStartTagTransition(final Collection<State> froms, final State to,
-            final CaptureGroup cg, final int priority) {
+            final CaptureGroup cg, final Priority priority) {
           for (final State from : froms) {
             put(from, InputRange.EPSILON, to, priority, cg.getStartTag());
           }
@@ -189,7 +186,7 @@ interface TransitionTable {
         }
 
         public void put(final State startingState, final InputRange range, final State endingState,
-            final int priority, final Tag tag) {
+            final Priority priority, final Tag tag) {
           // TODO Some overlapping tests
           assert startingState != null && range != null;
           final Pair<State, InputRange> key = new Pair<>(startingState, range);
@@ -345,6 +342,7 @@ interface TransitionTable {
           return next;
         }
 
+        @Deprecated
         public int lookup(final Map<State, SortedSet<MapItem>> state) {
           if (true) {
             throw new RuntimeException("deprecated");

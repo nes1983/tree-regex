@@ -15,6 +15,9 @@ import java.util.TreeSet;
 import org.junit.Before;
 import org.junit.Test;
 
+import ch.unibe.scg.regex.TransitionTriple.Priority;
+
+
 @SuppressWarnings("javadoc")
 public final class IntegrationTest {
   TNFAToTDFA nfa2dfa;
@@ -43,13 +46,13 @@ public final class IntegrationTest {
     when(tnfa.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
     when(tnfa.getInitialState()).thenReturn(s0);
     when(tnfa.availableTransitionsFor(eq(s0), isNull(Character.class))).thenReturn(
-        Arrays.asList(new TransitionTriple(s1, 1, t0), new TransitionTriple(s0, 0, Tag.NONE)));
+        Arrays.asList(new TransitionTriple(s1, Priority.NORMAL, t0), new TransitionTriple(s0,
+            Priority.LOW, Tag.NONE)));
     when(tnfa.availableTransitionsFor(eq(s0), eq('a'))).thenReturn(
-        Arrays.asList(new TransitionTriple(s0, 0, Tag.NONE)));
-    when(tnfa.availableTransitionsFor(s1, 'a'))
-        .thenReturn(
-            Arrays.asList(new TransitionTriple(s2, 1, Tag.NONE), new TransitionTriple(s1, 0,
-                Tag.NONE)));
+        Arrays.asList(new TransitionTriple(s0, Priority.LOW, Tag.NONE)));
+    when(tnfa.availableTransitionsFor(s1, 'a')).thenReturn(
+        Arrays.asList(new TransitionTriple(s2, Priority.NORMAL, Tag.NONE), new TransitionTriple(s1,
+            Priority.LOW, Tag.NONE)));
     when(tnfa.availableTransitionsFor(s2, 'a')).thenReturn(new ArrayList());
     when(tnfa.isAccepting(eq(s2))).thenReturn(true);
     when(tnfa.isAccepting(eq(s1))).thenReturn(false);

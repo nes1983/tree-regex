@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import ch.unibe.scg.regex.TransitionTable.RealTransitionTable;
 import ch.unibe.scg.regex.TransitionTable.RealTransitionTable.TNFATransitionTable;
+import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 @SuppressWarnings("javadoc")
 public final class TransitionTableTest {
@@ -35,17 +36,17 @@ public final class TransitionTableTest {
 
     // Creating some transitions
 
-    tb.put(q1, i1, q3, 0, null);
-    tb.put(q1, i3, q7, 0, null);
-    tb.put(q2, i2, q8, 0, null);
-    tb.put(q1, i2, q2, 0, null);
-    tb.put(q3, i3, q1, 0, null);
-    tb.put(q0, i1, q6, 0, null);
-    tb.put(q2, i1, q2, 0, null);
-    tb.put(q0, i2, q5, 0, null);
-    tb.put(q2, i3, q4, 0, null);
-    tb.put(q0, i3, q2, 0, null);
-    tb.put(q3, i2, q1, 0, null);
+    tb.put(q1, i1, q3, Priority.NORMAL, null);
+    tb.put(q1, i3, q7, Priority.NORMAL, null);
+    tb.put(q2, i2, q8, Priority.NORMAL, null);
+    tb.put(q1, i2, q2, Priority.NORMAL, null);
+    tb.put(q3, i3, q1, Priority.NORMAL, null);
+    tb.put(q0, i1, q6, Priority.NORMAL, null);
+    tb.put(q2, i1, q2, Priority.NORMAL, null);
+    tb.put(q0, i2, q5, Priority.NORMAL, null);
+    tb.put(q2, i3, q4, Priority.NORMAL, null);
+    tb.put(q0, i3, q2, Priority.NORMAL, null);
+    tb.put(q3, i2, q1, Priority.NORMAL, null);
     final RealTransitionTable.TNFATransitionTable t = tb.build();
 
     // Verify existing transitions
@@ -88,17 +89,17 @@ public final class TransitionTableTest {
 
     // Creating some transitions
 
-    tb.put(q1, ad, q3, 0, null);
-    tb.put(q1, yz, q7, 0, null);
-    tb.put(q2, ko, q8, 0, null);
-    tb.put(q1, ko, q2, 0, null);
-    tb.put(q3, yz, q1, 0, null);
-    tb.put(q0, ad, q6, 0, null);
-    tb.put(q2, ad, q2, 0, null);
-    tb.put(q0, ko, q5, 0, null);
-    tb.put(q2, yz, q4, 0, null);
-    tb.put(q0, yz, q2, 0, null);
-    tb.put(q3, ko, q1, 0, null);
+    tb.put(q1, ad, q3, Priority.NORMAL, null);
+    tb.put(q1, yz, q7, Priority.NORMAL, null);
+    tb.put(q2, ko, q8, Priority.NORMAL, null);
+    tb.put(q1, ko, q2, Priority.NORMAL, null);
+    tb.put(q3, yz, q1, Priority.NORMAL, null);
+    tb.put(q0, ad, q6, Priority.NORMAL, null);
+    tb.put(q2, ad, q2, Priority.NORMAL, null);
+    tb.put(q0, ko, q5, Priority.NORMAL, null);
+    tb.put(q2, yz, q4, Priority.NORMAL, null);
+    tb.put(q0, yz, q2, Priority.NORMAL, null);
+    tb.put(q3, ko, q1, Priority.NORMAL, null);
     final RealTransitionTable.TNFATransitionTable t = tb.build();
     // Verify existing transitions
 
@@ -127,7 +128,7 @@ public final class TransitionTableTest {
     final State q1 = State.get();
 
     final InputRange ad = InputRange.make('a', 'd');
-    tb.put(q0, ad, q1, 0, null);
+    tb.put(q0, ad, q1, Priority.NORMAL, null);
 
     final RealTransitionTable.TNFATransitionTable t = tb.build();
 
@@ -149,13 +150,14 @@ public final class TransitionTableTest {
     final InputRange ad = InputRange.make('a', 'd');
     final InputRange ko = InputRange.make('k', 'o');
 
-    tb.put(q0, ad, q2, 0, null);
-    tb.put(q1, ko, q3, 0, null);
-    tb.put(q0, ko, q2, 0, null);
+    tb.put(q0, ad, q2, Priority.NORMAL, null);
+    tb.put(q1, ko, q3, Priority.NORMAL, null);
+    tb.put(q0, ko, q2, Priority.NORMAL, null);
 
     final RealTransitionTable.TNFATransitionTable t = tb.build();
-    assertThat(t.toString(),
-        is("{(q0, a-d)=[q2, 0, null], (q0, k-o)=[q2, 0, null], (q1, k-o)=[q3, 0, null]}"));
+    assertThat(
+        t.toString(),
+        is("{(q0, a-d)=[q2, NORMAL, null], (q0, k-o)=[q2, NORMAL, null], (q1, k-o)=[q3, NORMAL, null]}"));
   }
 
 }

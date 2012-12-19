@@ -7,39 +7,36 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import ch.unibe.scg.regex.TransitionTable.RealTransitionTable.TNFATransitionTable;
+import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 
 interface TNFA {
 
   static class RealNFA implements TNFA {
     static class Builder {
-      public static final int DEFAULT = 0;
-      public final static int GREEDY = 0;
-      public final static int NON_GREEDY = Integer.MIN_VALUE;
-
       Set<State> finalStates = new TreeSet<>();
       State initialState;
       TNFATransitionTable.Builder transitionTableBuilder = TNFATransitionTable.builder();
 
       public void addEndTagTransition(final Collection<State> from, final State to,
-          final CaptureGroup captureGroup, final int priority) {
+          final CaptureGroup captureGroup, final Priority priority) {
         transitionTableBuilder.addEndTagTransition(from, to, captureGroup, priority);
       }
 
       public void addStartTagTransition(final Collection<State> from, final State to,
-          final CaptureGroup captureGroup, final int priority) {
+          final CaptureGroup captureGroup, final Priority priority) {
         transitionTableBuilder.addStartTagTransition(from, to, captureGroup, priority);
       }
 
       public void addUntaggedTransition(final InputRange inputRange, final Collection<State> from,
-          final Collection<State> to, final int priority) {
+          final Collection<State> to, final Priority priority) {
         for (final State t : to) {
           addUntaggedTransition(inputRange, from, t, priority);
         }
       }
 
       public void addUntaggedTransition(final InputRange any, final Collection<State> from,
-          final State to, final int priority) {
+          final State to, final Priority priority) {
         assert any != null && from != null && to != null;
         for (final State f : from) {
           addUntaggedTransition(any, f, to, priority);
@@ -47,7 +44,7 @@ interface TNFA {
       }
 
       public void addUntaggedTransition(final InputRange inputRange, final State from,
-          final State to, final int priority) {
+          final State to, final Priority priority) {
         assert from != null;
         assert to != null;
         transitionTableBuilder.put(from, inputRange, to, priority, Tag.NONE);
@@ -72,7 +69,7 @@ interface TNFA {
       }
 
       public void makeUntaggedEpsilonTransitionFromTo(final Collection<State> from,
-          final Collection<State> to, final int priority) {
+          final Collection<State> to, final Priority priority) {
         addUntaggedTransition(InputRange.EPSILON, from, to, priority);
       }
 

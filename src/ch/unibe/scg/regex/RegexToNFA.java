@@ -18,13 +18,13 @@ import ch.unibe.scg.regex.ParserProvider.Node.SetItem;
 import ch.unibe.scg.regex.ParserProvider.Node.Simple;
 import ch.unibe.scg.regex.ParserProvider.Node.Star;
 import ch.unibe.scg.regex.TNFA.RealNFA.Builder;
+import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 
 /**
  * Not thread-safe! Use only from one thread at a time!
  * 
  * @author nes
- * 
  */
 class RegexToNFA {
   static class MiniAutomaton {
@@ -179,7 +179,7 @@ class RegexToNFA {
   MiniAutomaton makeAny(final MiniAutomaton last, final Builder builder) {
     final State a = builder.makeState();
 
-    builder.addUntaggedTransition(InputRange.ANY, last.getFinishing(), a, Builder.DEFAULT);
+    builder.addUntaggedTransition(InputRange.ANY, last.getFinishing(), a, Priority.NORMAL);
 
     return new MiniAutomaton(last.getFinishing(), a);
   }
@@ -189,21 +189,21 @@ class RegexToNFA {
     final MiniAutomaton ret = new MiniAutomaton(last.getFinishing(), a);
 
     b.addUntaggedTransition(InputRange.make(character.getCharacter()), ret.getInitial(), a,
-        Builder.DEFAULT);
+        Priority.NORMAL);
 
     return ret;
   }
 
   MiniAutomaton makeEos(final MiniAutomaton last, final Builder builder) {
     final State a = builder.makeState();
-    builder.addUntaggedTransition(InputRange.EOS, last.getFinishing(), a, Builder.DEFAULT);
+    builder.addUntaggedTransition(InputRange.EOS, last.getFinishing(), a, Priority.NORMAL);
     return new MiniAutomaton(last.getFinishing(), a);
   }
 
   MiniAutomaton makeGroup(final MiniAutomaton last, final Builder builder, final Group group) {
     final CaptureGroup cg = builder.makeCaptureGroup();
     final State startGroup = builder.makeState();
-    builder.addStartTagTransition(last.getFinishing(), startGroup, cg, Builder.DEFAULT);
+    builder.addStartTagTransition(last.getFinishing(), startGroup, cg, Priority.NORMAL);
     final MiniAutomaton startGroupAutomaton = new MiniAutomaton((State) null, startGroup) {
       @Override
       public Collection<State> getInitial() {
@@ -214,7 +214,7 @@ class RegexToNFA {
     final MiniAutomaton body = make(startGroupAutomaton, builder, group.getBody());
 
     final State endGroup = builder.makeState();
-    builder.addEndTagTransition(body.getFinishing(), endGroup, cg, Builder.DEFAULT);
+    builder.addEndTagTransition(body.getFinishing(), endGroup, cg, Priority.NORMAL);
 
     final TaggedMiniAutomaton ret =
         new TaggedMiniAutomaton(last.getFinishing(), endGroup, body.getInitial(),
@@ -225,7 +225,7 @@ class RegexToNFA {
   MiniAutomaton makeInitialMiniAutomaton(final Builder builder) {
     final State init = builder.makeInitialState();
 
-    builder.addUntaggedTransition(InputRange.ANY, init, init, Builder.DEFAULT);
+    builder.addUntaggedTransition(InputRange.ANY, init, init, Priority.NORMAL);
 
     return new MiniAutomaton(init, init);
   }
@@ -280,7 +280,7 @@ class RegexToNFA {
     final MiniAutomaton ret = new MiniAutomaton(last.getFinishing(), f);
 
     builder.makeUntaggedEpsilonTransitionFromTo(inner.getFinishingRepeatHandles(),
-        inner.getBeginRepeatHandle(), Builder.DEFAULT);
+        inner.getBeginRepeatHandle(), Priority.NORMAL);
     return ret;
   }
 }
