@@ -1658,6 +1658,54 @@ The state
 
 \end_layout
 
+\begin_layout Enumerate
+Now, a mapping is searched by comparing the new DFA state 
+\begin_inset Formula $1[0,2],2[0,-1]$
+\end_inset
+
+ to any old states, in our case 
+\begin_inset Formula $1[0,1],2[0,-1]$
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+The memory locations 
+\begin_inset Formula $0$
+\end_inset
+
+ and 
+\begin_inset Formula $-1$
+\end_inset
+
+ can be mapped by the identity map.
+\end_layout
+
+\begin_layout Enumerate
+The memory location 
+\begin_inset Formula $2$
+\end_inset
+
+ in the new state is independent of the others, just as 
+\begin_inset Formula $1$
+\end_inset
+
+ in the old and they appear in the same position and therefore can be mapped.
+ If fixing 
+\begin_inset Formula $2$
+\end_inset
+
+ or 
+\begin_inset Formula $1$
+\end_inset
+
+ in any of the states would create additional constraint, they would possibly
+ make this mapping fail.
+\end_layout
+
+\end_deeper
 \begin_layout Section
 TDFA with hierarchica l commits
 \begin_inset CommandInset label
