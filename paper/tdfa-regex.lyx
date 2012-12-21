@@ -1147,7 +1147,7 @@ status open
 
 \begin_layout LyX-Code
 Name:   
-\begin_inset Formula $e(q,t)$
+\begin_inset Formula $e(q,x)$
 \end_inset
 
 
@@ -1177,7 +1177,11 @@ integer counter
 \end_deeper
 \begin_layout LyX-Code
 Input:  DFA state 
-\begin_inset Formula $Q$
+\begin_inset Formula $q$
+\end_inset
+
+, character to consume 
+\begin_inset Formula $chr$
 \end_inset
 
 
@@ -1191,116 +1195,176 @@ Output:
  is the new DFA state
 \end_layout
 
+\begin_deeper
+\begin_layout Standard
+\begin_inset Formula $R\leftarrow\{\}$
+\end_inset
+
+
+\end_layout
+
+\end_deeper
 \begin_layout LyX-Code
+Initialize empty stack 
+\begin_inset Formula $low$
+\end_inset
+
 
 \end_layout
 
 \begin_layout LyX-Code
-For all 
-\begin_inset Formula $(q',t')\in AARON!$
+Initialize empty stack 
+\begin_inset Formula $high$
 \end_inset
 
-, where 
+
+\end_layout
+
+\begin_layout LyX-Code
+For every transition 
+\begin_inset Formula $t$
+\end_inset
+
+ from any of 
+\begin_inset Formula $Q\in q$
+\end_inset
+
+ to 
 \begin_inset Formula $q'$
 \end_inset
 
- is reached by a depth first search starting from all 
-\begin_inset Formula $q$
+ that consumes 
+\begin_inset Formula $chr$
 \end_inset
 
- where 
-\begin_inset Formula $(q,t)\in Q$
-\end_inset
 
- that are reached by depth first search along 
-\begin_inset Formula $\epsilon$
-\end_inset
-
--arrows, starting from 
-\begin_inset Formula $q$
-\end_inset
-
- 
 \end_layout
 
+\begin_deeper
 \begin_layout LyX-Code
-For all NFA states 
+if 
+\begin_inset Formula $t$
+\end_inset
+
+ has high priority, push 
 \begin_inset Formula $q'$
 \end_inset
 
- that can be reached from 
-\begin_inset Formula $q$
+ to 
+\begin_inset Formula $high$
 \end_inset
 
- by traveling along exactly one 
+, else to 
+\begin_inset Formula $low$
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+
 \end_layout
 
 \begin_layout LyX-Code
-\begin_inset Formula $\epsilon$
+While 
+\begin_inset Formula $high$
 \end_inset
 
--arrow do
+ and 
+\begin_inset Formula $low$
+\end_inset
+
+ are not both empty
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+pop 
+\begin_inset Formula $q'$
+\end_inset
+
+ with store 
+\begin_inset Formula $[l_{1},\dots,l_{n}]$
+\end_inset
+
+ from 
+\begin_inset Formula $high$
+\end_inset
+
+ if possible, else from 
+\begin_inset Formula $low$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+if 
+\begin_inset Formula $q'\in R$
+\end_inset
+
+ jump to start of while loop
+\end_layout
+
+\begin_layout LyX-Code
+add 
+\begin_inset Formula $q'$
+\end_inset
+
+ to 
+\begin_inset Formula $R$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+for all transitions 
+\begin_inset Formula $t$
+\end_inset
+
+ from 
+\begin_inset Formula $q'$
+\end_inset
+
+ to 
+\begin_inset Formula $q''$
+\end_inset
+
+
 \end_layout
 
 \begin_deeper
 \begin_layout LyX-Code
 1.
- Resolve conflicts:
-\end_layout
-
-\begin_layout LyX-Code
-if there is a 
-\begin_inset Formula $(q',\hat{t})\in R$
-\end_inset
-
- 
-\end_layout
-
-\begin_deeper
-\begin_layout LyX-Code
-and the transition from 
-\begin_inset Formula $q$
-\end_inset
-
- to 
+ continue if 
 \begin_inset Formula $q'$
 \end_inset
 
- has negative priority then
+ has been seen:
 \end_layout
 
-\begin_deeper
 \begin_layout LyX-Code
-continue with the next 
-\begin_inset Formula $q'$
+if 
+\begin_inset Formula $q''\in R$
 \end_inset
 
- in the for loop.
- 
-\end_layout
-
-\end_deeper
-\end_deeper
-\begin_layout LyX-Code
-end if
+ jump to start of for loop
 \end_layout
 
 \begin_layout LyX-Code
 2.
- Build closure:
+ Compute new memory locations
 \end_layout
 
 \begin_layout LyX-Code
-if the transition from 
-\begin_inset Formula $q$
+if 
+\begin_inset Formula $t$
 \end_inset
 
- to 
-\begin_inset Formula $q'$
-\end_inset
-
- is tagged with tag 
-\begin_inset Formula $\tau_{k}$
+ is tagged with 
+\begin_inset Formula $\tau_{i}$
 \end_inset
 
 
@@ -1308,36 +1372,7 @@ if the transition from
 
 \begin_deeper
 \begin_layout LyX-Code
-let 
-\begin_inset Formula $t'$
-\end_inset
-
- be 
-\begin_inset Formula $[t_{1},\dots,t_{k-1},c,t_{k+1},\dots,t_{n}]$
-\end_inset
-
-
-\end_layout
-
-\begin_layout LyX-Code
-increment 
-\begin_inset Formula $c$
-\end_inset
-
-
-\end_layout
-
-\begin_layout LyX-Code
-set 
-\begin_inset Formula $R'$
-\end_inset
-
- 
-\begin_inset Formula $\leftarrow$
-\end_inset
-
-
-\begin_inset Formula $e(q',t')$
+\begin_inset Formula $l_{new}\leftarrow[l_{1},\dots,l_{i-1},c,l_{i+1},\dots,l_{n}]$
 \end_inset
 
 
@@ -1350,16 +1385,7 @@ else
 
 \begin_deeper
 \begin_layout LyX-Code
-set 
-\begin_inset Formula $R'$
-\end_inset
-
- 
-\begin_inset Formula $\leftarrow$
-\end_inset
-
-
-\begin_inset Formula $e(q',t)$
+\begin_inset Formula $l_{new}\leftarrow[l_{1},\dots,l_{n}]$
 \end_inset
 
 
@@ -1372,42 +1398,37 @@ end if
 
 \begin_layout LyX-Code
 3.
- add all elements of 
-\begin_inset Formula $R'$
-\end_inset
-
- to 
-\begin_inset Formula $R$
-\end_inset
-
-, overwriting with 
-\begin_inset Formula $R'$
-\end_inset
-
- taking precedence:
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Are conflicts still solved?
+ new store instructions:
 \end_layout
 
-\end_inset
-
+\begin_layout LyX-Code
 
 \end_layout
 
 \begin_layout LyX-Code
-set 
-\begin_inset Formula $R$
+4.
+ Push according to priority of transition:
+\end_layout
+
+\begin_layout LyX-Code
+if 
+\begin_inset Formula $t$
 \end_inset
 
- 
-\begin_inset Formula $\leftarrow$
+ has low priority, push 
+\begin_inset Formula $q''$
 \end_inset
 
+ with 
+\begin_inset Formula $l_{new}$
+\end_inset
 
-\begin_inset Formula $(R'\cup R)\setminus\{(\hat{q},\hat{t})\in R':\exists(\hat{q},\tilde{t})\in R\}$
+ to 
+\begin_inset Formula $low$
+\end_inset
+
+, else to 
+\begin_inset Formula $high$
 \end_inset
 
 
@@ -1416,6 +1437,11 @@ set
 \end_deeper
 \begin_layout LyX-Code
 end for
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+end while
 \end_layout
 
 \begin_layout LyX-Code
@@ -1438,7 +1464,7 @@ return
 \begin_inset Caption
 
 \begin_layout Plain Layout
-Compute the closure of state 
+Compute the follow-up state for DFA state 
 \begin_inset Formula $M$
 \end_inset
 
