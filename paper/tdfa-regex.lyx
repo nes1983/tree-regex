@@ -1492,6 +1492,172 @@ Compute the follow-up state for DFA state
 
 \end_layout
 
+\begin_layout Example
+Computing the next state from the DFA state 
+\begin_inset Formula $(1[0,1],2[0,-1])$
+\end_inset
+
+ in figure X: 
+\end_layout
+
+\begin_layout Enumerate
+Since only 
+\begin_inset Formula $2$
+\end_inset
+
+ has an 
+\begin_inset Formula $b$
+\end_inset
+
+ transition, 
+\begin_inset Formula $high=(3[0,-1])$
+\end_inset
+
+ after the initializing for loop
+\end_layout
+
+\begin_layout Enumerate
+The state 
+\begin_inset Formula $3[0,-1]$
+\end_inset
+
+ is taken from the stack and added to 
+\begin_inset Formula $R$
+\end_inset
+
+, which is now 
+\begin_inset Formula $\{3[0,-1]\}$
+\end_inset
+
+
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+possible optimization: only add if state has non-
+\begin_inset Formula $\epsilon$
+\end_inset
+
+ transitions
+\end_layout
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+The transition 
+\begin_inset Formula $3\rightarrow4$
+\end_inset
+
+ might be analysed first, but is added (with memory 
+\begin_inset Formula $[0,2]$
+\end_inset
+
+) to 
+\begin_inset Formula $low$
+\end_inset
+
+, because for greedy consumption in a 
+\begin_inset Formula $+$
+\end_inset
+
+ operator, the backward way is prefered.
+\end_layout
+
+\begin_layout Enumerate
+Then the transition 
+\begin_inset Formula $3\rightarrow2$
+\end_inset
+
+ is analysed and 
+\begin_inset Formula $2$
+\end_inset
+
+ is added to 
+\begin_inset Formula $high$
+\end_inset
+
+ without changes in the memory.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Now the state 
+\begin_inset Formula $2[0,-1]$
+\end_inset
+
+ is taken from the stack and added to 
+\begin_inset Formula $R$
+\end_inset
+
+, but since it has no 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+ exits, no further steps are taken from here
+\end_layout
+
+\begin_layout Enumerate
+The state 
+\begin_inset Formula $3[0,2]$
+\end_inset
+
+ is next and leads to 
+\begin_inset Formula $4[0,2]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+The state 
+\begin_inset Formula $4[0,2]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $1[0,2]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $1[0,2]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $2[0,2]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $2[0,2]$
+\end_inset
+
+ is however not added to 
+\begin_inset Formula $R$
+\end_inset
+
+, because there is a different 
+\begin_inset Formula $2$
+\end_inset
+
+ state (namely 
+\begin_inset Formula $2[0,-1]$
+\end_inset
+
+) in 
+\begin_inset Formula $R$
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 TDFA with hierarchica l commits
 \begin_inset CommandInset label
