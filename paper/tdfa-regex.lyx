@@ -506,9 +506,15 @@ key "Cox2007"
 
 \begin_layout Standard
 When the taciturn practioners acknowledge each other's work, we can't help
- but disagree almost universally with the characterization of each their
- work.
- Sulzmann calls Kuklewicz's work an 
+ but disagree almost universally with the characterizations they produce.
+ Sulzmann and Lu 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "sulzmann2012regular"
+
+\end_inset
+
+ call Kuklewicz's work an 
 \begin_inset Quotes eld
 \end_inset
 
@@ -537,9 +543,19 @@ key "Pike1987"
 , which is Thompson's NFA with submatch tracking.
  This seems unfair in that Laurikari's allows for far more aggressive reusing
  of old states than what Thompson allows.
- This should lead to Laurikari's TDFA having much fewer states, and therefore
- better performance, than even the undisputed winner of all current Regular
- Expression matching benchmarks: Google's RE2, which uses Pike's algorithm.
+ This should lead to Laurikari's TDFA havingfewer states, and therefore
+ better performance, than even Google's RE2, which uses Pike's algorithm.
+ This is not confirmed by the benchmarks by Sulzmann and Lu 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "sulzmann2012regular"
+
+\end_inset
+
+, but they offer an explanation: in their profiling, they see that all Haskell
+ implementations spend considerable time decoding the input strings.
+ In other words, the measured performance is more of an artifact of the
+ programming environment used.
  
 \end_layout
 
@@ -600,6 +616,23 @@ key "Sedgewick1990"
  not true.
 \end_layout
 
+\begin_layout Standard
+Sulzmann and Lu add to the table a new matching strategy that yields good
+ practical performance, although the theoretical bounds are considerably
+ worse than the state of the art, at 
+\begin_inset Formula $O(n^{2}m)$
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "sulzmann2012regular"
+
+\end_inset
+
+.
+\end_layout
+
 \begin_layout Section
 The TDFA powerset construction algorithm
 \begin_inset CommandInset label
@@ -613,17 +646,17 @@ name "sec:The-TNFA-algorithm"
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\naturals}{\mathbb{N}}
+\newcommand{\naturals}{\mathbb{N}}
 \end_inset
 
 
 \begin_inset FormulaMacro
-\renewcommand{\integers}{\mathbb{Z}}
+\newcommand{\integers}{\mathbb{Z}}
 \end_inset
 
 
 \begin_inset FormulaMacro
-\renewcommand{\pos}{\mathbf{\mathbf{p}}}
+\newcommand{\pos}{\mathbf{\mathbf{p}}}
 \end_inset
 
 Our algorithm is a modification of Laurikari's algorithm 
