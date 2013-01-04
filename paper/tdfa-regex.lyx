@@ -442,6 +442,165 @@ all
 \end_layout
 
 \begin_layout Section
+Related work
+\end_layout
+
+\begin_layout Standard
+While there is no shortage of books discussing the usage of regular expressions,
+ the implementation side of regular expression has not been so lucky.
+ Cox is spot-on when he argues that innovations have repeatedly been ignored
+ and later reinvented 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Cox2007"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+This paper is no exception.
+ The authors of this paper had set out to implement Laurikari's TDFA algorithm
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "laurikari2000nfas"
+
+\end_inset
+
+, only to discover that Laurikari's description of a TDFA is so far from
+ complete that it can rightfully only be called the sketch for an algorithm.
+ Only late in the process did we discover that the blanks had already been
+ filled by Kuklewicz in the course of his implementation of TDFAs in Haskell
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Kuklewicz2007"
+
+\end_inset
+
+.
+ Kuklewicz enshrined his added insight into Haskell library, but never published
+ the algorithm as a whole.
+ If the history of regular expressions is evidence of one thing, it is that
+ source code is a terrible medium to convey algorithms.
+ 
+\end_layout
+
+\begin_layout Standard
+The situation dramatically improved with Cox's simple and concise explanation
+ of regular expression matching 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Cox2007"
+
+\end_inset
+
+.
+ It seems ironic that this well-versed author published his influential
+ work on his website.
+ Although the joke may be on Academia's side.
+\end_layout
+
+\begin_layout Standard
+When the taciturn practioners acknowledge each other's work, we can't help
+ but disagree almost universally with the characterization of each their
+ work.
+ Sulzmann calls Kuklewicz's work an 
+\begin_inset Quotes eld
+\end_inset
+
+implementation
+\begin_inset Quotes erd
+\end_inset
+
+ of Laurikari's algorithm, although Laurikari's algorithm is far too incomplete
+ for that statement to be fair.
+ Laurikari's algorithm is referred to as a POSIX-style automaton.
+ In truth, Laurikari leaves the matching strategy entirely open.
+ It was Kuklewicz that found out how to get POSIX-style matching out of
+ Laurikari's TDFA.
+ 
+\end_layout
+
+\begin_layout Standard
+Cox says that Laurikari's TDFA is a reinvention Pike's published only in
+ code algorithm 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Pike1987"
+
+\end_inset
+
+, which is Thompson's NFA with submatch tracking.
+ This seems unfair in that Laurikari's allows for far more aggressive reusing
+ of old states than what Thompson allows.
+ This should lead to Laurikari's TDFA having much fewer states, and therefore
+ better performance, than even the undisputed winner of all current Regular
+ Expression matching benchmarks: Google's RE2, which uses Pike's algorithm.
+ 
+\end_layout
+
+\begin_layout Standard
+Another mistake that permeates the scarce literature is to call regular
+ expression matching linear.
+ As Sedgewick points out correctly 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Sedgewick1990"
+
+\end_inset
+
+, Thompson's NFA matching is of complexity 
+\begin_inset Formula $O(mn)$
+\end_inset
+
+, where 
+\begin_inset Formula $m$
+\end_inset
+
+ is the size of the input NFA, and 
+\begin_inset Formula $n$
+\end_inset
+
+ is the size of the input string.
+ To call this linear requires to assume 
+\begin_inset Formula $m$
+\end_inset
+
+ to be fix, which we cannot bring ourselves to justify.
+ It may well be true that, at present, 
+\begin_inset Formula $m$
+\end_inset
+
+ tends to be small.
+ But that is a natural consequence of the algorithms not scaling very well
+ with 
+\begin_inset Formula $m$
+\end_inset
+
+.
+ If they did, that would allow for fast feature extracting from text.
+ Therefore, in this paper, we consider the state of the art algorithms to
+ be quadratic, since both 
+\begin_inset Formula $m$
+\end_inset
+
+ and 
+\begin_inset Formula $n$
+\end_inset
+
+ are part of the input to a regular expression matcher.
+ We cannot rule out that a linear algorithm exists, in fact, we hope for
+ it.
+ To insist that regular expression matching is done in linear time is to
+ insist that the optimal algorithm has already been found; that is probably
+ not true.
+\end_layout
+
+\begin_layout Section
 The TDFA powerset construction algorithm
 \begin_inset CommandInset label
 LatexCommand label
@@ -454,17 +613,17 @@ name "sec:The-TNFA-algorithm"
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\newcommand{\naturals}{\mathbb{N}}
+\renewcommand{\naturals}{\mathbb{N}}
 \end_inset
 
 
 \begin_inset FormulaMacro
-\newcommand{\integers}{\mathbb{Z}}
+\renewcommand{\integers}{\mathbb{Z}}
 \end_inset
 
 
 \begin_inset FormulaMacro
-\newcommand{\pos}{\mathbf{\mathbf{p}}}
+\renewcommand{\pos}{\mathbf{\mathbf{p}}}
 \end_inset
 
 Our algorithm is a modification of Laurikari's algorithm 
@@ -1196,7 +1355,7 @@ Output:
 \end_layout
 
 \begin_deeper
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Formula $R\leftarrow\{\}$
 \end_inset
 
@@ -2080,45 +2239,6 @@ Conclusions
 
 \begin_layout Section
 Open questions
-\end_layout
-
-\begin_layout Standard
-The cost of matching an input string of length 
-\begin_inset Formula $n$
-\end_inset
-
- with a regex of length 
-\begin_inset Formula $r$
-\end_inset
-
- is 
-\begin_inset Formula $O(2^{r}+n)$
-\end_inset
-
-.
- Clearly, for small 
-\begin_inset Formula $n$
-\end_inset
-
- and big 
-\begin_inset Formula $r$
-\end_inset
-
-, Thompson's algorithm 
-\begin_inset CommandInset citation
-LatexCommand cite
-after "p. 293"
-key "Sedgewick1990"
-
-\end_inset
-
- at cost 
-\begin_inset Formula $O(nr)$
-\end_inset
-
- is preferable.
- However, it is still an open question whether Thompson's algorithm can
- be adapted to subgroup matching.
 \end_layout
 
 \begin_layout Standard
