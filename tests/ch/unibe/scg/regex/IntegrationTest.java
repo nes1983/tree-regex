@@ -45,6 +45,7 @@ public final class IntegrationTest {
 
     when(tnfa.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
     when(tnfa.getInitialState()).thenReturn(s0);
+    when(tnfa.allTags()).thenReturn(Arrays.asList(Tag.NONE));
     when(tnfa.availableTransitionsFor(eq(s0), isNull(Character.class))).thenReturn(
         Arrays.asList(new TransitionTriple(s1, Priority.NORMAL, t0), new TransitionTriple(s0,
             Priority.LOW, Tag.NONE)));
@@ -104,18 +105,7 @@ public final class IntegrationTest {
   @Test
   public void testConvert() {
     final TDFA tdfa = nfa2dfa.convert();
-    System.out.println(tdfa);
-    assertThat(tdfa.toString(), is(""));
-  }
-
-  @Test
-  public void testReach() {
-    final Map<State, SortedSet<MapItem>> arg = new LinkedHashMap<>();
-    arg.put(s0, new TreeSet<MapItem>());
-    final SortedSet<MapItem> argg = new TreeSet<>();
-    argg.add(new MapItem(t0, 0));
-    arg.put(s1, argg);
-    final Map<State, SortedSet<MapItem>> res = nfa2dfa.reach(arg, 'a');
-    assertThat(res.toString(), is("{q0=[], q2=[MapItem[0, t0]], q1=[MapItem[0, t0]]}"));
+    assertThat(tdfa.toString(),
+        is("q0-a-a -> q1 [1<- pos]\nq1-a-a -> q1 [1<- pos, 1->0]\n\n[0<- pos]"));
   }
 }

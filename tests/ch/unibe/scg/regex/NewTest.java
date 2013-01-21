@@ -64,21 +64,9 @@ public final class NewTest {
   }
 
   @Test
-  public void test() {
-    final DFAState initState = nfa2dfa.convertToDfaState(tnfa.getInitialState());
-    final DFAState res = nfa2dfa.e(initState);
-    assertEquals("q1->[0, -2], q0->[-1, -2]", res.toString());
-  }
-
-  @Test
   public void testInitialState() {
     assertEquals("[t0]", tnfa.allTags().toString());
-    final DFAState converted = nfa2dfa.convertToDfaState(tnfa.getInitialState());
-    assertEquals("", converted.toString());
-    // assertThat(converted.getData(size(), is(1));
-    // final int[] ary = converted.values().iterator().next();
-    // assertEquals("[-1, -2]", Arrays.toString(ary));
-    // final State state = converted.keySet().iterator().next();
-    // assertEquals("q0", state.toString());
+    final DFAState converted = nfa2dfa.makeStartState();
+    assertEquals("q0->[-1, -2], q1->[0, -2]", converted.toString());
   }
 }
