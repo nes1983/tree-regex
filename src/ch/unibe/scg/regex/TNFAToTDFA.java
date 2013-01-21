@@ -417,18 +417,20 @@ class TNFAToTDFA {
     final List<InputRange> ret = new ArrayList<>();
     Collections.sort(ranges);
     final Iterator<InputRange> iter = ranges.iterator();
-    final InputRange last = iter.next();
+    InputRange last = iter.next();
     InputRange cur = null;
     while (iter.hasNext()) {
       cur = iter.next();
       if (last.getTo() < cur.getFrom()) {
         ret.add(last);
+      } else {
+        last = InputRange.make((char) (last.getTo() + 1), cur.getTo());
       }
-      ret.add(new InputRange(last.getFrom(), ((char) (cur.getFrom() - 1))));
+      last = cur;
     }
     assert cur != null;
     ret.add(cur);
-    return ret;
+    return new ArrayList<>(ret);
   }
 
   /**
@@ -571,17 +573,21 @@ class TNFAToTDFA {
     return new DFAState(Collections.unmodifiableMap(initState));
   }
 
-  /** Niko and Aaron's closure. */
-  DFAState e(final Map<State, int[]> startState, final Character a) {
+  /**
+   * Niko and Aaron's closure.
+   * 
+   * @return The next state after state, for input a. If a == null, return the start state.
+   */
+  DFAState e(final Map<State, int[]> state, final Character a) {
     final Map<State, int[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
 
     final Deque<Map.Entry<State, int[]>> stack = new ArrayDeque<>(); // normal priority
     final Deque<Map.Entry<State, int[]>> lowStack = new ArrayDeque<>(); // low priority
 
     if (a == null) { // TODO(nikoschwarz): Beautify.
-      stack.addAll(startState.entrySet());
+      stack.addAll(state.entrySet());
     } else {
-      for (final Entry<State, int[]> pr : startState.entrySet()) {
+      for (final Entry<State, int[]> pr : state.entrySet()) {
         final int[] k = pr.getValue();
         final Collection<TransitionTriple> ts = tnfa.availableTransitionsFor(pr.getKey(), a);
         for (final TransitionTriple t : ts) {

@@ -1,8 +1,5 @@
 package ch.unibe.scg.regex;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,7 +15,6 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
 
 import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
 import ch.unibe.scg.regex.Tag.MarkerTag;
@@ -188,7 +184,10 @@ interface TransitionTable {
       public Collection<InputRange> allInputRanges() {
         final List<InputRange> ret = new ArrayList<>();
         for (final Pair<State, InputRange> range : transitions.keySet()) {
-          ret.add(range.getSecond());
+          final InputRange inputRange = range.getSecond();
+          if (!(inputRange instanceof InputRange.SpecialInputRange)) {
+            ret.add(inputRange);
+          }
         }
         return ret;
       }

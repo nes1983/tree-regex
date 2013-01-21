@@ -28,21 +28,19 @@ class TDFAInterpreter {
   InputRange findInputRange(List<InputRange> ranges, char input) {
     int l = 0;
     int r = ranges.size() - 1;
-    while (l < r) {
+    while (l <= r) {
       final int m = (l + r) / 2;
-      final char splitPoint = ranges.get(m).getFrom();
-      if (splitPoint > input) {
-        l = m + 1;
-      } else {
+      final InputRange splitPoint = ranges.get(m);
+      if (splitPoint.contains(input)) {
+        return splitPoint;
+      } else if (input < splitPoint.getFrom()) {
         r = m - 1;
+      } else {
+        l = m + 1;
       }
     }
 
-    final InputRange ret = ranges.get(l);
-    if (!ret.contains(input)) {
-      return null;
-    }
-    return ret;
+    return null; // Found nothing
   }
 
   public MatchResult interpret(CharSequence input) {
@@ -72,6 +70,10 @@ class TDFAInterpreter {
       }
 
       final DFAState u = tnfa2tdfa.e(t.getData(), a);
+
+      if (u.getData().isEmpty()) { // There is no matching NFA state.
+        return RealMatchResult.NoMatchResult.SINGLETON;
+      }
 
       final BitSet newLocations = tnfa2tdfa.newMemoryLocations(t.getData(), u.getData());
       // TODO(niko): There's a smarter way. You can compute the stores on the fly.

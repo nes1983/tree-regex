@@ -15,14 +15,23 @@ import ch.unibe.scg.regex.ParserProvider.Node.Regex;
 public class IntegrationTest2 {
   TDFAInterpreter tdfaInterpreter;
 
+  private TDFAInterpreter makeInterpreter(String regex) {
+    final Regex parsed = new ParserProvider().regexp().parse(regex);
+    final TNFA tnfa = new RegexToNFA().convert(parsed);
+
+    return new TDFAInterpreter(TNFAToTDFA.make(tnfa));
+  }
+
   String regexp() {
     return "(((a+)b)+c)+";
   }
 
   @Before
   public void setUp() {
+    State.resetCount();
     final Regex parsed = new ParserProvider().regexp().parse(regexp());
     final TNFA tnfa = new RegexToNFA().convert(parsed);
+
     assertThat(tnfa.toString(), is("q0 -> [q9], "
         + "{(q0, ANY)=[q0, NORMAL, NONE, q1, NORMAL, ➀0], " + "(q1, ε)=[q2, NORMAL, ➀1], "
         + "(q2, ε)=[q3, NORMAL, ➀2], " + "(q3, a-a)=[q4, NORMAL, NONE], "
@@ -35,7 +44,39 @@ public class IntegrationTest2 {
   @Test
   public void test() {
     final MatchResult res = tdfaInterpreter.interpret("aabbccaaaa");
-    // assertThat(res.toString(), is(""));
+    assertThat(res.toString(), is(""));
     assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is(""));
+  }
+
+  @Test
+  public void testNoMatch() {
+    final MatchResult res = tdfaInterpreter.interpret("aabc");
+    assertThat(res.toString(), is("NO_MATCH"));
+    assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is(""));
+  }
+
+  @Test
+  public void testTwoRangesAndOnePlus() {
+    assertThat(makeInterpreter("a+b").interpret("ab").toString(), is(""));
+  }
+
+  @Test
+  public void testTwoRangesAndOnePlusNoMatch() {
+    assertThat(makeInterpreter("a+b").interpret("aba").toString(), is("NO_MATCH"));
+  }
+
+  @Test
+  public void testTwoRangesAndTwoPlusNoMatch() {
+    assertThat(makeInterpreter("a+b+").interpret("aba").toString(), is("NO_MATCH"));
+  }
+
+  @Test
+  public void testTwoRangesMatch() {
+    assertThat(makeInterpreter("ab").interpret("ab").toString(), is(""));
+  }
+
+  @Test
+  public void testTwoRangesNoMatch() {
+    assertThat(makeInterpreter("ab").interpret("aba").toString(), is("NO_MATCH"));
   }
 }
