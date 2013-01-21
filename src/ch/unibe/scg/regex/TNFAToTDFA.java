@@ -11,7 +11,6 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -20,13 +19,19 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import ch.unibe.scg.regex.FixedPriorityQueue.Priorizable;
 import ch.unibe.scg.regex.Tag.MarkerTag;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 
 class TNFAToTDFA {
-
   static class DFAState implements Comparable<DFAState> {
+    final static DFAState NO_STATE;
+    static {
+      final Map<State, int[]> e = Collections.emptyMap();
+      NO_STATE = new DFAState(e);
+    }
+
     public static String toString(final Map<State, int[]> states) {
       final StringBuilder sb = new StringBuilder();
       for (final Map.Entry<State, int[]> el : states.entrySet()) {
@@ -86,11 +91,14 @@ class TNFAToTDFA {
     }
 
     boolean isMappable(final DFAState other, final int[] mapping) {
+      if (!this.innerStates.keySet().equals(other.innerStates.keySet())) {
+        return false;
+      }
       Arrays.fill(mapping, -1);
 
       for (final Map.Entry<State, int[]> entry : innerStates.entrySet()) {
         final int[] mine = entry.getValue();
-        final int[] theirs = other.innerStates.get(entry.getValue());
+        final int[] theirs = other.innerStates.get(entry.getKey());
         final boolean success = updateMap(mapping, mine, theirs);
         if (!success) {
           return false;
@@ -130,7 +138,11 @@ class TNFAToTDFA {
     private boolean updateMap(final int[] map, final int[] from, final int[] to) {
       assert from.length == to.length;
       for (int i = 0; i < from.length; i++) {
-        if (map[from[i]] == -1) {
+        if (from[i] < 0 && to[i] < 0) {
+          continue; // Both leave i unspecified: that's fine.
+        } else if (from[i] < 0 && to[i] >= 0) {
+          return false; // Only from specifies the mapping, that won't do.
+        } else if (map[from[i]] == -1) {
           map[from[i]] = to[i];
         } else if (map[from[i]] != to[i]) {
           return false;
@@ -138,7 +150,6 @@ class TNFAToTDFA {
       }
       return true;
     }
-
   }
 
   static enum DFAStateComparator implements Comparator<Map<State, int[]>> {
@@ -377,14 +388,13 @@ class TNFAToTDFA {
     public String toString() {
       return "" + state + "" + Arrays.toString(memoryLocation);
     }
-
   }
 
   public static TNFAToTDFA make(final TNFA tnfa) {
     return new TNFAToTDFA(tnfa);
   }
 
-  private int currentPos = -1;
+  int highestMapping = 0;
 
   final Instruction.InstructionMaker instructionMaker = Instruction.InstructionMaker.get();
 
@@ -397,10 +407,11 @@ class TNFAToTDFA {
     this.tnfa = tnfa;
   }
 
-  Collection<InputRange> allInputRanges() {
+  /** @return All input ranges, sorted */
+  List<InputRange> allInputRanges() {
     final List<InputRange> ranges = new ArrayList<>(tnfa.allInputRanges());
     if (ranges.size() < 2) {
-      return Collections.unmodifiableCollection(ranges);
+      return Collections.unmodifiableList(ranges);
     }
 
     final List<InputRange> ret = new ArrayList<>();
@@ -424,7 +435,9 @@ class TNFAToTDFA {
    * Maps directly to section 4 of the paper. That's why it looks so ugly.
    * 
    * @param S
+   * @deprecated
    */
+  @Deprecated
   Map<State, SortedSet<MapItem>> closure(final Map<State, SortedSet<MapItem>> S) {
     final Deque<Triple> stack = new ArrayDeque<>();
     for (final Entry<State, SortedSet<MapItem>> pr : S.entrySet()) {
@@ -485,13 +498,7 @@ class TNFAToTDFA {
   }
 
   public TDFA convert() {
-    DFAState start;
-    {
-      final State nfaStart = tnfa.getInitialState();
-      start = convertToDfaState(nfaStart);
-    }
-
-    start = e(start);
+    final DFAState start = makeStartState();
 
     final List<Instruction> initializer = makeInitializer(start);
 
@@ -506,23 +513,20 @@ class TNFAToTDFA {
 
       for (final InputRange inputRange : allInputRanges()) {
         final char a = inputRange.getFrom();
-        DFAState u;
 
-        final Map<State, int[]> k = reachable(t.getData(), a);
-        u = e(k);
+        final DFAState u = e(t.getData(), a);
 
-        final List<Instruction> c = new ArrayList<>();
+        final BitSet newLocations = newMemoryLocations(t.getData(), u.getData());
+        // TODO(niko): There's a smarter way. You can compute the stores on the fly.
 
-        final BitSet newLocations = newMemoryLocations(u.getData(), k);
-        System.out.println("k" + k);
-        System.out.println("newLocs: " + newLocations);
-
-        int[] mapping = new int[currentPos];
+        int[] mapping = new int[highestMapping];
         final DFAState mappedState = findMappableState(states, u, mapping);
+
         if (mappedState == null) {
           mapping = null;
         }
 
+        final List<Instruction> c = new ArrayList<>();
         for (int i = newLocations.nextSetBit(0); i >= 0; i = newLocations.nextSetBit(i + 1)) {
           if (mapping != null) {
             c.add(instructionMaker.storePos(mapping[i]));
@@ -533,12 +537,17 @@ class TNFAToTDFA {
 
         DFAState newState;
         if (mappedState != null) {
-          c.addAll(mappingInstructions(mapping, t));
+          c.addAll(mappingInstructions(mapping, u, newLocations));
           newState = mappedState;
         } else {
           states.add(u);
           unmarkedStates.add(u);
           newState = u;
+        }
+
+        // Free up new slots that weren't really needed.
+        if (mappedState != null) {
+          highestMapping -= newLocations.cardinality();
         }
 
         assert newState != null;
@@ -547,19 +556,14 @@ class TNFAToTDFA {
 
         // final Entry<State, SortedSet<MapItem>> smallestFinishing =
         // smallestFinishing(newState);
-        // XXX finishing stuff.
-
+        // TODO(niko): finishing stuff.
       }
-
     }
     return new TDFA(tdfaBuilder.build(), initializer);
-
   }
 
-  /**
-   * Used to create the initial state of the DFA.
-   */
-  DFAState convertToDfaState(final State s) {
+  /** Used to create the initial state of the DFA. */
+  private DFAState convertToDfaState(final State s) {
     final Map<State, int[]> initState = new HashMap<>();
     final int numTags = tnfa.allTags().size();
     final int[] initialMemoryLocations = makeInitialMemoryLocations(numTags);
@@ -567,37 +571,54 @@ class TNFAToTDFA {
     return new DFAState(Collections.unmodifiableMap(initState));
   }
 
-  DFAState e(final DFAState startState) {
-    return e(startState.getData());
-  }
-
   /** Niko and Aaron's closure. */
-  DFAState e(final Map<State, int[]> startState) {
-    final Map<State, int[]> R = new LinkedHashMap<>();
+  DFAState e(final Map<State, int[]> startState, final Character a) {
+    final Map<State, int[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
 
-    final Deque<Map.Entry<State, int[]>> stack = new ArrayDeque<>();
-    for (final Map.Entry<State, int[]> i : startState.entrySet()) {
-      stack.push(i);
+    final Deque<Map.Entry<State, int[]>> stack = new ArrayDeque<>(); // normal priority
+    final Deque<Map.Entry<State, int[]>> lowStack = new ArrayDeque<>(); // low priority
+
+    if (a == null) { // TODO(nikoschwarz): Beautify.
+      stack.addAll(startState.entrySet());
+    } else {
+      for (final Entry<State, int[]> pr : startState.entrySet()) {
+        final int[] k = pr.getValue();
+        final Collection<TransitionTriple> ts = tnfa.availableTransitionsFor(pr.getKey(), a);
+        for (final TransitionTriple t : ts) {
+          switch (t.getPriority()) {
+            case LOW:
+              lowStack.add(new StateWithMemoryLocation(t.getState(), Arrays.copyOf(k, k.length)));
+              break;
+            case NORMAL: // Fall thru
+            default:
+              stack.add(new StateWithMemoryLocation(t.getState(), Arrays.copyOf(k, k.length)));
+          }
+        }
+      }
     }
 
-    while (!stack.isEmpty()) {
+    if (lowStack.isEmpty() && stack.isEmpty()) {
+      return DFAState.NO_STATE;
+    }
 
-      final Entry<State, int[]> s = stack.pop();
-      final State q = s.getKey();
-      final int[] l = s.getValue();
+    do {
+      final Entry<State, int[]> s = stack.isEmpty() ? lowStack.pop() : stack.pop();
+      assert s != null;
 
       if (R.containsKey(s.getKey())) {
         continue;
       }
+      R.put(s.getKey(), s.getValue());
+
+      final State q = s.getKey();
+      final int[] l = s.getValue();
 
       nextTriple: for (final TransitionTriple triple : tnfa.availableTransitionsFor(q, null)) {
         final State qDash = triple.state;
 
         // Step 1.
-        if (R.containsKey(qDash) && triple.priority.equals(Priority.LOW)) {
+        if ((R.containsKey(qDash) && triple.priority.equals(Priority.LOW)) || R.containsKey(qDash)) {
           continue nextTriple;
-        } else if (R.containsKey(qDash)) {
-          assert triple.priority.equals(Priority.NORMAL);
         }
 
         // Step 2.
@@ -606,18 +627,26 @@ class TNFAToTDFA {
         if (!tau.equals(Tag.NONE)) {
           final int pos = positionFor(tau);
           tdash = Arrays.copyOf(l, l.length);
-          tdash[pos] = nextInt();
+          tdash[pos] = nextInt(); // TODO(niko): Produce store.
         } else {
           tdash = l;
         }
 
-        // Step 3
-        R.remove(triple.getState());
-        R.put(triple.getState(), tdash);
+        // Step 3. (TODO)
 
-        stack.push(new StateWithMemoryLocation(triple.getState(), tdash));
+        // Step 4.
+        if (!R.containsKey(triple.getState())) {
+          switch (triple.getPriority()) {
+            case LOW:
+              lowStack.add(new StateWithMemoryLocation(triple.getState(), tdash));
+              break;
+            case NORMAL: // fall thru
+            default:
+              stack.add(new StateWithMemoryLocation(triple.getState(), tdash));
+          }
+        }
       }
-    }
+    } while (!(stack.isEmpty() && lowStack.isEmpty()));
     return new DFAState(R);
   }
 
@@ -625,25 +654,15 @@ class TNFAToTDFA {
     final BitSet ret = new BitSet();
     for (final int[] ary : oldState.values()) {
       for (final int val : ary) {
-        ret.set(val);
+        if (val >= 0) { // TODO(nikoschwarz): Is this correct? Do we need negative indices or not?
+          ret.set(val);
+        }
       }
     }
     return ret;
   }
 
-  private Set<MapItem> extractMIs(final Map<State, SortedSet<MapItem>> oldState) {
-    final Set<MapItem> oldMIs = new LinkedHashSet<>();
-    for (final SortedSet<MapItem> mis : oldState.values()) {
-      for (final MapItem mi : mis) {
-        oldMIs.add(mi);
-      }
-    }
-    return oldMIs;
-  }
-
-  private DFAState findMappableState(final NavigableSet<DFAState> states, final DFAState u,
-      final int[] mapping) {
-
+  DFAState findMappableState(NavigableSet<DFAState> states, DFAState u, int[] mapping) {
     final Map<State, int[]> fromElement = new LinkedHashMap<>(u.getData());
     {
       final int[] min = new int[0];
@@ -653,7 +672,7 @@ class TNFAToTDFA {
     }
     final Map<State, int[]> toElement = new LinkedHashMap<>(u.getData());
     {
-      final int[] max = new int[currentPos + 1];
+      final int[] max = new int[highestMapping + 1];
       for (final Entry<State, int[]> e : toElement.entrySet()) {
         e.setValue(max);
       }
@@ -684,9 +703,7 @@ class TNFAToTDFA {
     return closure;
   }
 
-  /**
-   * Return a mapping from an existing state to a mapped state, if one exists. Otherwise, null.
-   */
+  /** Return a mapping from an existing state to a mapped state, if one exists. Otherwise, null. */
   Collection<Instruction> isStateMappable(final Map<State, SortedSet<MapItem>> toBeMappedState,
       final Map<State, SortedSet<MapItem>> existingState) {
     final Map<MapItem, MapItem> mappings = mappingsForReuse(toBeMappedState, existingState);
@@ -717,21 +734,31 @@ class TNFAToTDFA {
     return ret;
   }
 
-  private Collection<? extends Instruction> mappingInstructions(final int[] mapping,
-      final DFAState from) {
-    final BitSet locs = extractLocs(from.getData());
+  DFAState makeStartState() {
+    DFAState start;
+    {
+      final State nfaStart = tnfa.getInitialState();
+      start = convertToDfaState(nfaStart);
+    }
+
+    return e(start.getData(), null);
+  }
+
+  Collection<? extends Instruction> mappingInstructions(final int[] mapping, final DFAState to,
+      BitSet newLocations) {
+    final BitSet locs = extractLocs(to.getData());
+    locs.andNot(newLocations); // New locations already led to stores.
     final List<Instruction> ret = new ArrayList<>();
 
     for (int i = locs.nextSetBit(0); i >= 0; i = locs.nextSetBit(i + 1)) {
       ret.add(instructionMaker.reorder(i, mapping[i]));
+      // XXX Don't trust this.
     }
 
     return ret;
   }
 
-  /**
-   * If there's a mapping that allows reuse, return it. Otherwise, return null.
-   */
+  /** If there's a mapping that allows reuse, return it. Otherwise, return null. */
   private Map<MapItem, MapItem> mappingsForReuse(
       final Map<State, SortedSet<MapItem>> toBeMappedState,
       final Map<State, SortedSet<MapItem>> states) {
@@ -796,42 +823,15 @@ class TNFAToTDFA {
   int nextInt() {
     // XXX One could plug more logic into this method, to eliminate
     // post-processing.
-    return ++currentPos;
+    return highestMapping++;
   }
 
   private int positionFor(final Tag tau) {
-    int r = 2 * tau.getGroup() - 2;
+    int r = 2 * tau.getGroup();
     if (tau.isEndTag()) {
       r += 1;
     }
     return r;
-  }
-
-  /**
-   * tε closure(S) for each (u, k) ∈ S do push (u, 0, k) to stack initialize closure to S while
-   * stack is not empty pop (s, p, k), the top element, off of stack for each ε-transition from s to
-   * some state u do if the ε-transition was tagged with tn then if∃m:mmn ∈kthen remove mmn from k
-   * add mxn to k, where x is the smallest nonnegative integer such that mxn does not occur in S if
-   * ∃p′,k′ : (u,p′,k′) ∈ closure and p
-   * < p
-   * ′ then remove (u, p′, k′) from closure if (u, p, k) ∈/ closure then add (u, p, k) to closure
-   * push (u, p, k) onto stack remove the middle element, the priority, from all triples in closure
-   * return closure
-   * 
-   * @return
-   */
-  Map<State, SortedSet<MapItem>> reach(Map<State, SortedSet<MapItem>> state, char a) {
-    final Map<State, SortedSet<MapItem>> ret = new LinkedHashMap<>();
-
-    for (final Entry<State, SortedSet<MapItem>> pr : state.entrySet()) {
-      final SortedSet<MapItem> k = pr.getValue();
-
-      final Collection<TransitionTriple> ts = tnfa.availableTransitionsFor(pr.getKey(), a);
-      for (final TransitionTriple t : ts) {
-        ret.put(t.getState(), new TreeSet<>(k));
-      }
-    }
-    return Collections.unmodifiableMap(ret);
   }
 
   Map<State, int[]> reachable(final Map<State, int[]> state, final char a) {
@@ -842,6 +842,7 @@ class TNFAToTDFA {
 
       final Collection<TransitionTriple> ts = tnfa.availableTransitionsFor(pr.getKey(), a);
       for (final TransitionTriple t : ts) {
+        assert t.getPriority().equals(Priority.NORMAL);
         ret.put(t.getState(), Arrays.copyOf(k, k.length));
       }
     }
@@ -887,7 +888,7 @@ class TNFAToTDFA {
 }
 
 
-class Triple implements Comparable<Triple> {
+class Triple implements Comparable<Triple>, Priorizable {
   public final SortedSet<MapItem> mapItems;
   public final Priority priority;
   public final State state;
@@ -936,6 +937,11 @@ class Triple implements Comparable<Triple> {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public Enum<?> getPriority() {
+    return priority;
   }
 
   @Override
