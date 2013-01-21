@@ -6,18 +6,19 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.NavigableSet;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
-import org.junit.Before;
-import org.junit.Test;
 
 import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
 import ch.unibe.scg.regex.Tag.MarkerTag;
@@ -83,53 +84,27 @@ interface TransitionTable {
     }
   }
 
-  public static class DFATableTest {
-    final int s1 = 0;
-    final int s2 = 1;
-    final int s3 = 2;
-    final int s4 = 3;
-    TDFATransitionTable table;
+  static class NextDFAState {
+    List<Instruction> instructions;
+    DFAState nextState;
 
-    @Before
-    public void setUp() {
-      table =
-          new TDFATransitionTable(new char[] {'c', 'l'}, new char[] {'k', 'm'}, new int[] {s1, s2},
-              new int[] {s3, s4}, new List[] {Collections.EMPTY_LIST, Collections.EMPTY_LIST});
+    public NextDFAState(List<Instruction> instructions, DFAState nextState) {
+      this.instructions = instructions;
+      this.nextState = nextState;
     }
 
-    @Test
-    public void testTable() {
-      final NextState pr = table.newStateAndInstructions(200, 'd');
-      assertThat(pr, is(nullValue()));
+    public List<Instruction> getInstructions() {
+      return instructions;
     }
 
-    @Test
-    public void testTable2() {
-      final NextState pr = table.newStateAndInstructions(s1, 'c');
-      assertThat(pr.getNextState(), is(s3));
-
+    public DFAState getNextState() {
+      return nextState;
     }
 
-    @Test
-    public void testTable3() {
-      final NextState pr = table.newStateAndInstructions(s1, 'k');
-      assertThat(pr.getNextState(), is(s3));
-
+    @Override
+    public String toString() {
+      return nextState.toString() + " " + instructions;
     }
-
-    @Test
-    public void testTable4() {
-      final NextState pr = table.newStateAndInstructions(s1, 'l');
-      assertThat(pr, is(nullValue()));
-
-    }
-
-    @Test
-    public void testTable5() {
-      final NextState pr = table.newStateAndInstructions(s2, 'l');
-      assertThat(pr.getNextState(), is(s4));
-    }
-
   }
 
   static class NextState {
@@ -270,9 +245,8 @@ interface TransitionTable {
           character != null ? InputRange.make(character, character) : InputRange.EPSILON;
       final Pair<State, InputRange> searchMarker = new Pair<>(state, searched);
       final SortedMap<Pair<State, InputRange>, T> tail =
-          transitions.descendingMap().tailMap(searchMarker); // headMap and
-      // tailMap are
-      // different.
+          transitions.descendingMap().tailMap(searchMarker);
+      // headMap and tailMap are different.
       // One is inclusive, the other is not. Therefore, reverse.
       if (tail.isEmpty()) {
         return null;
@@ -302,14 +276,16 @@ interface TransitionTable {
         final char from, to;
         final List<Instruction> instructions;
         final int state, newState;
+        final DFAState toDFA;
 
         public Entry(final char from, final char to, final List<Instruction> instructions,
-            final int state, final int newState) {
+            final int state, final int newState, DFAState toDFA) {
           this.from = from;
           this.to = to;
           this.instructions = instructions;
           this.state = state;
           this.newState = newState;
+          this.toDFA = toDFA;
         }
 
         public int compareTo(final Entry o) {
@@ -363,19 +339,34 @@ interface TransitionTable {
       }
 
       final Mapping mapping = new Mapping();
-      final List<Entry> transitions = new ArrayList<>();
+      final NavigableSet<Entry> transitions = new TreeSet<>();
 
       public void addTransition(final DFAState t, final InputRange inputRange,
           final DFAState newState, final List<Instruction> instructions) {
 
         final Entry e =
             new Entry(inputRange.getFrom(), inputRange.getTo(), instructions, mapping.lookup(t),
-                mapping.lookup(newState));
+                mapping.lookup(newState), t);
         transitions.add(e);
       }
 
+      public NextDFAState availableTransition(DFAState t, char a) {
+        final int fromState = mapping.lookup(t);
+        final List<Instruction> emptyList = Collections.emptyList();
+        final Entry probe = new Entry(a, a, emptyList, fromState, -1, null);
+        final NavigableSet<Entry> headSet = transitions.headSet(probe, true);
+        if (headSet.isEmpty()) {
+          return null;
+        }
+        final Entry found = headSet.last();
+        if (found.state != probe.state || !(found.from <= a && a <= found.to)) {
+          return null;
+        }
+        return new NextDFAState(found.instructions, found.toDFA);
+      }
+
       public TDFATransitionTable build() {
-        Collections.sort(transitions);
+        final Iterator<Entry> transitionsIter = transitions.iterator();
         final int size = transitions.size();
         final char[] froms = new char[size];
         @SuppressWarnings("unchecked")
@@ -385,13 +376,14 @@ interface TransitionTable {
         final char[] tos = new char[size];
 
         for (int i = 0; i < size; i++) {
-          final Entry e = transitions.get(i);
+          final Entry e = transitionsIter.next();
           froms[i] = e.from;
           tos[i] = e.to;
           states[i] = e.state;
           newStates[i] = e.newState;
           instructions[i] = e.instructions;
         }
+        assert !transitionsIter.hasNext();
         return new TDFATransitionTable(froms, tos, states, newStates, instructions);
       }
     }
@@ -437,7 +429,7 @@ interface TransitionTable {
         } else if (cmp > 0) {
           l = x + 1;
         } else {
-          assert false;
+          throw new AssertionError();
         }
       }
 
@@ -458,12 +450,13 @@ interface TransitionTable {
       return null;
     }
 
+
     @Override
     public String toString() {
       final StringBuilder sb = new StringBuilder();
       for (int i = 0; i < size; i++) {
         final Entry e =
-            new Builder.Entry(froms[i], tos[i], instructions[i], states[i], newStates[i]);
+            new Builder.Entry(froms[i], tos[i], instructions[i], states[i], newStates[i], null);
         sb.append(e.toString());
         sb.append('\n');
       }
