@@ -244,8 +244,17 @@ class RegexToNFA {
     return new MiniAutomaton(last.getFinishing(), f);
   }
 
-  MiniAutomaton makePlus(final MiniAutomaton last, final Builder builder, final Plus node) {
-    throw new RuntimeException("Not implemented");
+  MiniAutomaton makePlus(final MiniAutomaton last, final Builder builder, final Plus plus) {
+    // TODO(niko) priority guard is missing.
+    final MiniAutomaton inner = make(last, builder, plus.getElementary());
+
+    final Collection<State> f = inner.getFinishing();
+
+    final MiniAutomaton ret = new MiniAutomaton(last.getFinishing(), f);
+
+    builder.makeUntaggedEpsilonTransitionFromTo(inner.getFinishingRepeatHandles(),
+        inner.getBeginRepeatHandle(), Priority.NORMAL);
+    return ret;
   }
 
   MiniAutomaton makePositiveSet(final MiniAutomaton last, final Builder builder,
@@ -271,7 +280,6 @@ class RegexToNFA {
   }
 
   MiniAutomaton makeStar(final MiniAutomaton last, final Builder builder, final Star star) {
-
     final MiniAutomaton inner = make(last, builder, star.getElementary());
 
     final List<State> f = new ArrayList<>(last.getFinishing());

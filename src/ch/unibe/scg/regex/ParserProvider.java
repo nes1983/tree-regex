@@ -136,6 +136,10 @@ class ParserProvider {
         this.elementary = elementary;
       }
 
+      public Node getElementary() {
+        return elementary;
+      }
+
       @Override
       public String toString() {
         return elementary.toString() + "+";
