@@ -41,7 +41,7 @@ public final class IntegrationTest {
     t0 = mock(Tag.class);
 
     when(t0.toString()).thenReturn("t0");
-    when(t0.getGroup()).thenReturn(1);
+    when(t0.getGroup()).thenReturn(1); // Must be 1, not 0, because 0 is the entire match.
 
     when(tnfa.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
     when(tnfa.getInitialState()).thenReturn(s0);

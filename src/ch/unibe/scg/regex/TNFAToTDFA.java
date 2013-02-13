@@ -832,7 +832,8 @@ class TNFAToTDFA {
   }
 
   private int positionFor(final Tag tau) {
-    int r = 2 * tau.getGroup();
+    // The first capture group is 1, but arrays start at 0.
+    int r = 2 * tau.getGroup() - 2;
     if (tau.isEndTag()) {
       r += 1;
     }

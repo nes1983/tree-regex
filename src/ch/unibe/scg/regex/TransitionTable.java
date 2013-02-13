@@ -69,10 +69,9 @@ interface TransitionTable {
       public String toString() {
         return "g" + number;
       }
-
     }
 
-    CaptureGroup last = new RealCaptureGroup(-1);
+    CaptureGroup last = new RealCaptureGroup(0);
 
     synchronized CaptureGroup next() {
       last = RealCaptureGroup.make(last.getNumber() + 1);
