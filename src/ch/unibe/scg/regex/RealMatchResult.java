@@ -1,7 +1,5 @@
 package ch.unibe.scg.regex;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.regex.MatchResult;
 
@@ -46,26 +44,32 @@ class RealMatchResult implements MatchResult {
     }
   }
 
-  List<Pair<Integer, Integer>> captureGroups = new ArrayList<>();
+  final int[] captureGroupPositions;
+  final CharSequence input;
+
+  RealMatchResult(int[] captureGroupPositions, CharSequence input) {
+    this.captureGroupPositions = captureGroupPositions;
+    this.input = input;
+  }
 
   public int end() {
     return end(0);
   }
 
   public int end(final int group) {
-    return captureGroups.get(group).getSecond();
+    return captureGroupPositions[group * 2 + 1];
   }
 
   public String group() {
-    throw null;
+    return group(0);
   }
 
   public String group(final int group) {
-    throw null;
+    return input.subSequence(start(group), end(group)).toString();
   }
 
   public int groupCount() {
-    throw null;
+    return captureGroupPositions.length / 2;
   }
 
   public int start() {
@@ -73,12 +77,7 @@ class RealMatchResult implements MatchResult {
   }
 
   public int start(final int group) {
-    return captureGroups.get(group).getFirst();
-  }
-
-  void takeCaptureGroup(final Tag tag, final int match) {
-    assert tag != null;
-    captureGroups.add(tag.getGroup(), new Pair<>(0, match));
+    return captureGroupPositions[group * 2];
   }
 
   @Override

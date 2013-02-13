@@ -1,5 +1,6 @@
 package ch.unibe.scg.regex;
 
+@Deprecated
 class MapItem implements Comparable<MapItem> {
   private final int pos;
   private final Tag tag;

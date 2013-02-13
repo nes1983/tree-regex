@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -88,6 +89,26 @@ class TNFAToTDFA {
       }
 
       return innerStates.keySet().hashCode();
+    }
+
+    /**
+     * @param tnfa the TNFA that knows whether or not this state is final.
+     * @return mapping if this state is final. Otherwise, return null.
+     */
+    int[] finalStateMappingIfAny(TNFA tnfa) {
+      final Set<State> finalStates = new HashSet<>(tnfa.getFinalStates());
+      finalStates.retainAll(innerStates.keySet());
+
+      if (finalStates.isEmpty()) {
+        return null;
+      }
+
+      if (finalStates.size() > 1) {
+        throw new IllegalStateException("There should only be one final state, but there were "
+            + finalStates);
+      }
+
+      return innerStates.get(finalStates.iterator().next());
     }
 
     boolean isMappable(final DFAState other, final int[] mapping) {
@@ -717,7 +738,8 @@ class TNFAToTDFA {
     }
     final Collection<Instruction> ret = new ArrayList<>();
     for (final Entry<MapItem, MapItem> e : mappings.entrySet()) {
-      instructionMaker.reorder(e.getKey(), e.getValue());
+      // instructionMaker.reorder(e.getKey(), e.getValue());
+      throw null; // TODO delete dead code.
     }
     return Collections.unmodifiableCollection(ret);
   }
@@ -757,7 +779,6 @@ class TNFAToTDFA {
 
     for (int i = locs.nextSetBit(0); i >= 0; i = locs.nextSetBit(i + 1)) {
       ret.add(instructionMaker.reorder(i, mapping[i]));
-      // XXX Don't trust this.
     }
 
     return ret;

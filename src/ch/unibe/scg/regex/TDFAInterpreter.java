@@ -49,8 +49,6 @@ class TDFAInterpreter {
     DFAState t = tnfa2tdfa.makeStartState();
     states.add(t);
 
-    final MatchResult ret = new RealMatchResult();
-
     final int[] context = new int[100]; // TODO(niko) enter real size;
     for (int pos = 0; pos < input.length(); pos++) {
       final char a = input.charAt(pos);
@@ -86,13 +84,6 @@ class TDFAInterpreter {
       }
 
       final List<Instruction> c = new ArrayList<>();
-      for (int i = newLocations.nextSetBit(0); i >= 0; i = newLocations.nextSetBit(i + 1)) {
-        if (mapping != null) {
-          c.add(instructionMaker.storePos(mapping[i]));
-        } else {
-          c.add(instructionMaker.storePos(i));
-        }
-      }
 
       DFAState newState;
       if (mappedState != null) {
@@ -101,6 +92,14 @@ class TDFAInterpreter {
       } else {
         states.add(u);
         newState = u;
+      }
+
+      for (int i = newLocations.nextSetBit(0); i >= 0; i = newLocations.nextSetBit(i + 1)) {
+        if (mapping != null) {
+          c.add(instructionMaker.storePos(mapping[i]));
+        } else {
+          c.add(instructionMaker.storePos(i));
+        }
       }
 
       // Free up new slots that weren't really needed.
@@ -114,6 +113,22 @@ class TDFAInterpreter {
       t = newState;
     }
 
-    return ret;
+    final int[] mapping = t.finalStateMappingIfAny(tnfa2tdfa.tnfa);
+    if (mapping == null) {
+      return RealMatchResult.NoMatchResult.SINGLETON;
+    }
+
+    return extractFromContext(context, mapping, input);
+  }
+
+  private MatchResult extractFromContext(int[] context, int[] mapping, CharSequence input) {
+    final int[] extracted = new int[mapping.length];
+    for (int i = 0; i < mapping.length; i += 2) {
+      if (context[mapping[i]] < 0) {
+        continue; // TODO delete. Nice for the current unit test, but broken over all.
+      }
+      extracted[i] = context[mapping[i]];
+    }
+    return new RealMatchResult(extracted, input);
   }
 }

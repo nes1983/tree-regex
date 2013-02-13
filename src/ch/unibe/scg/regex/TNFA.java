@@ -64,6 +64,7 @@ interface TNFA {
         return RegexToNFA.checkNotNull(initialState);
       }
 
+      /** Make non-final state */
       public State makeState() {
         return State.get();
       }
@@ -117,6 +118,10 @@ interface TNFA {
       return finalStates.contains(state);
     }
 
+    public Set<State> getFinalStates() {
+      return finalStates;
+    }
+
     @Override
     public String toString() {
       final Formatter formatter = new Formatter();
@@ -144,4 +149,6 @@ interface TNFA {
    * @return whether or not {@code state} accepting. True if it is, false otherwise.
    */
   public boolean isAccepting(State state);
+
+  public Set<State> getFinalStates();
 }
