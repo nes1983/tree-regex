@@ -214,12 +214,6 @@ interface TransitionTable {
         assert ret != null;
         return ret;
       }
-
-      public void put(final State startingState, final InputRange range, final State endingState,
-          final Tag tag) {
-        assert false; // TODO delete.
-        throw new RuntimeException("Not implemented");
-      }
     }
 
     final NavigableMap<Pair<State, InputRange>, T> transitions;
