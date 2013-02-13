@@ -4,10 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 interface Instruction {
-  public static class Context {}
 
   static class CopyInstruction implements Instruction {
-
     public static Instruction make(final int fromTag, final int fromPos, final int toTag,
         final int toPos) {
       return new CopyInstruction(fromTag, fromPos, toTag, toPos);
@@ -22,22 +20,21 @@ interface Instruction {
       this.toPos = toPos;
     }
 
-    public void execute(final Context context, final int pos) {
-      throw null;
+    @Override
+    public void execute(int[] context, int pos) {
+      throw new RuntimeException("Not implemented");
     }
 
     @Override
     public String toString() {
       return "" + fromTag + "," + fromPos + " <- " + toTag + "," + toPos;
     }
-
   }
 
   /**
    * Not threadsafe!
    */
   class InstructionMaker {
-
     public static InstructionMaker get() {
       return new InstructionMaker();
     }
@@ -54,54 +51,68 @@ interface Instruction {
       final int ret = nextId();
       tagIds.put(tag, ret);
       return ret;
-
     }
 
     public int nextId() {
       return ++id;
     }
 
-    public Instruction reorder(final int i, final int j) {
-      throw new RuntimeException("Not implemented");
+    public Instruction reorder(final int from, final int to) {
+      return new ReorderInstruction(from, to);
     }
 
     public Instruction reorder(final MapItem from, final MapItem to) {
-      return CopyInstruction.make(lookup(from.getTag()), from.getPos(), lookup(to.getTag()),
-          to.getPos());
-    }
-
-    public Instruction storePos(final int i) {
       throw new RuntimeException("Not implemented");
     }
 
-    public Instruction storePos(final MapItem mapItem) {
-      return SetInstruction.make(lookup(mapItem.getTag()), mapItem.getPos());
+    public Instruction storePos(final int tag) {
+      return SetInstruction.make(tag);
     }
 
+    public Instruction storePos(final MapItem mapItem) {
+      return SetInstruction.make(lookup(mapItem.getTag()));
+    }
   }
 
-  static class SetInstruction implements Instruction {
+  static class ReorderInstruction implements Instruction {
+    final int from, to;
 
-    static SetInstruction make(final int tag, final int pos) {
-      return new SetInstruction(tag, pos);
+    ReorderInstruction(int from, int to) {
+      this.from = from;
+      this.to = to;
     }
 
-    final int tag, pos;
-
-    public SetInstruction(final int tag, final int pos) {
-      this.tag = tag;
-      this.pos = pos;
-    }
-
-    public void execute(final Context context, final int pos) {
-      throw null;
+    @Override
+    public void execute(int[] context, int pos) {
+      context[to] = context[from];
     }
 
     @Override
     public String toString() {
-      return "" + tag + "," + pos + "<- pos";
+      return String.valueOf(from) + "->" + to;
     }
   }
 
-  public void execute(Context context, int pos);
+  static class SetInstruction implements Instruction {
+    static SetInstruction make(final int tag) {
+      return new SetInstruction(tag);
+    }
+
+    final int tag;
+
+    public SetInstruction(final int tag) {
+      this.tag = tag;
+    }
+
+    public void execute(final int[] context, final int pos) {
+      context[tag] = pos;
+    }
+
+    @Override
+    public String toString() {
+      return "" + tag + "<- pos";
+    }
+  }
+
+  public void execute(int[] context, int pos);
 }
