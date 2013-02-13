@@ -15,12 +15,8 @@ import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 @SuppressWarnings("javadoc")
 public final class NewTest {
-
   TNFAToTDFA nfa2dfa;
-
-  State s0;
-  State s1;
-  State s2;
+  State s0, s1, s2;
   Tag t0;
   TNFA tnfa;
 
@@ -37,7 +33,7 @@ public final class NewTest {
     t0 = mock(Tag.class);
 
     when(t0.toString()).thenReturn("t0");
-    when(t0.getGroup()).thenReturn(1);
+    when(t0.getGroup()).thenReturn(0);
 
     when(tnfa.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
     when(tnfa.getInitialState()).thenReturn(s0);
