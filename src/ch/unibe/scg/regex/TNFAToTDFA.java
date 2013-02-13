@@ -631,9 +631,8 @@ class TNFAToTDFA {
         final Tag tau = triple.tag;
         int[] tdash;
         if (!tau.equals(Tag.NONE)) {
-          final int pos = positionFor(tau);
           tdash = Arrays.copyOf(l, l.length);
-          tdash[pos] = nextInt(); // TODO(niko): Produce store.
+          tdash[positionFor(tau)] = nextInt(); // TODO(niko): Produce store.
         } else {
           tdash = l;
         }

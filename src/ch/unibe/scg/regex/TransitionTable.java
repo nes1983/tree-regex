@@ -21,14 +21,15 @@ import ch.unibe.scg.regex.Tag.MarkerTag;
 import ch.unibe.scg.regex.TransitionTable.TDFATransitionTable.Builder.Entry;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
-
 /**
  * A {@link TransitionTable} is the set of all possible transition of a {@link TDFA}
  * 
  * @author Niko Schwarz, Fabien Dubosson
  */
 interface TransitionTable {
-
+  /**
+   * Returns increasing capture groups, including their tags. The first returned capture group is 1.
+   */
   static class CaptureGroupMaker {
     /**
      * Don't instantiate directly. Use {@link CaptureGroupMaker} instead.
@@ -46,8 +47,7 @@ interface TransitionTable {
 
       Tag startTag;
 
-      RealCaptureGroup(final int number) {
-        super();
+      private RealCaptureGroup(final int number) {
         this.number = number;
       }
 

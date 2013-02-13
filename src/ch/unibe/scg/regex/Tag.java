@@ -62,8 +62,7 @@ interface Tag extends Comparable<Tag> {
    */
   static abstract class RealTag extends AbstractTag {
     static class EndTag extends RealTag {
-
-      EndTag(final CaptureGroup captureGroup) {
+      private EndTag(final CaptureGroup captureGroup) {
         super(captureGroup);
       }
 
@@ -84,8 +83,8 @@ interface Tag extends Comparable<Tag> {
     }
 
     static class StartTag extends RealTag {
-
-      StartTag(final CaptureGroup captureGroup) {
+      /** Call {@link #makeStartTag(RealCaptureGroup)} instead. */
+      private StartTag(final CaptureGroup captureGroup) {
         super(captureGroup);
       }
 
