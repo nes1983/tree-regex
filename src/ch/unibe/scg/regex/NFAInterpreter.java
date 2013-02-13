@@ -43,9 +43,9 @@ class NFAInterpreter {
 
       when(tag.getGroup()).thenReturn(0);
       when(tnfa.availableTransitionsFor(Mockito.eq(a), eq('a'))).thenReturn(
-          Arrays.asList(new Pair<State, Tag>(a, tag)));
+          Arrays.asList(new TransitionTriple(a, null, tag)));
       when(tnfa.availableTransitionsFor(Mockito.eq(a), eq('b'))).thenReturn(
-          Arrays.asList(new Pair<State, Tag>(b, tag)));
+          Arrays.asList(new TransitionTriple(b, null, tag)));
       when(tnfa.availableTransitionsFor(Mockito.eq(b), Mockito.any(Character.class))).thenReturn(
           (Collection) Collections.emptyList());
       when(tnfa.getInitialState()).thenReturn(a);
@@ -62,12 +62,12 @@ class NFAInterpreter {
 
   final TNFA nfa;
 
-  final Pair<State, Tag> SCAN;
+  final TransitionTriple SCAN;
 
   NFAInterpreter(final TNFA nfa) {
     this.nfa = nfa;
 
-    SCAN = new Pair<>(new State(), null);
+    SCAN = new TransitionTriple(null, null, null);
 
   }
 
@@ -79,30 +79,31 @@ class NFAInterpreter {
   }
 
   public MatchResult match(int j, final String input) {
-    final Deque<Pair<State, Tag>> q = new ArrayDeque<>();
+    final Deque<TransitionTriple> q = new ArrayDeque<>();
     q.add(SCAN);
-    Pair<State, Tag> transition = new Pair<>(nfa.getInitialState(), Tag.ENTIRE_MATCH);
-    final RealMatchResult r = new RealMatchResult(this);
+    TransitionTriple transition =
+        new TransitionTriple(nfa.getInitialState(), null, Tag.ENTIRE_MATCH);
+    final RealMatchResult r = new RealMatchResult();
     do {
       if (transition.equals(SCAN)) {
         j++;
         q.add(SCAN);
       } else {
-        final Collection<Pair<State, Tag>> transitions =
-            nfa.availableTransitionsFor(transition.getFirst(), charAt(j, input));
+        final Collection<TransitionTriple> transitions =
+            nfa.availableTransitionsFor(transition.getState(), charAt(j, input));
         assert transitions != null;
-        for (final Pair<State, Tag> t : transitions) {
+        for (final TransitionTriple t : transitions) {
           q.add(t);
         }
       }
       transition = q.pop();
       if (!transition.equals(SCAN)) {
-        r.takeCaptureGroup(transition.getSecond(), j - 1);
+        r.takeCaptureGroup(transition.getTag(), j - 1);
       }
-    } while (j <= input.length() && !nfa.isAccepting(transition.getFirst()) && !q.isEmpty());
+    } while (j <= input.length() && !nfa.isAccepting(transition.getState()) && !q.isEmpty());
 
-    if (nfa.isAccepting(transition.getFirst())) {
-      r.takeCaptureGroup(transition.getSecond(), j - 1);
+    if (nfa.isAccepting(transition.getState())) {
+      r.takeCaptureGroup(transition.getTag(), j - 1);
       r.takeCaptureGroup(Tag.ENTIRE_MATCH, j - 1);
       return r; // TODO: make immutable.
     } else {
