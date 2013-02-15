@@ -55,6 +55,7 @@ class TDFAInterpreter {
 
       NextDFAState nextState;
       if ((nextState = tdfaBuilder.availableTransition(t, a)) != null) {
+        // TODO check for fail state.
         for (final Instruction instruction : nextState.getInstructions()) {
           instruction.execute(context, pos); // TODO fill in context.
         }
@@ -83,7 +84,7 @@ class TDFAInterpreter {
         mapping = null;
       }
 
-      final List<Instruction> c = new ArrayList<>();
+      List<Instruction> c = new ArrayList<>();
 
       DFAState newState;
       if (mappedState != null) {
@@ -108,6 +109,13 @@ class TDFAInterpreter {
       }
 
       assert newState != null;
+
+      // Shrink c to minimum size.
+      c = new ArrayList<>(c);
+
+      for (final Instruction instruction : c) {
+        instruction.execute(context, pos); // TODO fill in context.
+      }
 
       tdfaBuilder.addTransition(t, inputRange, newState, c);
       t = newState;
