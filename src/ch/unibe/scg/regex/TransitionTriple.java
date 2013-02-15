@@ -1,8 +1,6 @@
 package ch.unibe.scg.regex;
 
-import ch.unibe.scg.regex.FixedPriorityQueue.Priorizable;
-
-class TransitionTriple implements Priorizable {
+class TransitionTriple {
   static enum Priority {
     LOW, NORMAL;
   }
