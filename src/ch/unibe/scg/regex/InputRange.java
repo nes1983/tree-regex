@@ -6,7 +6,7 @@ package ch.unibe.scg.regex;
  * 
  * @author Fabien Dubosson
  */
-class InputRange implements Comparable<InputRange> {
+abstract class InputRange implements Comparable<InputRange> {
   private static class Any extends SpecialInputRange {
     @Override
     public String toString() {
@@ -29,8 +29,19 @@ class InputRange implements Comparable<InputRange> {
   }
 
   static class SpecialInputRange extends InputRange {
-    SpecialInputRange() {
-      super(Character.MIN_VALUE, Character.MAX_VALUE);
+    @Override
+    public boolean contains(char character) {
+      return false;
+    }
+
+    @Override
+    public char getFrom() {
+      return Character.MIN_VALUE;
+    }
+
+    @Override
+    public char getTo() {
+      return Character.MIN_VALUE;
     }
   }
 
@@ -45,33 +56,56 @@ class InputRange implements Comparable<InputRange> {
   }
 
   public static InputRange make(final char from, final char to) {
-    return new InputRange(from, to);
+    return new RealInputRange(from, to);
   }
 
-  /**
-   * First {@link Character} of the range
-   */
-  private final char from;
+  static class RealInputRange extends InputRange {
+    /**
+     * First {@link Character} of the range
+     */
+    private final char from;
 
-  /**
-   * Last {@link Character} or the range
-   */
-  private final char to;
+    /**
+     * Last {@link Character} or the range
+     */
+    private final char to;
 
-  /**
-   * Constructor which take the first and last character as parameter
-   * 
-   * @param from The first {@link Character} of the range
-   * @param to The last {@link Character} of the range
-   */
-  InputRange(final char from, final char to) {
-    this.from = from;
-    this.to = to;
+    /**
+     * Constructor which take the first and last character as parameter
+     * 
+     * @param from The first {@link Character} of the range
+     * @param to The last {@link Character} of the range
+     */
+    RealInputRange(final char from, final char to) {
+      this.from = from;
+      this.to = to;
+    }
+
+    @Override
+    public boolean contains(final char character) {
+      return (from <= character && character <= to);
+    }
+
+    @Override
+    public String toString() {
+      return "" + from + "-" + to;
+    }
+
+    @Override
+    public char getFrom() {
+      return from;
+    }
+
+    @Override
+    public char getTo() {
+      return to;
+    }
   }
 
-  public int compareTo(final InputRange o) {
-    return this.getFrom() - o.getFrom();
-  }
+  @Override
+  public int compareTo(InputRange o) {
+    return Character.compare(getFrom(), o.getFrom());
+  };
 
   /**
    * Tell if the {@link InputRange} contains a {@link Character} within its range
@@ -79,30 +113,19 @@ class InputRange implements Comparable<InputRange> {
    * @param character A specific {@link Character}.
    * @return if the {@link Character} is contained within the {@link InputRange}.
    */
-  public boolean contains(final char character) {
-    return (from <= character && character <= to);
-  }
+  public abstract boolean contains(final char character);
 
   /**
    * Return the first {@link Character} of the range
    * 
    * @return the first {@link Character} of the range
    */
-  public char getFrom() {
-    return from;
-  }
+  public abstract char getFrom();
 
   /**
    * Return the last {@link Character} of the range
    * 
    * @return the last {@link Character} of the range
    */
-  public char getTo() {
-    return to;
-  }
-
-  @Override
-  public String toString() {
-    return "" + from + "-" + to;
-  }
+  public abstract char getTo();
 }

@@ -476,9 +476,11 @@ class TNFAToTDFA {
             case LOW:
               lowStack.add(new StateWithMemoryLocation(triple.getState(), tdash));
               break;
-            case NORMAL: // fall thru
-            default:
+            case NORMAL:
               stack.add(new StateWithMemoryLocation(triple.getState(), tdash));
+              break;
+            default:
+              throw new AssertionError();
           }
         }
       }
@@ -579,8 +581,7 @@ class TNFAToTDFA {
   }
 
   private int positionFor(final Tag tau) {
-    // The first capture group is 1, but arrays start at 0.
-    int r = 2 * tau.getGroup() - 2;
+    int r = 2 * tau.getGroup();
     if (tau.isEndTag()) {
       r += 1;
     }

@@ -53,14 +53,16 @@ class TDFAInterpreter {
     for (int pos = 0; pos < input.length(); pos++) {
       final char a = input.charAt(pos);
 
-      NextDFAState nextState;
-      if ((nextState = tdfaBuilder.availableTransition(t, a)) != null) {
-        // TODO check for fail state.
-        for (final Instruction instruction : nextState.getInstructions()) {
-          instruction.execute(context, pos); // TODO fill in context.
+      {
+        NextDFAState nextState;
+        if ((nextState = tdfaBuilder.availableTransition(t, a)) != null) {
+          // TODO check for fail state.
+          for (final Instruction instruction : nextState.getInstructions()) {
+            instruction.execute(context, pos); // TODO fill in context.
+          }
+          t = nextState.getNextState();
+          continue;
         }
-        t = nextState.getNextState();
-        continue;
       }
 
       final InputRange inputRange = findInputRange(inputRanges, a);

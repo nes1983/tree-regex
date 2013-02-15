@@ -3,6 +3,9 @@ package ch.unibe.scg.regex;
 interface CaptureGroup {
   /**
    * Returns increasing capture groups, including their tags. The first returned capture group is 1.
+   * 
+   * <p>
+   * Immutable.
    */
   static class CaptureGroupMaker {
     CaptureGroup last = make(0);

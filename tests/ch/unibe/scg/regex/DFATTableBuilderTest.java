@@ -29,7 +29,7 @@ public final class DFATTableBuilderTest {
     final DFAState q0 = mock(DFAState.class);
     final DFAState q1 = mock(DFAState.class);
 
-    builder.addTransition(q0, new InputRange('a', 'c'), q1, (List) Collections.emptyList());
+    builder.addTransition(q0, InputRange.make('a', 'c'), q1, (List) Collections.emptyList());
 
     final TDFATransitionTable dfa = builder.build();
     assertThat(dfa.toString(), is("q0-a-c -> q1 []\n"));

@@ -27,6 +27,22 @@ import ch.unibe.scg.regex.TransitionTriple.Priority;
  * @author nes
  */
 class RegexToNFA {
+  public TNFA convert(final Node node) {
+    checkNotNull(node);
+    final CaptureGroup entireMatch = new CaptureGroup.CaptureGroupMaker().make(0);
+
+    final Builder builder = new Builder();
+    final MiniAutomaton m = makeInitialMiniAutomaton(builder, entireMatch);
+
+    final MiniAutomaton a = make(m, builder, node);
+
+    final State endTagger = builder.makeState();
+    builder.setAsAccepting(endTagger);
+    builder.addEndTagTransition(a.getFinishing(), endTagger, entireMatch, Priority.NORMAL);
+
+    return builder.build();
+  }
+
   static class MiniAutomaton {
     final Collection<State> finishing;
     final Collection<State> initial;
@@ -108,21 +124,6 @@ class RegexToNFA {
       throw new NullPointerException();
     }
     return o;
-  }
-
-  public TNFA convert(final Node node) {
-    checkNotNull(node);
-
-    final Builder builder = new Builder();
-    final MiniAutomaton m = makeInitialMiniAutomaton(builder);
-
-    final MiniAutomaton a = make(m, builder, node);
-
-    for (final State s : a.getFinishing()) {
-      builder.setAsAccepting(s);
-    }
-
-    return builder.build();
   }
 
   InputRange inputRangeFor(final Node.Char character) {
@@ -222,16 +223,14 @@ class RegexToNFA {
     return ret;
   }
 
-  MiniAutomaton makeInitialMiniAutomaton(final Builder builder) {
+  MiniAutomaton makeInitialMiniAutomaton(final Builder builder, CaptureGroup entireMatch) {
     final State init = builder.makeInitialState();
-
+    // Eat prefix.
     builder.addUntaggedTransition(InputRange.ANY, init, init, Priority.NORMAL);
 
-    return new MiniAutomaton(init, init);
-  }
-
-  MiniAutomaton makeNode(final MiniAutomaton last, final Builder builder, final Plus node) {
-    throw new RuntimeException("Not implemented");
+    final State startTagger = builder.makeState();
+    builder.addStartTagTransition(Arrays.asList(init), startTagger, entireMatch, Priority.NORMAL);
+    return new MiniAutomaton(init, startTagger);
   }
 
   MiniAutomaton makeOptional(final MiniAutomaton last, final Builder builder,
