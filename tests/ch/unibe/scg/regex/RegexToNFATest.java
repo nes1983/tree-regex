@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.MatchResult;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,9 +27,6 @@ public final class RegexToNFATest {
     final Any any = mock(Any.class);
     final TNFA n = r.convert(any);
     assertThat(n.toString(), is("q0 -> [q1], {(q0, ANY)=[(q0, NONE), (q1, NONE)]}"));
-    final NFAInterpreter i = new NFAInterpreter(n);
-    final MatchResult o = i.match("");
-    assertThat(o.toString(), is("NO_MATCH"));
   }
 
   @Test
@@ -40,11 +36,6 @@ public final class RegexToNFATest {
     when(character.getCharacter()).thenReturn('4');
     final TNFA n = r.convert(character);
     assertThat(n.toString(), is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], (q0, 4-4)=[(q1, NONE)]}"));
-    final NFAInterpreter i = new NFAInterpreter(n);
-    final MatchResult o = i.match("5");
-    assertThat(o.toString(), is("NO_MATCH"));
-    final MatchResult oo = i.match("4");
-    assertThat(oo.toString(), is("0-0"));
   }
 
   @Test
@@ -63,11 +54,6 @@ public final class RegexToNFATest {
     assertThat(character, is(EscapedChar.class));
     final TNFA n = r.convert(character);
     assertThat(n.toString(), is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], (q0, .-.)=[(q1, NONE)]}"));
-    final NFAInterpreter i = new NFAInterpreter(n);
-    final MatchResult o = i.match("5");
-    assertThat(o.toString(), is("NO_MATCH"));
-    final MatchResult oo = i.match(".");
-    assertThat(oo.toString(), is("0-0"));
   }
 
   @Test

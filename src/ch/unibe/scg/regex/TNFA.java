@@ -9,9 +9,7 @@ import java.util.TreeSet;
 import ch.unibe.scg.regex.TransitionTable.RealTransitionTable.TNFATransitionTable;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
-
 interface TNFA {
-
   static class RealNFA implements TNFA {
     static class Builder {
       Set<State> finalStates = new TreeSet<>();
@@ -64,7 +62,7 @@ interface TNFA {
         return RegexToNFA.checkNotNull(initialState);
       }
 
-      /** Make non-final state */
+      /** @return a new non-final state */
       public State makeState() {
         return State.get();
       }

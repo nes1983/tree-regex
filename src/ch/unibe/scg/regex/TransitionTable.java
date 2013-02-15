@@ -12,7 +12,6 @@ import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -260,7 +259,7 @@ interface TransitionTable {
   }
 
   static class TDFATransitionTable {
-    // XXX optimizations: use int for state, then lookup state by
+    // TODO optimizations: use int for state, then lookup state by
     // states[state].
 
     static class Builder {
@@ -308,21 +307,6 @@ interface TransitionTable {
           final int next = next();
           mapping.put(state, next);
           return next;
-        }
-
-        @Deprecated
-        public int lookup(final Map<State, SortedSet<MapItem>> state) {
-          if (true) {
-            throw new RuntimeException("deprecated");
-            // final Integer to = mapping.get(state);
-            // if (to != null) {
-            // return to;
-            // }
-            // final int next = next();
-            // mapping.put(state, next);
-            // return next;
-          }
-          return 0;
         }
 
         int next() {
