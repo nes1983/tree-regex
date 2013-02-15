@@ -6,15 +6,28 @@ import java.util.Formatter;
 import java.util.Set;
 import java.util.TreeSet;
 
+import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker;
 import ch.unibe.scg.regex.TransitionTable.RealTransitionTable.TNFATransitionTable;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 interface TNFA {
   static class RealNFA implements TNFA {
+    final Set<State> finalStates;
+    final State initialState;
+    final TNFATransitionTable transitionTable;
+
+    RealNFA(final TNFATransitionTable transitionTable, final State initialState,
+        final Set<State> finalStates) {
+      this.transitionTable = transitionTable;
+      this.initialState = initialState;
+      this.finalStates = finalStates;
+    }
+
     static class Builder {
-      Set<State> finalStates = new TreeSet<>();
+      final CaptureGroupMaker captureGroupMaker = new CaptureGroupMaker();
+      final Set<State> finalStates = new TreeSet<>();
       State initialState;
-      TNFATransitionTable.Builder transitionTableBuilder = TNFATransitionTable.builder();
+      final TNFATransitionTable.Builder transitionTableBuilder = TNFATransitionTable.builder();
 
       public void addEndTagTransition(final Collection<State> from, final State to,
           final CaptureGroup captureGroup, final Priority priority) {
@@ -54,7 +67,7 @@ interface TNFA {
       }
 
       public CaptureGroup makeCaptureGroup() {
-        return transitionTableBuilder.makeCaptureGroup();
+        return captureGroupMaker.next();
       }
 
       public State makeInitialState() {
@@ -75,24 +88,6 @@ interface TNFA {
       public void setAsAccepting(final State finishing) {
         finalStates.add(finishing);
       }
-
-    }
-
-    public static Builder builder() {
-      return new Builder();
-    }
-
-    final Set<State> finalStates;
-    final State initialState;
-
-    final TNFATransitionTable transitionTable;
-
-    RealNFA(final TNFATransitionTable transitionTable, final State initialState,
-        final Set<State> finalStates) {
-      super();
-      this.transitionTable = transitionTable;
-      this.initialState = initialState;
-      this.finalStates = finalStates;
     }
 
     public Collection<InputRange> allInputRanges() {
@@ -142,8 +137,7 @@ interface TNFA {
   public State getInitialState();
 
   /**
-   * 
-   * @param state
+   * @param state not null.
    * @return whether or not {@code state} accepting. True if it is, false otherwise.
    */
   public boolean isAccepting(State state);

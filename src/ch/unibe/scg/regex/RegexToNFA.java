@@ -113,7 +113,7 @@ class RegexToNFA {
   public TNFA convert(final Node node) {
     checkNotNull(node);
 
-    final Builder builder = TNFA.RealNFA.builder();
+    final Builder builder = new Builder();
     final MiniAutomaton m = makeInitialMiniAutomaton(builder);
 
     final MiniAutomaton a = make(m, builder, node);

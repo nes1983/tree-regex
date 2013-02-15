@@ -99,10 +99,6 @@ interface TransitionTable {
           // set :(
         }
 
-        public CaptureGroup makeCaptureGroup() {
-          return captureGroupMaker.next();
-        }
-
         public void put(final State startingState, final InputRange range, final State endingState,
             final Priority priority, final Tag tag) {
           // TODO Some overlapping tests
