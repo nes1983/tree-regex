@@ -1,7 +1,8 @@
 package ch.unibe.scg.regex;
 
-import ch.unibe.scg.regex.TransitionTable.CaptureGroupMaker;
-import ch.unibe.scg.regex.TransitionTable.CaptureGroupMaker.RealCaptureGroup;
+import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker;
+import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker.RealCaptureGroup;
+
 
 /**
  * Get one from {@link CaptureGroupMaker}.
@@ -58,7 +59,6 @@ interface Tag extends Comparable<Tag> {
 
   /**
    * Don't instantiate directly. Leave it to {@link CaptureGroupMaker}.
-   * 
    */
   static abstract class RealTag extends AbstractTag {
     static class EndTag extends RealTag {
