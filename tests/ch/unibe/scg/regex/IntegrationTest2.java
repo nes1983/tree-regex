@@ -22,36 +22,44 @@ public class IntegrationTest2 {
     return new TDFAInterpreter(TNFAToTDFA.make(tnfa));
   }
 
-  String regexp() {
-    return "(((a+)b)+c)+";
-  }
-
   @Before
   public void setUp() {
     State.resetCount();
-    final Regex parsed = new ParserProvider().regexp().parse(regexp());
+    final Regex parsed = new ParserProvider().regexp().parse("(((a+)b)+c)+");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
 
-    assertThat(tnfa.toString(), is("q0 -> [q9], "
-        + "{(q0, ANY)=[q0, NORMAL, NONE, q1, NORMAL, ➀0], " + "(q1, ε)=[q2, NORMAL, ➀1], "
-        + "(q2, ε)=[q3, NORMAL, ➀2], " + "(q3, a-a)=[q4, NORMAL, NONE], "
-        + "(q4, ε)=[q3, NORMAL, NONE, q5, NORMAL, ➁2], " + "(q5, b-b)=[q6, NORMAL, NONE], "
-        + "(q6, ε)=[q7, NORMAL, ➁1, q2, NORMAL, NONE], " + "(q7, c-c)=[q8, NORMAL, NONE], "
-        + "(q8, ε)=[q9, NORMAL, ➁0, q1, NORMAL, NONE]}"));
+    assertThat(tnfa.toString(),
+        is("q0 -> [q9], {(q0, ANY)=[q0, NORMAL, NONE, q1, NORMAL, ➀1], (q1, ε)=[q2, NORMAL, ➀2], "
+            + "(q2, ε)=[q3, NORMAL, ➀3], (q3, a-a)=[q4, NORMAL, NONE], "
+            + "(q4, ε)=[q3, NORMAL, NONE, q5, NORMAL, ➁3], (q5, b-b)=[q6, NORMAL, NONE], "
+            + "(q6, ε)=[q7, NORMAL, ➁2, q2, NORMAL, NONE], (q7, c-c)=[q8, NORMAL, NONE], "
+            + "(q8, ε)=[q9, NORMAL, ➁1, q1, NORMAL, NONE]}"));
     tdfaInterpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
   }
 
   @Test
-  public void test() {
+  public void shouldNotMatch() {
     final MatchResult res = tdfaInterpreter.interpret("aabbccaaaa");
-    assertThat(res.toString(), is(""));
+    assertThat(res.toString(), is("NO_MATCH"));
+    assertThat(tdfaInterpreter.tdfaBuilder.build().toString(),
+        is("q0-a-a -> q1 [6<- pos]\nq1-a-a -> q1 []\nq1-b-b -> q2 [14<- pos]\n"
+            + "q2-b-b -> q3 []\nq3-c-c -> q4 [22<- pos]\n"
+            + "q4-c-c -> q5 []\nq5-a-a -> q6 [30<- pos]\nq6-a-a -> q1 []\n"));
+  }
+
+
+
+  @Test
+  public void shouldMatch() {
+    final MatchResult res = tdfaInterpreter.interpret("aabbc");
+    assertThat(res.toString(), is("0-5"));
     assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is(""));
   }
 
   @Test
   public void testNoMatch() {
     final MatchResult res = tdfaInterpreter.interpret("aabc");
-    assertThat(res.toString(), is("NO_MATCH"));
+    assertThat(res.toString(), is("0-4"));
     assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is(""));
   }
 
@@ -72,6 +80,7 @@ public class IntegrationTest2 {
 
   @Test
   public void testTwoRangesMatch() {
+    // TODO: NFA must contain tags for entire match.
     assertThat(makeInterpreter("ab").interpret("ab").toString(), is(""));
   }
 

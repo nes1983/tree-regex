@@ -7,10 +7,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.HashSet;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -56,6 +53,7 @@ public final class IntegrationTest {
             Priority.LOW, Tag.NONE)));
     when(tnfa.availableTransitionsFor(s2, 'a')).thenReturn(new ArrayList());
     when(tnfa.isAccepting(eq(s2))).thenReturn(true);
+    when(tnfa.getFinalStates()).thenReturn(new HashSet<>(Arrays.asList(s2)));
     when(tnfa.isAccepting(eq(s1))).thenReturn(false);
     when(tnfa.isAccepting(eq(s0))).thenReturn(false);
     return tnfa;
@@ -65,41 +63,6 @@ public final class IntegrationTest {
   public void setUp() {
     tnfa = makeTheNFA();
     nfa2dfa = TNFAToTDFA.make(tnfa);
-  }
-
-  // @Test
-  // public void testClosure() {
-  // final Map<State, SortedSet<MapItem>> initState = //nfa2dfa
-  // // .convertToDfaState(tnfa.getInitialState());
-  // null;
-  // assertThat(initState.toString(), is("{q0=[]}"));
-  // final Map<State, SortedSet<MapItem>> withTags =
-  // nfa2dfa.closure(initState);
-  // final Iterator<Entry<State, SortedSet<MapItem>>> iter =
-  // withTags.entrySet()
-  // .iterator();
-  // final Entry<State, SortedSet<MapItem>> e1 = iter.next();
-  // final Entry<State, SortedSet<MapItem>> e2 = iter.next();
-  // assertFalse(e1.getValue() == e2.getValue());
-  // assertThat(withTags.size(), is(2));
-  // assertThat(withTags.entrySet().iterator().next().getValue().isEmpty(),
-  // is(true));
-  // assertThat(withTags.toString(), is("{q0=[], q1=[MapItem[0, t0]]}"));
-  //
-  // }
-
-  @Test
-  public void testClosure2() {
-    final Map<State, SortedSet<MapItem>> input = new LinkedHashMap<>();
-    input.put(s0, new TreeSet<MapItem>());
-    final SortedSet<MapItem> arg = new TreeSet<>();
-    arg.add(new MapItem(t0, 0));
-    input.put(s2, arg);
-    input.put(s1, new TreeSet<>(arg));
-    assertThat(input.toString(), is("{q0=[], q2=[MapItem[0, t0]], q1=[MapItem[0, t0]]}"));
-
-    final Map<State, SortedSet<MapItem>> res = nfa2dfa.closure(input);
-    assertThat(res.toString(), is(""));
   }
 
   @Test

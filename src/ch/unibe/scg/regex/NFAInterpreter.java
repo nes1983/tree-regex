@@ -30,7 +30,7 @@ class NFAInterpreter {
       final TNFA tnfa = r.convert(s);
       final NFAInterpreter n = new NFAInterpreter(tnfa);
       final RealMatchResult match = (RealMatchResult) n.match("...");
-      assertThat(match.captureGroups.toString(), is(""));
+      assertThat(match.toString(), is(""));
     }
 
     @Test

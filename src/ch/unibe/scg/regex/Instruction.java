@@ -61,16 +61,8 @@ interface Instruction {
       return new ReorderInstruction(from, to);
     }
 
-    public Instruction reorder(final MapItem from, final MapItem to) {
-      throw new RuntimeException("Not implemented");
-    }
-
     public Instruction storePos(final int tag) {
       return SetInstruction.make(tag);
-    }
-
-    public Instruction storePos(final MapItem mapItem) {
-      return SetInstruction.make(lookup(mapItem.getTag()));
     }
   }
 

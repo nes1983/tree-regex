@@ -124,7 +124,7 @@ class TDFAInterpreter {
   private MatchResult extractFromContext(int[] context, int[] mapping, CharSequence input) {
     final int[] extracted = new int[mapping.length];
     for (int i = 0; i < mapping.length; i += 2) {
-      if (context[mapping[i]] < 0) {
+      if (mapping[i] < 0) {
         continue; // TODO delete. Nice for the current unit test, but broken over all.
       }
       extracted[i] = context[mapping[i]];

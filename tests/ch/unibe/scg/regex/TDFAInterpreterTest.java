@@ -22,7 +22,7 @@ public class TDFAInterpreterTest {
   public void testBuiltAutomaton() {
     interpreter.interpret("aaaaaa");
     assertThat(interpreter.tdfaBuilder.build().toString(),
-        is("q0-a-a -> q1 [1<- pos]\nq1-a-a -> q1 [1<- pos, 1->0]\n"));
+        is("q0-a-a -> q1 [1<- pos]\nq1-a-a -> q1 [1->0, 1<- pos]\n"));
   }
 
   @Test
@@ -42,6 +42,6 @@ public class TDFAInterpreterTest {
   @Test
   public void testMatch() {
     final MatchResult matchResult = interpreter.interpret("aaaaaa");
-    assertThat(matchResult.toString(), is(""));
+    assertThat(matchResult.toString(), is("4-0"));
   }
 }
