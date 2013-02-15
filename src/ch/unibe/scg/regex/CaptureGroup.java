@@ -5,22 +5,16 @@ interface CaptureGroup {
    * Returns increasing capture groups, including their tags. The first returned capture group is 1.
    */
   static class CaptureGroupMaker {
+    CaptureGroup last = make(0);
+
     /**
      * Don't instantiate directly. Use {@link CaptureGroupMaker} instead.
      */
     static class RealCaptureGroup implements CaptureGroup {
-      static RealCaptureGroup make(final int number) {
-        final RealCaptureGroup cg = new RealCaptureGroup(number);
-        cg.startTag = Tag.RealTag.makeStartTag(cg);
-        cg.endTag = Tag.RealTag.makeEndTag(cg);
-        return cg;
-      }
-
-      Tag endTag;
+      Tag startTag, endTag;
       final int number;
 
-      Tag startTag;
-
+      /** Call {@link RealCaptureGroup#make(int)} instead */
       private RealCaptureGroup(final int number) {
         this.number = number;
       }
@@ -45,10 +39,15 @@ interface CaptureGroup {
       }
     }
 
-    CaptureGroup last = new RealCaptureGroup(0);
+    RealCaptureGroup make(final int number) {
+      final RealCaptureGroup cg = new RealCaptureGroup(number);
+      cg.startTag = Tag.RealTag.makeStartTag(cg);
+      cg.endTag = Tag.RealTag.makeEndTag(cg);
+      return cg;
+    }
 
-    synchronized CaptureGroup next() {
-      last = RealCaptureGroup.make(last.getNumber() + 1);
+    public synchronized CaptureGroup next() {
+      last = make(last.getNumber() + 1);
       return last;
     }
   }
