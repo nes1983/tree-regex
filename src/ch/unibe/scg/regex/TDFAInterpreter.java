@@ -49,7 +49,7 @@ class TDFAInterpreter {
     DFAState t = tnfa2tdfa.makeStartState();
     states.add(t);
 
-    final int[] context = new int[100]; // TODO(niko) enter real size;
+    final Memory memory = new Memory();
     for (int pos = 0; pos < input.length(); pos++) {
       final char a = input.charAt(pos);
 
@@ -58,7 +58,7 @@ class TDFAInterpreter {
         if ((nextState = tdfaBuilder.availableTransition(t, a)) != null) {
           // TODO check for fail state.
           for (final Instruction instruction : nextState.getInstructions()) {
-            instruction.execute(context, pos); // TODO fill in context.
+            instruction.execute(memory, pos); // TODO fill in context.
           }
           t = nextState.getNextState();
           continue;
@@ -116,7 +116,7 @@ class TDFAInterpreter {
       c = new ArrayList<>(c);
 
       for (final Instruction instruction : c) {
-        instruction.execute(context, pos); // TODO fill in context.
+        instruction.execute(memory, pos); // TODO fill in context.
       }
 
       tdfaBuilder.addTransition(t, inputRange, newState, c);
@@ -128,16 +128,16 @@ class TDFAInterpreter {
       return RealMatchResult.NoMatchResult.SINGLETON;
     }
 
-    return extractFromContext(context, mapping, input);
+    return extractFromContext(memory, mapping, input);
   }
 
-  private MatchResult extractFromContext(int[] context, int[] mapping, CharSequence input) {
+  private MatchResult extractFromContext(Memory memory, int[] mapping, CharSequence input) {
     final int[] extracted = new int[mapping.length];
     for (int i = 0; i < mapping.length; i++) {
       if (mapping[i] < 0) {
         continue; // TODO delete. Nice for the current unit test, but broken over all.
       }
-      extracted[i] = context[mapping[i]];
+      extracted[i] = memory.read(mapping[i]);
     }
     return new RealMatchResult(extracted, input);
   }

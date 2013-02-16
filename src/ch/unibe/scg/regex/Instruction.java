@@ -20,7 +20,7 @@ interface Instruction {
     }
 
     @Override
-    public void execute(int[] context, int pos) {
+    public void execute(Memory memory, int pos) {
       throw new RuntimeException("Not implemented");
     }
 
@@ -72,8 +72,8 @@ interface Instruction {
     }
 
     @Override
-    public void execute(int[] context, int pos) {
-      context[to] = context[from];
+    public void execute(Memory memory, int pos) {
+      memory.write(to, memory.read(from));
     }
 
     @Override
@@ -93,8 +93,8 @@ interface Instruction {
       this.tag = tag;
     }
 
-    public void execute(final int[] context, final int pos) {
-      context[tag] = pos;
+    public void execute(final Memory memory, final int pos) {
+      memory.write(tag, pos);
     }
 
     @Override
@@ -103,5 +103,5 @@ interface Instruction {
     }
   }
 
-  public void execute(int[] context, int pos);
+  public void execute(Memory memory, int pos);
 }
