@@ -2436,11 +2436,13 @@ abaababc
 \begin_inset Quotes erd
 \end_inset
 
-.
- First, it is converted to a 
-\shape smallcaps
-nfa
-\shape default
+, the resulting DFA can be seen in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:lazy-dfa"
+
+\end_inset
+
 :
 \end_layout
 
@@ -2907,6 +2909,58 @@ We are in a finishing state
 
 \end_deeper
 \begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename graphs/abc-dfa.pdf
+	width 75text%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:lazy-dfa"
+
+\end_inset
+
+The DFA of 
+\family typewriter
+(?:(?:(a+)b)+c)+
+\family default
+ matching 
+\begin_inset Quotes eld
+\end_inset
+
+abaababc
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \begin_inset Note Comment
 status collapsed
 
