@@ -291,6 +291,7 @@ interface TransitionTable {
         final int size = transitions.size();
         final char[] froms = new char[size];
         @SuppressWarnings("unchecked")
+        // Suppress seems unavoidable. Checked on Stackoverflow.
         final List<Instruction>[] instructions = new List[size];
         final int[] newStates = new int[size];
         final int[] states = new int[size];

@@ -20,7 +20,6 @@ public final class NewTest {
   Tag t0;
   TNFA tnfa;
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
   TNFA makeTheNFA() {
     State.resetCount();
 
@@ -45,7 +44,7 @@ public final class NewTest {
     when(tnfa.availableTransitionsFor(s1, 'a')).thenReturn(
         Arrays.asList(new TransitionTriple(s2, Priority.NORMAL, Tag.NONE), new TransitionTriple(s1,
             Priority.NORMAL, Tag.NONE)));
-    when(tnfa.availableTransitionsFor(s2, 'a')).thenReturn(new ArrayList());
+    when(tnfa.availableTransitionsFor(s2, 'a')).thenReturn(new ArrayList<TransitionTriple>());
     when(tnfa.isAccepting(eq(s2))).thenReturn(true);
     when(tnfa.isAccepting(eq(s1))).thenReturn(false);
     when(tnfa.isAccepting(eq(s0))).thenReturn(false);

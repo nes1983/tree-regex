@@ -20,6 +20,7 @@ public final class DFATableTest {
   final int s4 = 3;
   TDFATransitionTable table;
 
+  // Suppress seems unavoidable.
   @SuppressWarnings("unchecked")
   @Before
   public void setUp() {

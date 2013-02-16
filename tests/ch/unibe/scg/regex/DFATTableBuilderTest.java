@@ -23,19 +23,17 @@ public final class DFATTableBuilderTest {
     builder = new TDFATransitionTable.Builder();
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
   @Test
   public void testBuilder() {
     final DFAState q0 = mock(DFAState.class);
     final DFAState q1 = mock(DFAState.class);
-
-    builder.addTransition(q0, InputRange.make('a', 'c'), q1, (List) Collections.emptyList());
+    final List<Instruction> empty = Collections.emptyList();
+    builder.addTransition(q0, InputRange.make('a', 'c'), q1, empty);
 
     final TDFATransitionTable dfa = builder.build();
     assertThat(dfa.toString(), is("q0-a-c -> q1 []\n"));
     final NextState pr = dfa.newStateAndInstructions(0, 'b');
     assertThat(pr.getNextState(), is(1));
-    assertThat(pr.getInstructions(), is(Collections.EMPTY_LIST));
-
+    assertThat(pr.getInstructions(), is(empty));
   }
 }

@@ -74,9 +74,10 @@ public class TDFAInterpreterTest {
 
   @Test
   public void testInvalidStringCompiled() {
-    interpreter.interpret("b");
+    final MatchResult matcher = interpreter.interpret("b");
     assertThat(interpreter.tdfaBuilder.build().toString(), is(""));
     // Input falls outside of supported input ranges, so this is legal.
+    assertThat(matcher.toString(), is("NO_MATCH"));
   }
 
 
