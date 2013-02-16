@@ -8,13 +8,23 @@ package ch.unibe.scg.regex;
  */
 abstract class InputRange implements Comparable<InputRange> {
   private static class Any extends SpecialInputRange {
+    Any() {
+      // Everything.
+      super(Character.MIN_VALUE, Character.MAX_VALUE);
+    }
+
     @Override
     public String toString() {
       return "ANY";
     }
   }
 
-  private static class Eos extends SpecialInputRange {
+  private static class Eos extends RealInputRange {
+    Eos() {
+      // Nothing.
+      super((char) (Character.MIN_VALUE + 1), Character.MIN_VALUE);
+    }
+
     @Override
     public String toString() {
       return "$";
@@ -22,26 +32,20 @@ abstract class InputRange implements Comparable<InputRange> {
   }
 
   private static class Epsilon extends SpecialInputRange {
+    Epsilon() {
+      // Nothing.
+      super((char) (Character.MIN_VALUE + 2), Character.MIN_VALUE);
+    }
+
     @Override
     public String toString() {
       return "ε";
     }
   }
 
-  static class SpecialInputRange extends InputRange {
-    @Override
-    public boolean contains(char character) {
-      return false;
-    }
-
-    @Override
-    public char getFrom() {
-      return Character.MIN_VALUE;
-    }
-
-    @Override
-    public char getTo() {
-      return Character.MIN_VALUE;
+  static class SpecialInputRange extends RealInputRange {
+    private SpecialInputRange(char from, char to) {
+      super(from, to);
     }
   }
 
