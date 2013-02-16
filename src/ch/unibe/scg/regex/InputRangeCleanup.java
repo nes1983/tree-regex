@@ -27,7 +27,6 @@ class InputRangeCleanup {
       final InputRange c = current.next();
       final InputRange n = next.next();
       final InputRange shrunk = shrink(c, n);
-      System.out.println(shrunk);
       ret.add(shrunk);
     } while (next.hasNext());
     ret.add(current.next());
