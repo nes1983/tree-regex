@@ -240,7 +240,7 @@ interface TransitionTable {
 
         final Map<DFAState, Integer> mapping = new LinkedHashMap<>();
 
-        public int lookup(final DFAState state) {
+        public int lookupOrMake(final DFAState state) {
           final Integer to = mapping.get(state);
           if (to != null) {
             return to;
@@ -253,6 +253,10 @@ interface TransitionTable {
         int next() {
           return ++lastCreatedState;
         }
+
+        Integer lookup(DFAState t) {
+          return mapping.get(t);
+        }
       }
 
       final Mapping mapping = new Mapping();
@@ -262,13 +266,16 @@ interface TransitionTable {
           final DFAState newState, final List<Instruction> instructions) {
 
         final Entry e =
-            new Entry(inputRange.getFrom(), inputRange.getTo(), instructions, mapping.lookup(t),
-                mapping.lookup(newState), t);
+            new Entry(inputRange.getFrom(), inputRange.getTo(), instructions,
+                mapping.lookupOrMake(t), mapping.lookupOrMake(newState), newState);
         transitions.add(e);
       }
 
       public NextDFAState availableTransition(DFAState t, char a) {
-        final int fromState = mapping.lookup(t);
+        final Integer fromState = mapping.lookup(t);
+        if (fromState == null) {
+          return null;
+        }
         final List<Instruction> emptyList = Collections.emptyList();
         final Entry probe = new Entry(a, a, emptyList, fromState, -1, null);
         final NavigableSet<Entry> headSet = transitions.headSet(probe, true);

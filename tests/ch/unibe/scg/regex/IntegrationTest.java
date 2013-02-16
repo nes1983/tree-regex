@@ -54,8 +54,8 @@ public class IntegrationTest {
 
   @Test
   public void testMatch2() {
-    final MatchResult res = tdfaInterpreter.interpret("aabc");
-    assertThat(res.toString(), is("0-3"));
+    final MatchResult res = tdfaInterpreter.interpret("aaabcaaabcaabc");
+    assertThat(res.toString(), is("0-13"));
     assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is(""));
   }
 
