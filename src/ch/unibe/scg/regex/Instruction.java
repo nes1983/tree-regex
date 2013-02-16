@@ -4,7 +4,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 interface Instruction {
-
   static class CopyInstruction implements Instruction {
     public static Instruction make(final int fromTag, final int fromPos, final int toTag,
         final int toPos) {
@@ -31,9 +30,7 @@ interface Instruction {
     }
   }
 
-  /**
-   * Not threadsafe!
-   */
+  /** Not threadsafe. */
   class InstructionMaker {
     public static InstructionMaker get() {
       return new InstructionMaker();

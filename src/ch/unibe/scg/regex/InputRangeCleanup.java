@@ -32,7 +32,6 @@ class InputRangeCleanup {
     ret.add(current.next());
 
     return Collections.unmodifiableSortedSet(ret);
-
   }
 
   public InputRange shrink(final InputRange toBeShrunk, final InputRange fixed) {
