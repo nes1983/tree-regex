@@ -12,18 +12,20 @@ import org.junit.Test;
 import ch.unibe.scg.regex.TransitionTable.NextState;
 import ch.unibe.scg.regex.TransitionTable.TDFATransitionTable;
 
-public class DFATableTest {
+@SuppressWarnings("javadoc")
+public final class DFATableTest {
   final int s1 = 0;
   final int s2 = 1;
   final int s3 = 2;
   final int s4 = 3;
   TDFATransitionTable table;
 
+  @SuppressWarnings("unchecked")
   @Before
   public void setUp() {
     table =
         new TDFATransitionTable(new char[] {'c', 'l'}, new char[] {'k', 'm'}, new int[] {s1, s2},
-            new int[] {s3, s4}, new List[] {Collections.EMPTY_LIST, Collections.EMPTY_LIST});
+            new int[] {s3, s4}, new List[] {Collections.emptyList(), Collections.emptyList()});
   }
 
   @Test
