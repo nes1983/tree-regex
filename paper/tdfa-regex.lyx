@@ -1346,11 +1346,7 @@ Name:
 \end_layout
 
 \begin_layout LyX-Code
-Global variables: a result list 
-\begin_inset Formula $R$
-\end_inset
-
- (initially empty), 
+Global variables: 
 \end_layout
 
 \begin_deeper
@@ -1413,6 +1409,11 @@ Initialize empty stack
 \end_layout
 
 \begin_layout LyX-Code
+1.
+ Consuming the input
+\end_layout
+
+\begin_layout LyX-Code
 For every transition 
 \begin_inset Formula $t$
 \end_inset
@@ -1455,7 +1456,12 @@ if
 
 \end_deeper
 \begin_layout LyX-Code
+2.
+ Following 
+\begin_inset Formula $\varepsilon$
+\end_inset
 
+-transitions
 \end_layout
 
 \begin_layout LyX-Code
@@ -1529,7 +1535,7 @@ for all transitions
 
 \begin_deeper
 \begin_layout LyX-Code
-1.
+2.1.
  continue if 
 \begin_inset Formula $q'$
 \end_inset
@@ -1546,7 +1552,7 @@ if
 \end_layout
 
 \begin_layout LyX-Code
-2.
+2.2.
  Compute new memory locations
 \end_layout
 
@@ -1565,6 +1571,13 @@ if
 \begin_deeper
 \begin_layout LyX-Code
 \begin_inset Formula $l_{new}\leftarrow[l_{1},\dots,l_{i-1},c,l_{i+1},\dots,l_{n}]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+\begin_inset Formula $c\leftarrow c+1$
 \end_inset
 
 
@@ -1589,7 +1602,7 @@ end if
 \end_layout
 
 \begin_layout LyX-Code
-3.
+2.3.
  new store instructions:
 \end_layout
 
@@ -1598,7 +1611,7 @@ end if
 \end_layout
 
 \begin_layout LyX-Code
-4.
+2.4.
  Push according to priority of transition:
 \end_layout
 
@@ -1684,25 +1697,83 @@ Compute the follow-up state for DFA state
 
 \end_layout
 
-\begin_layout Example
-Computing the next state from the DFA state 
-\begin_inset Formula $(1[0,1],2[0,-1])$
+\begin_layout Definition
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename graphs/automaton.pdf
+	width 69text%
+
 \end_inset
 
- in figure X: 
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:example-automaton"
+
+\end_inset
+
+Automaton for ((b+)|a)+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Example
+Computing the next state from the DFA state 
+\begin_inset Formula $(1[2,5,3,4],2[6,5,3,4],3[2,0,3,1],4[2,0,3,1],5[2,0,3,1],6[2,0,3,4],7[2,0,3,4],8[2,5,3,4])$
+\end_inset
+
+, which is the state after reading a single 
+\begin_inset Quotes eld
+\end_inset
+
+b
+\begin_inset Quotes erd
+\end_inset
+
+ input, in figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:example-automaton"
+
+\end_inset
+
+: 
 \end_layout
 
 \begin_layout Enumerate
 Since only 
-\begin_inset Formula $2$
+\begin_inset Formula $3$
 \end_inset
 
- has an 
+ has a 
 \begin_inset Formula $b$
 \end_inset
 
- transition, 
-\begin_inset Formula $high=(3[0,-1])$
+ transition and no tags are written in consuming transitions, 
+\begin_inset Formula $high=(4[2,0,3,1])$
 \end_inset
 
  after the initializing for loop
@@ -1710,7 +1781,7 @@ Since only
 
 \begin_layout Enumerate
 The state 
-\begin_inset Formula $3[0,-1]$
+\begin_inset Formula $4[2,0,3,1]$
 \end_inset
 
  is taken from the stack and added to 
@@ -1718,7 +1789,7 @@ The state
 \end_inset
 
 , which is now 
-\begin_inset Formula $\{3[0,-1]\}$
+\begin_inset Formula $\{4[2,0,3,1]\}$
 \end_inset
 
 
@@ -1741,31 +1812,28 @@ possible optimization: only add if state has non-
 \begin_deeper
 \begin_layout Enumerate
 The transition 
-\begin_inset Formula $3\rightarrow4$
+\begin_inset Formula $4\rightarrow5$
 \end_inset
 
- might be analysed first, but is added (with memory 
-\begin_inset Formula $[0,2]$
-\end_inset
-
-) to 
+ might be analysed first, but is added to 
 \begin_inset Formula $low$
 \end_inset
 
-, because for greedy consumption in a 
+, because for greedy consumption in the 
 \begin_inset Formula $+$
 \end_inset
 
  operator, the backward way is prefered.
+ The memory is not changed here.
 \end_layout
 
 \begin_layout Enumerate
 Then the transition 
-\begin_inset Formula $3\rightarrow2$
+\begin_inset Formula $4\rightarrow3$
 \end_inset
 
  is analysed and 
-\begin_inset Formula $2$
+\begin_inset Formula $3$
 \end_inset
 
  is added to 
@@ -1778,7 +1846,7 @@ Then the transition
 \end_deeper
 \begin_layout Enumerate
 Now the state 
-\begin_inset Formula $2[0,-1]$
+\begin_inset Formula $3[2,0,3,1]$
 \end_inset
 
  is taken from the stack and added to 
@@ -1794,11 +1862,11 @@ Now the state
 
 \begin_layout Enumerate
 The state 
-\begin_inset Formula $3[0,2]$
+\begin_inset Formula $4[2,0,3,1]$
 \end_inset
 
- is next and leads to 
-\begin_inset Formula $4[0,2]$
+ leads to 
+\begin_inset Formula $5[2,0,3,1]$
 \end_inset
 
 
@@ -1806,41 +1874,108 @@ The state
 
 \begin_layout Enumerate
 The state 
-\begin_inset Formula $4[0,2]$
+\begin_inset Formula $5[2,0,3,1]$
 \end_inset
 
  leads to 
-\begin_inset Formula $1[0,2]$
+\begin_inset Formula $6[2,0,3,7]$
+\end_inset
+
+, because 
+\begin_inset Formula $\tau$
+\end_inset
+
+ is closed here.
+\end_layout
+
+\begin_layout Enumerate
+The state 
+\begin_inset Formula $6[2,0,3,7]$
+\end_inset
+
+ leads to 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $7[2,0,3,7]$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+The state 
+\begin_inset Formula $7[2,0,3,7]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $8[2,8,3,7]$
+\end_inset
+
+, closing the 
+\begin_inset Formula $\sigma$
+\end_inset
+
+ tag.
+ 
+\end_layout
+
+\begin_layout Enumerate
+The state 
+\begin_inset Formula $8[2,8,3,7]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $1[2,8,3,7]$
 \end_inset
 
 
 \end_layout
 
 \begin_layout Enumerate
-\begin_inset Formula $1[0,2]$
+The state 
+\begin_inset Formula $1[2,8,3,7]$
 \end_inset
 
  leads to 
-\begin_inset Formula $2[0,2]$
+\begin_inset Formula $2[9,8,3,7]$
 \end_inset
 
+, reopening 
+\begin_inset Formula $\sigma$
+\end_inset
 
+.
 \end_layout
 
 \begin_layout Enumerate
-\begin_inset Formula $2[0,2]$
+The state 
+\begin_inset Formula $2[9,8,3,7]$
 \end_inset
 
- is however not added to 
+ would lead to 
+\begin_inset Formula $3[9,8,10,7]$
+\end_inset
+
+, it is however not added to 
 \begin_inset Formula $R$
 \end_inset
 
 , because there is a different 
-\begin_inset Formula $2$
+\begin_inset Formula $3$
 \end_inset
 
  state (namely 
-\begin_inset Formula $2[0,-1]$
+\begin_inset Formula $3[4,1,5,3]$
 \end_inset
 
 ) in 
@@ -1852,49 +1987,160 @@ The state
 
 \begin_layout Enumerate
 Now, a mapping is searched by comparing the new DFA state 
-\begin_inset Formula $1[0,2],2[0,-1]$
+\begin_inset Formula $(1[2,8,3,7],2[9,8,3,7],3[2,0,3,1],4[2,0,3,1],5[2,0,3,1],6[2,0,3,7],7[2,0,3,7],8[2,8,3,7])$
 \end_inset
 
  to any old states, in our case 
-\begin_inset Formula $1[0,1],2[0,-1]$
+\begin_inset Formula $(1[2,5,3,4],2[6,5,3,4],3[2,0,3,1],4[2,0,3,1],5[2,0,3,1],6[2,0,3,4],7[2,0,3,4],8[2,5,3,4])$
 \end_inset
 
-
+.
+ 
 \end_layout
 
 \begin_deeper
 \begin_layout Enumerate
-The memory locations 
+Now the first NFA state has the memory 
+\begin_inset Formula $[2,8,3,7]$
+\end_inset
+
+ in the new state and 
+\begin_inset Formula $[2,5,3,4]$
+\end_inset
+
+ in the old state.
+ This adds the following constraints:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Memory locations 
+\begin_inset Formula $2$
+\end_inset
+
+ and 
+\begin_inset Formula $3$
+\end_inset
+
+ is mapped to themselves
+\end_layout
+
+\begin_layout Enumerate
+Memory location 
+\begin_inset Formula $8$
+\end_inset
+
+ is mapped to 
+\begin_inset Formula $5$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Memory location 
+\begin_inset Formula $7$
+\end_inset
+
+ is mapped to 
+\begin_inset Formula $4$
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+The second NFA state has the memory 
+\begin_inset Formula $[9,8,3,7]$
+\end_inset
+
+ and 
+\begin_inset Formula $[6,5,3,4]$
+\end_inset
+
+ respectively.
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Memory location 
+\begin_inset Formula $9$
+\end_inset
+
+ is mapped to 
+\begin_inset Formula $6$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Memory location 
+\begin_inset Formula $8$
+\end_inset
+
+ is mapped to 
+\begin_inset Formula $5$
+\end_inset
+
+, which conforms to the given constraint from earlier
+\end_layout
+
+\begin_layout Enumerate
+Memory location 
+\begin_inset Formula $7$
+\end_inset
+
+ is mapped to 
+\begin_inset Formula $4$
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+The third, forth, and fifth NFA state has identical memory, which introduces
+ the constraints for 
 \begin_inset Formula $0$
 \end_inset
 
  and 
-\begin_inset Formula $-1$
+\begin_inset Formula $1$
 \end_inset
 
- can be mapped by the identity map.
+
 \end_layout
 
 \begin_layout Enumerate
-The memory location 
-\begin_inset Formula $2$
+The sixth and seventh NFA state conforms to the mapping of 
+\begin_inset Formula $7$
 \end_inset
 
- in the new state is independent of the others, just as 
-\begin_inset Formula $1$
+ to 
+\begin_inset Formula $4$
 \end_inset
 
- in the old and they appear in the same position and therefore can be mapped.
- If fixing 
-\begin_inset Formula $2$
+
+\end_layout
+
+\begin_layout Enumerate
+The eighth NFA state conforms to the mapping of 
+\begin_inset Formula $8$
 \end_inset
 
- or 
-\begin_inset Formula $1$
+ to 
+\begin_inset Formula $5$
 \end_inset
 
- in any of the states would create additional constraint, they would possibly
- make this mapping fail.
+.
+\end_layout
+
+\begin_layout Enumerate
+This means that the new state is isomorphic to an existing state and the
+ mapping has been explicitly constructed.
+ The newly introduced locations are assigned the position of character read.
 \end_layout
 
 \end_deeper
@@ -2050,12 +2296,12 @@ A hierarchy node, as a tree node, has a corresponding subtree.
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename graphs/lehrer_match.pdf
-	width 100text%
+	width 80text%
 
 \end_inset
 
@@ -2065,7 +2311,7 @@ status open
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename graphs/lehrer_after.pdf
-	width 100text%
+	width 80text%
 
 \end_inset
 
@@ -2143,34 +2389,16 @@ The intuition is to notice that two tags -- the opening and the corresponding
 
 \end_layout
 
-\begin_layout Paragraph*
-Example
-\end_layout
-
-\begin_layout Standard
-In the following, the regex 
-\family typewriter
-(?:(?:(a+)b)+c)+
-\family default
- will be converted to a 
-\shape smallcaps
-dfa
-\shape default
-.
- First, it is converted to a 
-\shape smallcaps
-nfa
-\shape default
-:
+\begin_layout Example
 \begin_inset Float figure
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename graphs/standard_example.svg
+	filename graphs/abc.pdf
 	width 75text%
 
 \end_inset
@@ -2190,53 +2418,494 @@ NFA about to be transformed.
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-As can be seen, the 
+In the following, the regex 
+\family typewriter
+(?:(?:(a+)b)+c)+
+\family default
+ will be converted to a 
 \shape smallcaps
 dfa
 \shape default
- start node is just 
-\begin_inset Formula $\{s_{1}\}$
+ lazily while matching the string 
+\begin_inset Quotes eld
 \end_inset
 
-, since no 
-\begin_inset Formula $\varepsilon$
+abaababc
+\begin_inset Quotes erd
 \end_inset
 
--steps are possible.
- Now the states are extended using a breadth first search: 
+.
+ First, it is converted to a 
+\shape smallcaps
+nfa
+\shape default
+:
 \end_layout
 
 \begin_layout Enumerate
-\begin_inset Formula ${s_{1}}\xrightarrow{a}{s_{2}m_{t}^{0}}$
+The starting state is 
+\begin_inset Formula $(1[-1,-2],2[0,-2])$
+\end_inset
+
+ and the memory location 
+\begin_inset Formula $0$
+\end_inset
+
+ is initialized to hold the index 
+\begin_inset Formula $0$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Now the letter a is read:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+\begin_inset Formula $2[0,-2]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $3[0,-2]$
 \end_inset
 
 
 \end_layout
 
 \begin_layout Enumerate
-\begin_inset Formula ${s_{2}m_{t}^{0}}\xrightarrow{a}{s_{2}m_{t}^{0}}$
+\begin_inset Formula $3[0,-2]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $2[0,-2]$
 \end_inset
 
 
 \end_layout
 
 \begin_layout Enumerate
-\begin_inset Formula ${s_{2}m_{t}^{0}}\xrightarrow{b}{s_{3}m_{t}^{0}}$
+\begin_inset Formula $3[0,-2]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $4[0,-2]$
 \end_inset
 
 
 \end_layout
 
+\begin_layout Enumerate
+\begin_inset Formula $4[0,-2]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $5[0,1]$
+\end_inset
+
+, with the instruction to write the index to 
+\begin_inset Formula $1$
+\end_inset
+
+ and commit the memory locations 
+\begin_inset Formula $(0,1)$
+\end_inset
+
+ on level 
+\begin_inset Formula $3$
+\end_inset
+
+ afterwards.
+ The hierarchical memory is now 
+\begin_inset Formula $c_{1}=nil,c_{2}=nil,c_{3}=(0,1)$
+\end_inset
+
+, where 
+\begin_inset Formula $(0,1)$
+\end_inset
+
+ are the indeces, not the memory locations
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Um, we might need to introduce a better notation
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Next the letter b is read:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+\begin_inset Formula $5[0,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $6[0,1]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $6[0,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $1[0,1]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $1[0,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $2[2,1]$
+\end_inset
+
+, with the instruction to write the current index to 
+\begin_inset Formula $2$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $6[0,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $7[0,1]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+7[0,1] leads to 
+\begin_inset Formula $8[0,1]$
+\end_inset
+
+, with the instruction to commit to the second level.
+ The hierarchical memory is now 
+\begin_inset Formula $c_{1}=nil,c_{2}=(0,1),c_{3}=(0,1)$
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Next the letter a is read:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+\begin_inset Formula $2[2,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $3[2,1]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $3[2,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $2[2,1]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $3[2,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $4[2,1]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $4[2,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $5[2,3]$
+\end_inset
+
+, with the instruction to write the current index to memory location 
+\begin_inset Formula $3$
+\end_inset
+
+ and commit the third level: 
+\begin_inset Formula $c_{1}=nil,c_{2}=(0,1),c_{3}=(2,3)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+We find, that this state is mappable to the previous state 
+\begin_inset Formula $(2[0,-2],3[0,-2],4[0,-2],5[0,1])$
+\end_inset
+
+ with the mapping 
+\begin_inset Formula $2\rightarrow0,1\rightarrow-2$
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Next the letter a is read:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+\begin_inset Formula $2[0,-2]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $3[0,-2]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $3[0,-2]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $2[0,-2]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $3[0,-2]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $4[0,-2]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $4[0,-2]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $5[0,1]$
+\end_inset
+
+, with the instruction to write the current index to memory location 
+\begin_inset Formula $1$
+\end_inset
+
+ and commit the third level: 
+\begin_inset Formula $c_{1}=nil,c_{2}=(0,1),c_{3}=(2,4)$
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Next the letter b is read, but the transition is already known:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+We write the current index into memory location 
+\begin_inset Formula $2$
+\end_inset
+
+ and commit the second level.
+ Now the match 
+\begin_inset Formula $(2,4)$
+\end_inset
+
+ is compared against the previous match 
+\begin_inset Formula $(0,1)$
+\end_inset
+
+, but the length of the new match is bigger, therefore the new match overwrites
+ the old one.
+ 
+\begin_inset Formula $c_{1}=nil,c_{2}=(2,4),c_{3}=(2,4)$
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Next the letter a is read, but the transition is already known:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+We write the current index into memory location 
+\begin_inset Formula $-2$
+\end_inset
+
+ (because of the mapping) and commit 
+\begin_inset Formula $(2,-2)$
+\end_inset
+
+ to the third level.
+ 
+\begin_inset Formula $c_{1}=nil,c_{2}=(2,4),c_{3}=(5,6)$
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Next the letter b is read, but the transition is already known:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+We write the current index into memory location 
+\begin_inset Formula $2$
+\end_inset
+
+ and commit to the second level.
+ The match 
+\begin_inset Formula $(5,6)$
+\end_inset
+
+ is compared against the previous match 
+\begin_inset Formula $(2,4)$
+\end_inset
+
+, but the length of the old match is bigger, therefore the old match is
+ kept.
+ 
+\begin_inset Formula $c_{1}=nil,c_{2}=(2,4),c_{3}=(5,6)$
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Next the letter c is read:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+\begin_inset Formula $8[0,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $9[0,1]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $9[0,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $1[0,1]$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $1[0,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $2[2,1]$
+\end_inset
+
+, with the instruction to write the current index to memory location 
+\begin_inset Formula $2$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $9[0,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $10[0,1]$
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Enumerate
+\begin_inset Formula $10[0,1]$
+\end_inset
+
+ leads to 
+\begin_inset Formula $11[0,1]$
+\end_inset
+
+, with the instruction to commit to the first level.
+ 
+\begin_inset Formula $c_{1}=(2,4),c_{2}=(2,4),c_{3}=(5,6)$
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Finally the end of the string is read.
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+We are in a finishing state 
+\begin_inset Formula $11[0,1]$
+\end_inset
+
+, therefore the match succeeds.
+ The current commit of the top layer is returned: 
+\begin_inset Formula $c_{1}=(2,4)$
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
 \begin_layout Standard
 \begin_inset Note Comment
 status collapsed
