@@ -51,9 +51,9 @@ public class IntegrationTest2 {
   }
 
   @Test
-  public void shouldMatch() {
+  public void shouldNotMatchTwoBs() {
     final MatchResult res = tdfaInterpreter.interpret("aabbc");
-    assertThat(res.toString(), is("0-4"));
+    assertThat(res.toString(), is("NO_MATCH"));
     // assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is(""));
   }
 
