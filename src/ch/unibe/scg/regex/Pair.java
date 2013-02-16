@@ -37,7 +37,6 @@ class Pair<A extends Comparable<A>, B extends Comparable<B>> extends XAbstractPa
     }
     return this.getSecond().compareTo(o.getSecond());
   }
-
 }
 
 

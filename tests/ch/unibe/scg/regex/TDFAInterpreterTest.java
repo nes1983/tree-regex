@@ -25,7 +25,6 @@ public class TDFAInterpreterTest {
     interpreter = new TDFAInterpreter(new TNFAToTDFA(makeTheNFA()));
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   TNFA makeTheNFA() {
     State.resetCount();
 
@@ -51,7 +50,7 @@ public class TDFAInterpreterTest {
     when(tnfa.availableTransitionsFor(s1, 'a')).thenReturn(
         Arrays.asList(new TransitionTriple(s2, Priority.NORMAL, Tag.NONE), new TransitionTriple(s1,
             Priority.LOW, Tag.NONE)));
-    when(tnfa.availableTransitionsFor(s2, 'a')).thenReturn(new ArrayList());
+    when(tnfa.availableTransitionsFor(s2, 'a')).thenReturn(new ArrayList<TransitionTriple>());
     when(tnfa.isAccepting(eq(s2))).thenReturn(true);
     when(tnfa.getFinalStates()).thenReturn(new HashSet<>(Arrays.asList(s2)));
     when(tnfa.isAccepting(eq(s1))).thenReturn(false);

@@ -70,7 +70,7 @@ class TDFAInterpreter {
         return RealMatchResult.NoMatchResult.SINGLETON;
       }
 
-      final DFAState u = tnfa2tdfa.e(t.getData(), a);
+      final DFAState u = tnfa2tdfa.e(t.getData(), a, false);
 
       if (u.getData().isEmpty()) { // There is no matching NFA state.
         return RealMatchResult.NoMatchResult.SINGLETON;

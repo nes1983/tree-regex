@@ -93,10 +93,8 @@ interface TransitionTable {
         }
 
         public TNFATransitionTable build() {
-          return new TNFATransitionTable(transitions); // There's no
-          // unmodifiable
-          // navigable
-          // set :(
+          return new TNFATransitionTable(transitions);
+          // There's no unmodifiable navigable set :(
         }
 
         public void put(final State startingState, final InputRange range, final State endingState,
@@ -111,7 +109,6 @@ interface TransitionTable {
             transitions.put(key, col);
           }
           col.add(new TransitionTriple(endingState, priority, tag));
-
         }
       }
 
@@ -167,8 +164,6 @@ interface TransitionTable {
     }
 
     /**
-     * Get the {@link Pair} of {@link State} and {@link SequenceOfInstructions} assigned when
-     * starting from a {@link State} with a specified {@link Character}
      * 
      * @param state The starting {@link State}
      * @param character The specified {@link Character}. May be null. If so, only epsilon
@@ -177,6 +172,7 @@ interface TransitionTable {
      *         isn't one.
      */
     T getEntry(final State state, final Character character) {
+      // TODO(niko) get rid of Character, and use a char instead.
       final InputRange searched =
           character != null ? InputRange.make(character, character) : InputRange.EPSILON;
       final Pair<State, InputRange> searchMarker = new Pair<>(state, searched);

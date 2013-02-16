@@ -347,7 +347,7 @@ class TNFAToTDFA {
       for (final InputRange inputRange : allInputRanges()) {
         final char a = inputRange.getFrom();
 
-        final DFAState u = e(t.getData(), a);
+        final DFAState u = e(t.getData(), a, false);
 
         final BitSet newLocations = newMemoryLocations(t.getData(), u.getData());
         // TODO(niko): There's a smarter way. You can compute the stores on the fly.
@@ -407,15 +407,17 @@ class TNFAToTDFA {
   /**
    * Niko and Aaron's closure.
    * 
-   * @return The next state after state, for input a. If a == null, return the start state.
+   * @param startState if to generate the start state. If so, ignore a.
+   * @param a the character that was read. Is ignored if startState == true.
+   * @return The next state after state, for input a.
    */
-  DFAState e(final Map<State, int[]> state, final Character a) {
+  DFAState e(final Map<State, int[]> state, final char a, boolean startState) {
     final Map<State, int[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
 
     final Deque<Map.Entry<State, int[]>> stack = new ArrayDeque<>(); // normal priority
     final Deque<Map.Entry<State, int[]>> lowStack = new ArrayDeque<>(); // low priority
 
-    if (a == null) { // TODO(nikoschwarz): Beautify.
+    if (startState) { // TODO(nikoschwarz): Beautify.
       stack.addAll(state.entrySet());
     } else {
       for (final Entry<State, int[]> pr : state.entrySet()) {
@@ -551,7 +553,7 @@ class TNFAToTDFA {
       start = convertToDfaState(nfaStart);
     }
 
-    return e(start.getData(), null);
+    return e(start.getData(), Character.MAX_VALUE, true);
   }
 
   Collection<? extends Instruction> mappingInstructions(final int[] mapping, final DFAState to,

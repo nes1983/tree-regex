@@ -46,20 +46,17 @@ public class IntegrationTest {
         + "q1-a-a -> q1 [5<- pos]\n" + "q1-b-b -> q2 [6<- pos, 7<- pos]\n"));
   }
 
-
-
   @Test
   public void shouldNotMatchTwoBs() {
     final MatchResult res = tdfaInterpreter.interpret("aabbc");
     assertThat(res.toString(), is("NO_MATCH"));
-    // assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is(""));
   }
 
   @Test
   public void testMatch2() {
     final MatchResult res = tdfaInterpreter.interpret("aabc");
     assertThat(res.toString(), is("0-3"));
-    // assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is(""));
+    assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is(""));
   }
 
   @Test
