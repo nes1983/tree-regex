@@ -329,72 +329,6 @@ class TNFAToTDFA {
     return new ArrayList<>(ret);
   }
 
-  @Deprecated
-  public TDFA convert() {
-    final DFAState start = makeStartState();
-
-    final List<Instruction> initializer = makeInitializer(start);
-
-    final Deque<DFAState> unmarkedStates = new ArrayDeque<>();
-    final NavigableSet<DFAState> states = new TreeSet<>();
-
-    states.add(start);
-    unmarkedStates.add(start);
-
-    for (DFAState t; !unmarkedStates.isEmpty();) {
-      t = unmarkedStates.pop();
-
-      for (final InputRange inputRange : allInputRanges()) {
-        final char a = inputRange.getFrom();
-
-        final DFAState u = e(t.getData(), a, false);
-
-        final BitSet newLocations = newMemoryLocations(t.getData(), u.getData());
-        // TODO(niko): There's a smarter way. You can compute the stores on the fly.
-
-        int[] mapping = new int[highestMapping];
-        final DFAState mappedState = findMappableState(states, u, mapping);
-
-        if (mappedState == null) {
-          mapping = null;
-        }
-
-        final List<Instruction> c = new ArrayList<>();
-        for (int i = newLocations.nextSetBit(0); i >= 0; i = newLocations.nextSetBit(i + 1)) {
-          if (mapping != null) {
-            c.add(instructionMaker.storePos(mapping[i]));
-          } else {
-            c.add(instructionMaker.storePos(i));
-          }
-        }
-
-        DFAState newState;
-        if (mappedState != null) {
-          c.addAll(mappingInstructions(mapping, u, newLocations));
-          newState = mappedState;
-        } else {
-          states.add(u);
-          unmarkedStates.add(u);
-          newState = u;
-        }
-
-        // Free up new slots that weren't really needed.
-        if (mappedState != null) {
-          highestMapping -= newLocations.cardinality();
-        }
-
-        assert newState != null;
-
-        tdfaBuilder.addTransition(t, inputRange, newState, c);
-
-        // final Entry<State, SortedSet<MapItem>> smallestFinishing =
-        // smallestFinishing(newState);
-        // TODO(niko): finishing stuff.
-      }
-    }
-    return new TDFA(tdfaBuilder.build(), initializer);
-  }
-
   /** Used to create the initial state of the DFA. */
   private DFAState convertToDfaState(final State s) {
     final Map<State, int[]> initState = new HashMap<>();
@@ -527,15 +461,6 @@ class TNFAToTDFA {
     }
 
     return null;
-  }
-
-  private List<Instruction> makeInitializer(final DFAState start) {
-    final List<Instruction> initializer = new ArrayList<>();
-    final BitSet locs = extractLocs(start.getData());
-    for (int i = locs.nextSetBit(0); i >= 0; i = locs.nextSetBit(i + 1)) {
-      initializer.add(instructionMaker.storePos(i));
-    }
-    return initializer;
   }
 
   private int[] makeInitialMemoryLocations(final int numTags) {
