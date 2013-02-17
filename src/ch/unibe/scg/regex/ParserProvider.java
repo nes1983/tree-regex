@@ -2,6 +2,7 @@ package ch.unibe.scg.regex;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -300,7 +301,7 @@ class ParserProvider {
 
     if (c == null) {
       throw new IllegalArgumentException("Expected only constructor in " + clazz
-          + ". List of constructors: " + cs);
+          + ". List of constructors: " + Arrays.toString(cs));
     }
     return c;
   }
