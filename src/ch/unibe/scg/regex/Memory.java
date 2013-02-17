@@ -16,7 +16,7 @@ class Memory {
 
   private void ensureSize(int pos) {
     if (memory.length <= pos) {
-      final int[] newMemory = new int[2 * memory.length];
+      final int[] newMemory = new int[Math.max(2 * memory.length, pos + 1)];
       System.arraycopy(memory, 0, newMemory, 0, memory.length);
       memory = newMemory;
     }
