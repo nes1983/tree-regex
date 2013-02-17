@@ -8,6 +8,7 @@ import java.util.TreeSet;
 import java.util.regex.MatchResult;
 
 import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
+import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructions;
 import ch.unibe.scg.regex.TransitionTable.NextDFAState;
 
 /** Interprets the known TDFA states. Compiles missing states on the fly. */
@@ -46,10 +47,18 @@ class TDFAInterpreter {
   public MatchResult interpret(CharSequence input) {
     final List<InputRange> inputRanges = tnfa2tdfa.allInputRanges();
 
-    DFAState t = tnfa2tdfa.makeStartState();
+    final Memory memory = new Memory();
+    DFAState t;
+    {
+      final StateAndInstructions stateAndInstructions = tnfa2tdfa.makeStartState();
+      t = stateAndInstructions.dfaState;
+      for (final Instruction instruction : stateAndInstructions.instructions) {
+        instruction.execute(memory, 0);
+      }
+    }
+
     states.add(t);
 
-    final Memory memory = new Memory();
     for (int pos = 0; pos < input.length(); pos++) {
       final char a = input.charAt(pos);
 
@@ -58,7 +67,7 @@ class TDFAInterpreter {
         if ((nextState = tdfaBuilder.availableTransition(t, a)) != null) {
           // TODO check for fail state.
           for (final Instruction instruction : nextState.getInstructions()) {
-            instruction.execute(memory, pos); // TODO fill in context.
+            instruction.execute(memory, pos);
           }
           t = nextState.getNextState();
           continue;
@@ -70,13 +79,14 @@ class TDFAInterpreter {
         return RealMatchResult.NoMatchResult.SINGLETON;
       }
 
-      final DFAState u = tnfa2tdfa.e(t.getData(), a, false);
+      final StateAndInstructions uu = tnfa2tdfa.e(t.getData(), a, false);
+      final DFAState u = uu.dfaState;
 
       if (u.getData().isEmpty()) { // There is no matching NFA state.
         return RealMatchResult.NoMatchResult.SINGLETON;
       }
 
-      final BitSet newLocations = tnfa2tdfa.newMemoryLocations(t.getData(), u.getData());
+      final BitSet newLocations = tnfa2tdfa.extractStorePositions(uu.instructions);
       // TODO(niko): There's a smarter way. You can compute the stores on the fly.
 
       int[] mapping = new int[tnfa2tdfa.highestMapping];

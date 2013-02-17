@@ -17,12 +17,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableSet;
 import java.util.Set;
-import java.util.TreeSet;
 
+import ch.unibe.scg.regex.Instruction.SetInstruction;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 
 class TNFAToTDFA {
+  static final StateAndInstructions NO_STATE;
+  static {
+    final List<SetInstruction> empty = Collections.emptyList();
+    NO_STATE = new StateAndInstructions(DFAState.NO_STATE, empty);
+  }
+  static final BitSet ZERO = new BitSet(0);
+
   static class DFAState implements Comparable<DFAState> {
     final static DFAState NO_STATE;
     static {
@@ -345,7 +352,17 @@ class TNFAToTDFA {
    * @param a the character that was read. Is ignored if startState == true.
    * @return The next state after state, for input a.
    */
-  DFAState e(final Map<State, int[]> state, final char a, boolean startState) {
+  static class StateAndInstructions {
+    final DFAState dfaState;
+    final List<SetInstruction> instructions;
+
+    StateAndInstructions(DFAState dfaState, List<SetInstruction> instructions) {
+      this.dfaState = dfaState;
+      this.instructions = instructions;
+    }
+  }
+
+  StateAndInstructions e(final Map<State, int[]> state, final char a, boolean startState) {
     final Map<State, int[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
 
     final Deque<Map.Entry<State, int[]>> stack = new ArrayDeque<>(); // normal priority
@@ -371,9 +388,10 @@ class TNFAToTDFA {
     }
 
     if (lowStack.isEmpty() && stack.isEmpty()) {
-      return DFAState.NO_STATE;
+      return NO_STATE;
     }
 
+    List<SetInstruction> instructions = Collections.emptyList();
     do {
       final Entry<State, int[]> s = stack.isEmpty() ? lowStack.pop() : stack.pop();
       assert s != null;
@@ -397,9 +415,15 @@ class TNFAToTDFA {
         // Step 2.
         final Tag tau = triple.tag;
         int[] tdash;
-        if ((!tau.equals(Tag.NONE)) && (!startState)) {
+        if (!tau.equals(Tag.NONE)) {
           tdash = Arrays.copyOf(l, l.length);
-          tdash[positionFor(tau)] = nextInt(); // TODO(niko): Produce store.
+          final int pos = nextInt();
+          tdash[positionFor(tau)] = pos;
+          if (instructions.isEmpty()) {
+            instructions = new ArrayList<>();
+          }
+          // The cast is necessary because we'll need the store postion later again.
+          instructions.add((SetInstruction) instructionMaker.storePos(pos));
         } else {
           tdash = l;
         }
@@ -421,7 +445,7 @@ class TNFAToTDFA {
         }
       }
     } while (!(stack.isEmpty() && lowStack.isEmpty()));
-    return new DFAState(R);
+    return new StateAndInstructions(new DFAState(R), instructions);
   }
 
   private BitSet extractLocs(final Map<State, int[]> oldState) {
@@ -471,7 +495,7 @@ class TNFAToTDFA {
     return ret;
   }
 
-  DFAState makeStartState() {
+  StateAndInstructions makeStartState() {
     DFAState start;
     {
       final State nfaStart = tnfa.getInitialState();
@@ -513,5 +537,17 @@ class TNFAToTDFA {
       r += 1;
     }
     return r;
+  }
+
+  BitSet extractStorePositions(List<SetInstruction> instructions) {
+    if (instructions.isEmpty()) {
+      return ZERO;
+    }
+
+    final BitSet ret = new BitSet();
+    for (final SetInstruction instruction : instructions) {
+      ret.set(instruction.tag);
+    }
+    return ret;
   }
 }

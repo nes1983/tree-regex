@@ -56,7 +56,11 @@ public class IntegrationTest {
   public void testMatch2() {
     final MatchResult res = tdfaInterpreter.interpret("aaabcaaabcaabc");
     assertThat(res.toString(), is("0-13"));
-    assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is(""));
+    assertThat(
+        tdfaInterpreter.tdfaBuilder.build().toString(),
+        // It's ok that stores start at 4. The previous 3 were stored in the initializer.
+        is("q0-a-a -> q1 [4<- pos]\nq1-a-a -> q1 [5<- pos]\n" + "q1-b-b -> q2 [6<- pos, 7<- pos]\n"
+            + "q2-c-c -> q3 [8<- pos, 9<- pos, 10<- pos, 11<- pos]\n" + "q3-a-a -> q1 [12<- pos]\n"));
   }
 
   @Test
