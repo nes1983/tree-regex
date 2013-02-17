@@ -14,10 +14,10 @@ import ch.unibe.scg.regex.TransitionTable.TDFATransitionTable;
 
 @SuppressWarnings("javadoc")
 public final class DFATableTest {
-  final int s1 = 0;
-  final int s2 = 1;
-  final int s3 = 2;
-  final int s4 = 3;
+  static final int s1 = 0;
+  static final int s2 = 1;
+  static final int s3 = 2;
+  static final int s4 = 3;
   TDFATransitionTable table;
 
   // Suppress seems unavoidable.
