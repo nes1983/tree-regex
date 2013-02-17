@@ -455,8 +455,6 @@ class RegExp {
 
   RegExp exp1, exp2;
 
-  int flags;
-
   char from, to;
 
   Kind kind;
