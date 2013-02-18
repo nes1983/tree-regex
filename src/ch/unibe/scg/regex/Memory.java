@@ -10,6 +10,13 @@ class Memory {
     int[] entries = new int[1];
     int pos = 0;
 
+    History(History history) {
+      this.entries = history.entries;
+      this.pos = history.pos;
+    }
+
+    History() {}
+
     void push(int entry) {
       if (pos + 1 >= entries.length) {
         grow();
@@ -86,7 +93,7 @@ class Memory {
   }
 
   void copyTo(int from, int to) {
-    histories[to] = histories[from];
+    histories[to] = new History(histories[from]);
   }
 
   void grow(int pos) {
