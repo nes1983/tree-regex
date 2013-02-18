@@ -3,7 +3,7 @@ package ch.unibe.scg.regex;
 import java.util.Arrays;
 
 class Memory {
-  private int[] memory = new int[8];
+  History[] histories = new History[8];
 
   static class History {
     int[] entries = new int[1];
@@ -25,6 +25,10 @@ class Memory {
 
     IntIterator iterator() {
       return new RealIntIterator(this);
+    }
+
+    int latestValue() {
+      return entries[pos - 1];
     }
 
     @Override
@@ -68,24 +72,27 @@ class Memory {
   }
 
   void write(int pos, int value) {
-    ensureSize(pos);
-    memory[pos] = value;
-  }
-
-  int read(int pos) {
-    return memory[pos];
-  }
-
-  private void ensureSize(int pos) {
-    if (memory.length <= pos) {
-      final int[] newMemory = new int[Math.max(2 * memory.length, pos + 1)];
-      System.arraycopy(memory, 0, newMemory, 0, memory.length);
-      memory = newMemory;
+    if (histories.length <= pos) {
+      grow(pos);
     }
+    if (histories[pos] == null) {
+      histories[pos] = new History();
+    }
+    histories[pos].push(value);
+  }
+
+  void move(int from, int to) {
+    histories[to] = histories[from];
+  }
+
+  void grow(int pos) {
+    final History[] newMemory = new History[Math.max(2 * histories.length, pos + 1)];
+    System.arraycopy(histories, 0, newMemory, 0, histories.length);
+    histories = newMemory;
   }
 
   @Override
   public String toString() {
-    return Arrays.toString(memory);
+    return Arrays.toString(histories);
   }
 }
