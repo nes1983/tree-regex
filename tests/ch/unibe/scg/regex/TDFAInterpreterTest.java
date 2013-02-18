@@ -86,6 +86,6 @@ public class TDFAInterpreterTest {
   @Test
   public void testMatch() {
     final MatchResult matchResult = interpreter.interpret("aaaaaa");
-    assertThat(matchResult.toString(), is("5-0"));
+    assertThat(matchResult.toString(), is("4-0"));
   }
 }
