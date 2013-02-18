@@ -11,7 +11,7 @@ class Memory {
     int pos = 0;
 
     History(History history) {
-      this.entries = history.entries;
+      this.entries = Arrays.copyOf(history.entries, history.entries.length);
       this.pos = history.pos;
     }
 
