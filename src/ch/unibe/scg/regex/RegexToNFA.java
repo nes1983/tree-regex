@@ -29,16 +29,17 @@ import ch.unibe.scg.regex.TransitionTriple.Priority;
 class RegexToNFA {
   public TNFA convert(final Node node) {
     checkNotNull(node);
-    final CaptureGroup entireMatch = new CaptureGroup.CaptureGroupMaker().make(0);
-
     final Builder builder = new Builder();
-    final MiniAutomaton m = makeInitialMiniAutomaton(builder, entireMatch);
 
-    final MiniAutomaton a = make(m, builder, node);
+    final MiniAutomaton m =
+        makeInitialMiniAutomaton(builder, builder.captureGroupMaker.entireMatch);
+
+    final MiniAutomaton a = make(m, builder, node, builder.captureGroupMaker.entireMatch);
 
     final State endTagger = builder.makeState();
     builder.setAsAccepting(endTagger);
-    builder.addEndTagTransition(a.getFinishing(), endTagger, entireMatch, Priority.NORMAL);
+    builder.addEndTagTransition(a.getFinishing(), endTagger, builder.captureGroupMaker.entireMatch,
+        Priority.NORMAL);
 
     return builder.build();
   }
@@ -144,22 +145,23 @@ class RegexToNFA {
     }
   }
 
-  MiniAutomaton make(final MiniAutomaton last, final Builder builder, final Node node) {
+  MiniAutomaton make(final MiniAutomaton last, final Builder builder, final Node node,
+      CaptureGroup captureGroup) {
     MiniAutomaton ret;
     if (node instanceof Node.Any) {
       ret = makeAny(last, builder);
     } else if (node instanceof Node.Char) {
       ret = makeChar(last, builder, (Node.Char) node);
     } else if (node instanceof Node.Simple) {
-      ret = makeSimple(last, builder, (Node.Simple) node);
+      ret = makeSimple(last, builder, (Node.Simple) node, captureGroup);
     } else if (node instanceof Node.Optional) {
-      ret = makeOptional(last, builder, (Node.Optional) node);
+      ret = makeOptional(last, builder, (Node.Optional) node, captureGroup);
     } else if (node instanceof Node.Star) {
-      ret = makeStar(last, builder, (Star) node);
+      ret = makeStar(last, builder, (Star) node, captureGroup);
     } else if (node instanceof Node.Plus) {
-      ret = makePlus(last, builder, (Node.Plus) node);
+      ret = makePlus(last, builder, (Node.Plus) node, captureGroup);
     } else if (node instanceof Node.Group) {
-      ret = makeGroup(last, builder, (Node.Group) node);
+      ret = makeGroup(last, builder, (Node.Group) node, captureGroup);
     } else if (node instanceof Node.Eos) {
       ret = makeEos(last, builder);
     } else if (node instanceof Node.Char) {
@@ -201,8 +203,9 @@ class RegexToNFA {
     return new MiniAutomaton(last.getFinishing(), a);
   }
 
-  MiniAutomaton makeGroup(final MiniAutomaton last, final Builder builder, final Group group) {
-    final CaptureGroup cg = builder.makeCaptureGroup();
+  MiniAutomaton makeGroup(final MiniAutomaton last, final Builder builder, final Group group,
+      CaptureGroup captureGroup) {
+    final CaptureGroup cg = builder.makeCaptureGroup(captureGroup);
     final State startGroup = builder.makeState();
     builder.addStartTagTransition(last.getFinishing(), startGroup, cg, Priority.NORMAL);
     final MiniAutomaton startGroupAutomaton = new MiniAutomaton((State) null, startGroup) {
@@ -212,7 +215,7 @@ class RegexToNFA {
             "A group's inner elements cannot point to something outside of it.");
       }
     };
-    final MiniAutomaton body = make(startGroupAutomaton, builder, group.getBody());
+    final MiniAutomaton body = make(startGroupAutomaton, builder, group.getBody(), cg);
 
     final State endGroup = builder.makeState();
     builder.addEndTagTransition(body.getFinishing(), endGroup, cg, Priority.NORMAL);
@@ -234,8 +237,8 @@ class RegexToNFA {
   }
 
   MiniAutomaton makeOptional(final MiniAutomaton last, final Builder builder,
-      final Optional optional) {
-    final MiniAutomaton ma = make(last, builder, optional.getElementary());
+      final Optional optional, CaptureGroup captureGroup) {
+    final MiniAutomaton ma = make(last, builder, optional.getElementary(), captureGroup);
 
     final List<State> f = new ArrayList<>(last.getFinishing());
     f.addAll(ma.getFinishing());
@@ -243,9 +246,10 @@ class RegexToNFA {
     return new MiniAutomaton(last.getFinishing(), f);
   }
 
-  MiniAutomaton makePlus(final MiniAutomaton last, final Builder builder, final Plus plus) {
+  MiniAutomaton makePlus(final MiniAutomaton last, final Builder builder, final Plus plus,
+      CaptureGroup captureGroup) {
     // TODO(niko) priority guard is missing.
-    final MiniAutomaton inner = make(last, builder, plus.getElementary());
+    final MiniAutomaton inner = make(last, builder, plus.getElementary(), captureGroup);
 
     final Collection<State> f = inner.getFinishing();
 
@@ -267,19 +271,21 @@ class RegexToNFA {
     throw null;
   }
 
-  MiniAutomaton makeSimple(final MiniAutomaton last, final Builder b, final Simple simple) {
+  MiniAutomaton makeSimple(final MiniAutomaton last, final Builder b, final Simple simple,
+      CaptureGroup captureGroup) {
     final List<? extends Basic> bs = simple.getBasics();
 
     MiniAutomaton lm = last;
     for (final Basic e : bs) {
-      lm = make(lm, b, e);
+      lm = make(lm, b, e, captureGroup);
     }
 
     return new MiniAutomaton(last.getFinishing(), lm.getFinishing());
   }
 
-  MiniAutomaton makeStar(final MiniAutomaton last, final Builder builder, final Star star) {
-    final MiniAutomaton inner = make(last, builder, star.getElementary());
+  MiniAutomaton makeStar(final MiniAutomaton last, final Builder builder, final Star star,
+      CaptureGroup captureGroup) {
+    final MiniAutomaton inner = make(last, builder, star.getElementary(), captureGroup);
 
     final List<State> f = new ArrayList<>(last.getFinishing());
     f.addAll(inner.getFinishing());

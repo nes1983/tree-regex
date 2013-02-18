@@ -66,8 +66,8 @@ interface TNFA {
             Collections.unmodifiableSet(finalStates));
       }
 
-      public CaptureGroup makeCaptureGroup() {
-        return captureGroupMaker.next();
+      public CaptureGroup makeCaptureGroup(CaptureGroup parent) {
+        return captureGroupMaker.next(parent);
       }
 
       public State makeInitialState() {

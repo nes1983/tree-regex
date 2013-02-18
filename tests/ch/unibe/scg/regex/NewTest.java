@@ -30,9 +30,12 @@ public final class NewTest {
     final TNFA tnfa = mock(TNFA.class);
 
     t0 = mock(Tag.class);
+    final CaptureGroup cg = mock(CaptureGroup.class);
+
+    when(cg.getNumber()).thenReturn(0);
 
     when(t0.toString()).thenReturn("t0");
-    when(t0.getGroup()).thenReturn(0);
+    when(t0.getGroup()).thenReturn(cg);
 
     when(tnfa.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
     when(tnfa.getInitialState()).thenReturn(s0);

@@ -19,7 +19,12 @@ interface Tag extends Comparable<Tag> {
   }
 
   static class NoTag implements Tag {
-    private static final CaptureGroup none = new RealCaptureGroup(-1);
+    private static final CaptureGroup none;
+    static {
+      final RealCaptureGroup myNone = new RealCaptureGroup(-1, null);
+      myNone.parent = myNone;
+      none = myNone;
+    }
 
     public int compareTo(final Tag o) {
       return Integer.compare(-1, o.getGroup().getNumber());

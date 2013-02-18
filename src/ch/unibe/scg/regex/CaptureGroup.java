@@ -7,8 +7,18 @@ interface CaptureGroup {
    * <p>
    * Immutable.
    */
+
   static class CaptureGroupMaker {
-    CaptureGroup last = make(0);
+    final CaptureGroup entireMatch;
+    CaptureGroup last;
+
+    CaptureGroupMaker() {
+      final RealCaptureGroup castEntireMatch = make(0, null);
+      castEntireMatch.parent = castEntireMatch;
+      entireMatch = castEntireMatch;
+
+      last = entireMatch;
+    }
 
     /**
      * Don't instantiate directly. Use {@link CaptureGroupMaker} instead.
@@ -16,10 +26,16 @@ interface CaptureGroup {
     static class RealCaptureGroup implements CaptureGroup {
       Tag startTag, endTag;
       final int number;
+      CaptureGroup parent;
 
       /** Call {@link RealCaptureGroup#make(int)} instead */
-      RealCaptureGroup(final int number) {
+      RealCaptureGroup(final int number, CaptureGroup parent) {
         this.number = number;
+        this.parent = parent;
+      }
+
+      public CaptureGroup getParent() {
+        return parent;
       }
 
       public Tag getEndTag() {
@@ -42,15 +58,15 @@ interface CaptureGroup {
       }
     }
 
-    RealCaptureGroup make(final int number) {
-      final RealCaptureGroup cg = new RealCaptureGroup(number);
+    private static RealCaptureGroup make(final int number, CaptureGroup parent) {
+      final RealCaptureGroup cg = new RealCaptureGroup(number, parent);
       cg.startTag = Tag.RealTag.makeStartTag(cg);
       cg.endTag = Tag.RealTag.makeEndTag(cg);
       return cg;
     }
 
-    public synchronized CaptureGroup next() {
-      last = make(last.getNumber() + 1);
+    public synchronized CaptureGroup next(CaptureGroup parent) {
+      last = make(last.getNumber() + 1, parent);
       return last;
     }
   }
