@@ -14,30 +14,19 @@ interface Tag extends Comparable<Tag> {
   static abstract class AbstractTag implements Tag {
     @Override
     public int compareTo(final Tag o) {
-      return Integer.valueOf(getGroup()).compareTo(o.getGroup());
+      return Integer.compare(getGroup().getNumber(), o.getGroup().getNumber());
     }
   }
 
-  static class MarkerTag implements Tag {
-    final int group;
-    final String name;
-
-    MarkerTag(final int group) {
-      this.name = "MarkerTag";
-      this.group = group;
-    }
-
-    MarkerTag(final String name) {
-      this.name = name;
-      this.group = 0;
-    }
+  static class NoTag implements Tag {
+    private static final CaptureGroup none = new RealCaptureGroup(-1);
 
     public int compareTo(final Tag o) {
-      return getGroup() - o.getGroup();
+      return Integer.compare(-1, o.getGroup().getNumber());
     }
 
-    public int getGroup() {
-      return group;
+    public CaptureGroup getGroup() {
+      return none;
     }
 
     @Override
@@ -52,9 +41,8 @@ interface Tag extends Comparable<Tag> {
 
     @Override
     public String toString() {
-      return name;
+      return "None";
     }
-
   }
 
   /**
@@ -120,8 +108,8 @@ interface Tag extends Comparable<Tag> {
     }
 
     @Override
-    public int getGroup() {
-      return captureGroup.getNumber();
+    public CaptureGroup getGroup() {
+      return captureGroup;
     }
 
     public abstract boolean isEndTag();
@@ -129,11 +117,9 @@ interface Tag extends Comparable<Tag> {
     public abstract boolean isStartTag();
   }
 
-  public final Tag ENTIRE_MATCH = new MarkerTag("ENTIRE_MATCH");
+  public final Tag NONE = new NoTag();
 
-  public final Tag NONE = new MarkerTag("NONE");
-
-  public int getGroup();
+  public CaptureGroup getGroup();
 
   public boolean isEndTag();
 

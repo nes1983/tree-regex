@@ -532,7 +532,7 @@ class TNFAToTDFA {
   }
 
   private int positionFor(final Tag tau) {
-    int r = 2 * tau.getGroup();
+    int r = 2 * tau.getGroup().getNumber();
     if (tau.isEndTag()) {
       r += 1;
     }

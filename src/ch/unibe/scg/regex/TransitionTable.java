@@ -17,7 +17,7 @@ import java.util.TreeSet;
 
 import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker;
 import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
-import ch.unibe.scg.regex.Tag.MarkerTag;
+import ch.unibe.scg.regex.Tag.NoTag;
 import ch.unibe.scg.regex.TransitionTable.TDFATransitionTable.Builder.Entry;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
@@ -137,7 +137,7 @@ interface TransitionTable {
         for (final Collection<TransitionTriple> triples : transitions.values()) {
           for (final TransitionTriple triple : triples) {
             final Tag tag = triple.getTag();
-            if (!(tag instanceof MarkerTag)) {
+            if (!(tag instanceof NoTag)) {
               ret.add(tag);
             }
           }

@@ -18,7 +18,7 @@ interface CaptureGroup {
       final int number;
 
       /** Call {@link RealCaptureGroup#make(int)} instead */
-      private RealCaptureGroup(final int number) {
+      RealCaptureGroup(final int number) {
         this.number = number;
       }
 
