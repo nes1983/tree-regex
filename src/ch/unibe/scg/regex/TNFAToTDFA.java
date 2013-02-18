@@ -526,8 +526,6 @@ class TNFAToTDFA {
   }
 
   int nextInt() {
-    // XXX One could plug more logic into this method, to eliminate
-    // post-processing.
     return highestMapping++;
   }
 
