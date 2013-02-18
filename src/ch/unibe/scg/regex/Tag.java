@@ -46,7 +46,7 @@ interface Tag extends Comparable<Tag> {
 
     @Override
     public String toString() {
-      return "None";
+      return "NONE";
     }
   }
 
@@ -71,7 +71,7 @@ interface Tag extends Comparable<Tag> {
 
       @Override
       public String toString() {
-        return "➁" + getGroup();
+        return "➁" + getGroup().getNumber();
       }
     }
 
@@ -93,7 +93,7 @@ interface Tag extends Comparable<Tag> {
 
       @Override
       public String toString() {
-        return "➀" + getGroup();
+        return "➀" + getGroup().getNumber();
       }
     }
 
