@@ -2,6 +2,7 @@ package ch.unibe.scg.regex;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.TreeSet;
@@ -79,6 +80,7 @@ class TDFAInterpreter {
         return RealMatchResult.NoMatchResult.SINGLETON;
       }
 
+      // TODO this is ugly. Clearly, e should return StateAndPositions.
       final StateAndInstructions uu = tnfa2tdfa.e(t.getData(), a, false);
       final DFAState u = uu.dfaState;
 
@@ -87,7 +89,6 @@ class TDFAInterpreter {
       }
 
       final BitSet newLocations = tnfa2tdfa.extractStorePositions(uu.instructions);
-      // TODO(niko): There's a smarter way. You can compute the stores on the fly.
 
       int[] mapping = new int[tnfa2tdfa.highestMapping];
       final DFAState mappedState = tnfa2tdfa.findMappableState(states, u, mapping);
@@ -96,23 +97,22 @@ class TDFAInterpreter {
         mapping = null;
       }
 
-      List<Instruction> c = new ArrayList<>();
+      List<Instruction> c;
 
       DFAState newState;
-      if (mappedState != null) {
-        c.addAll(tnfa2tdfa.mappingInstructions(mapping, u, newLocations));
+      if (mapping != null) {
+        final Collection<? extends Instruction> moves =
+            tnfa2tdfa.mappingInstructions(mapping, u, newLocations);
+        c = new ArrayList<>(uu.instructions.size() + moves.size());
+        c.addAll(moves);
+        for (int i = newLocations.nextSetBit(0); i >= 0; i = newLocations.nextSetBit(i + 1)) {
+          c.add(instructionMaker.storePos(mapping[i]));
+        }
         newState = mappedState;
       } else {
         states.add(u);
         newState = u;
-      }
-
-      for (int i = newLocations.nextSetBit(0); i >= 0; i = newLocations.nextSetBit(i + 1)) {
-        if (mapping != null) {
-          c.add(instructionMaker.storePos(mapping[i]));
-        } else {
-          c.add(instructionMaker.storePos(i));
-        }
+        c = new ArrayList<Instruction>(uu.instructions);
       }
 
       // Free up new slots that weren't really needed.
@@ -122,11 +122,8 @@ class TDFAInterpreter {
 
       assert newState != null;
 
-      // Shrink c to minimum size.
-      c = new ArrayList<>(c);
-
       for (final Instruction instruction : c) {
-        instruction.execute(memory, pos); // TODO fill in context.
+        instruction.execute(memory, pos);
       }
 
       tdfaBuilder.addTransition(t, inputRange, newState, c);
@@ -138,10 +135,10 @@ class TDFAInterpreter {
       return RealMatchResult.NoMatchResult.SINGLETON;
     }
 
-    return extractFromContext(memory, mapping, input);
+    return extractFromMemory(memory, mapping, input);
   }
 
-  private MatchResult extractFromContext(Memory memory, int[] mapping, CharSequence input) {
+  private MatchResult extractFromMemory(Memory memory, int[] mapping, CharSequence input) {
     final int[] extracted = new int[mapping.length];
     for (int i = 0; i < mapping.length; i++) {
       if (mapping[i] < 0) {
