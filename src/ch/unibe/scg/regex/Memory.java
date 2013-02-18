@@ -1,6 +1,7 @@
 package ch.unibe.scg.regex;
 
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 
 class Memory {
   History[] histories = new History[8];
@@ -28,6 +29,9 @@ class Memory {
     }
 
     int latestValue() {
+      if (pos <= 0) {
+        throw new NoSuchElementException("This history was never written into, but is read.");
+      }
       return entries[pos - 1];
     }
 
@@ -81,14 +85,14 @@ class Memory {
     histories[pos].push(value);
   }
 
-  void move(int from, int to) {
+  void copyTo(int from, int to) {
     histories[to] = histories[from];
   }
 
   void grow(int pos) {
-    final History[] newMemory = new History[Math.max(2 * histories.length, pos + 1)];
-    System.arraycopy(histories, 0, newMemory, 0, histories.length);
-    histories = newMemory;
+    final History[] newHistories = new History[Math.max(2 * histories.length, pos + 1)];
+    System.arraycopy(histories, 0, newHistories, 0, histories.length);
+    histories = newHistories;
   }
 
   @Override

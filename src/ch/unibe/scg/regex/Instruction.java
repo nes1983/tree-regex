@@ -73,7 +73,7 @@ interface Instruction {
 
     @Override
     public void execute(Memory memory, int pos) {
-      memory.move(from, to);
+      memory.copyTo(from, to);
     }
 
     @Override
