@@ -1,8 +1,10 @@
 package ch.unibe.scg.regex;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Formatter;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -15,12 +17,14 @@ interface TNFA {
     final Set<State> finalStates;
     final State initialState;
     final TNFATransitionTable transitionTable;
+    final List<Tag> tags;
 
     RealNFA(final TNFATransitionTable transitionTable, final State initialState,
-        final Set<State> finalStates) {
+        final Set<State> finalStates, List<Tag> tags) {
       this.transitionTable = transitionTable;
       this.initialState = initialState;
       this.finalStates = finalStates;
+      this.tags = tags;
     }
 
     static class Builder {
@@ -28,6 +32,7 @@ interface TNFA {
       final Set<State> finalStates = new TreeSet<>();
       State initialState;
       final TNFATransitionTable.Builder transitionTableBuilder = TNFATransitionTable.builder();
+      final List<Tag> tags = new ArrayList<>();
 
       public void addEndTagTransition(final Collection<State> from, final State to,
           final CaptureGroup captureGroup, final Priority priority) {
@@ -63,7 +68,7 @@ interface TNFA {
 
       public RealNFA build() {
         return new RealNFA(transitionTableBuilder.build(), initialState,
-            Collections.unmodifiableSet(finalStates));
+            new HashSet<>(finalStates), new ArrayList<>(tags));
       }
 
       public CaptureGroup makeCaptureGroup(CaptureGroup parent) {
@@ -87,6 +92,12 @@ interface TNFA {
 
       public void setAsAccepting(final State finishing) {
         finalStates.add(finishing);
+      }
+
+      public void registerCaptureGroup(CaptureGroup cg) {
+        assert tags.size() / 2 == cg.getNumber();
+        tags.add(cg.getStartTag());
+        tags.add(cg.getEndTag());
       }
     }
 
@@ -123,6 +134,11 @@ interface TNFA {
       formatter.close();
       return ret;
     }
+
+    @Override
+    public List<Tag> getTags() {
+      return tags;
+    }
   }
 
   Collection<InputRange> allInputRanges();
@@ -143,4 +159,6 @@ interface TNFA {
   public boolean isAccepting(State state);
 
   public Set<State> getFinalStates();
+
+  public List<Tag> getTags();
 }

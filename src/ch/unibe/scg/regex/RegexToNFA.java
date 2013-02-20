@@ -31,6 +31,8 @@ class RegexToNFA {
     checkNotNull(node);
     final Builder builder = new Builder();
 
+    builder.registerCaptureGroup(builder.captureGroupMaker.entireMatch);
+
     final MiniAutomaton m =
         makeInitialMiniAutomaton(builder, builder.captureGroupMaker.entireMatch);
 
@@ -206,6 +208,7 @@ class RegexToNFA {
   MiniAutomaton makeGroup(final MiniAutomaton last, final Builder builder, final Group group,
       CaptureGroup captureGroup) {
     final CaptureGroup cg = builder.makeCaptureGroup(captureGroup);
+    builder.registerCaptureGroup(cg);
     final State startGroup = builder.makeState();
     builder.addStartTagTransition(last.getFinishing(), startGroup, cg, Priority.NORMAL);
     final MiniAutomaton startGroupAutomaton = new MiniAutomaton((State) null, startGroup) {
