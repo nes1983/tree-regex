@@ -2,8 +2,8 @@ package ch.unibe.scg.regex;
 
 /**
  * {@link InputRange} represent a range of {@link Character} which can be used in
- * {@link TransitionTable} of {@link TDFA}.
- * 
+ * {@link TransitionTable} of TDFA.
+ *
  * @author Fabien Dubosson
  */
 abstract class InputRange implements Comparable<InputRange> {
@@ -76,7 +76,7 @@ abstract class InputRange implements Comparable<InputRange> {
 
     /**
      * Constructor which take the first and last character as parameter
-     * 
+     *
      * @param from The first {@link Character} of the range
      * @param to The last {@link Character} of the range
      */
@@ -113,7 +113,7 @@ abstract class InputRange implements Comparable<InputRange> {
 
   /**
    * Tell if the {@link InputRange} contains a {@link Character} within its range
-   * 
+   *
    * @param character A specific {@link Character}.
    * @return if the {@link Character} is contained within the {@link InputRange}.
    */
@@ -121,14 +121,14 @@ abstract class InputRange implements Comparable<InputRange> {
 
   /**
    * Return the first {@link Character} of the range
-   * 
+   *
    * @return the first {@link Character} of the range
    */
   public abstract char getFrom();
 
   /**
    * Return the last {@link Character} of the range
-   * 
+   *
    * @return the last {@link Character} of the range
    */
   public abstract char getTo();

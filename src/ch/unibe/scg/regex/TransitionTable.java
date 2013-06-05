@@ -22,8 +22,8 @@ import ch.unibe.scg.regex.TransitionTable.TDFATransitionTable.Builder.Entry;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 /**
- * A {@link TransitionTable} is the set of all possible transition of a {@link TDFA}
- * 
+ * A {@link TransitionTable} is the set of all possible transition of a TDFA
+ *
  * @author Niko Schwarz, Fabien Dubosson
  */
 interface TransitionTable {
@@ -164,7 +164,7 @@ interface TransitionTable {
     }
 
     /**
-     * 
+     *
      * @param state The starting {@link State}
      * @param character The specified {@link Character}. May be null. If so, only epsilon
      *        transitions are returned.
