@@ -30,9 +30,9 @@ import ch.unibe.scg.regex.ParserProvider.Node.Union;
 
 /**
  * Objects not threadsafe! Use from only one thread!
- * 
+ *
  * @author nes
- * 
+ *
  */
 class ParserProvider {
   public static interface Node {
@@ -281,13 +281,7 @@ class ParserProvider {
     }
   }
 
-  /**
-   * Find only one constructor.
-   * 
-   * @param clazz
-   * @param cs
-   * @return
-   */
+  /** Find only one constructor. */
   static <T> Constructor<T> findConstructor(final Class<T> clazz, final Constructor<T>[] cs) {
     Constructor<T> c = null;
     for (final Constructor<T> eachC : cs) {
