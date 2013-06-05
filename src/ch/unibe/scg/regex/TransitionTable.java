@@ -66,11 +66,11 @@ interface TransitionTable {
       return nextState;
     }
   }
+
   static class TNFATransitionTable implements TransitionTable {
     final NavigableMap<Pair<State, InputRange>, Collection<TransitionTriple>> transitions;
 
     public static class Builder {
-
       final CaptureGroupMaker captureGroupMaker = new CaptureGroupMaker();
 
       final TreeMap<Pair<State, InputRange>, Collection<TransitionTriple>> transitions =
@@ -181,11 +181,7 @@ interface TransitionTable {
     }
   }
 
-
   static class TDFATransitionTable {
-    // TODO optimizations: use int for state, then lookup state by
-    // states[state].
-
     static class Builder {
       static class Entry implements Comparable<Entry> {
         final char from, to;
@@ -357,7 +353,6 @@ interface TransitionTable {
 
       return null;
     }
-
 
     @Override
     public String toString() {
