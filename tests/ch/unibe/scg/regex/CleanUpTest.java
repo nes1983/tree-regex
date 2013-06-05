@@ -1,14 +1,13 @@
 package ch.unibe.scg.regex;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,11 +28,6 @@ public final class CleanUpTest {
     final TreeSet<InputRange> s = new TreeSet<>(l);
     final SortedSet<InputRange> cleaned = inputRangeCleanup.cleanUp(s);
     assertThat(cleaned.toString(), is("[a-b, c-d, e-k]"));
-  }
-
-  @After
-  public void tearDown() {
-    inputRangeCleanup = null;
   }
 
   @Test
