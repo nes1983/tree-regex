@@ -18,7 +18,6 @@ import java.util.TreeSet;
 import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker;
 import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
 import ch.unibe.scg.regex.Tag.NoTag;
-import ch.unibe.scg.regex.TransitionTable.TDFATransitionTable.Builder.Entry;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 /**
@@ -55,7 +54,6 @@ interface TransitionTable {
     int nextState;
 
     public NextState(final int nextState, final List<Instruction> instructions) {
-      super();
       this.nextState = nextState;
       this.instructions = instructions;
     }
@@ -68,115 +66,65 @@ interface TransitionTable {
       return nextState;
     }
   }
+  static class TNFATransitionTable implements TransitionTable {
+    final NavigableMap<Pair<State, InputRange>, Collection<TransitionTriple>> transitions;
 
-  static abstract class RealTransitionTable<T> implements TransitionTable {
-    static class TNFATransitionTable extends RealTransitionTable<Collection<TransitionTriple>> {
-      public static class Builder {
+    public static class Builder {
 
-        final CaptureGroupMaker captureGroupMaker = new CaptureGroupMaker();
+      final CaptureGroupMaker captureGroupMaker = new CaptureGroupMaker();
 
-        final TreeMap<Pair<State, InputRange>, Collection<TransitionTriple>> transitions =
-            new TreeMap<>();
+      final TreeMap<Pair<State, InputRange>, Collection<TransitionTriple>> transitions =
+          new TreeMap<>();
 
-        public void addEndTagTransition(final Collection<State> froms, final State to,
-            final CaptureGroup captureGroup, final Priority priority) {
-          for (final State from : froms) {
-            put(from, InputRange.EPSILON, to, priority, captureGroup.getEndTag());
-          }
-        }
-
-        public void addStartTagTransition(final Collection<State> froms, final State to,
-            final CaptureGroup cg, final Priority priority) {
-          for (final State from : froms) {
-            put(from, InputRange.EPSILON, to, priority, cg.getStartTag());
-          }
-        }
-
-        public TNFATransitionTable build() {
-          return new TNFATransitionTable(transitions);
-          // There's no unmodifiable navigable set :(
-        }
-
-        public void put(final State startingState, final InputRange range, final State endingState,
-            final Priority priority, final Tag tag) {
-          // TODO Some overlapping tests
-          assert startingState != null && range != null;
-          final Pair<State, InputRange> key = new Pair<>(startingState, range);
-
-          Collection<TransitionTriple> col = transitions.get(key);
-          if (col == null) {
-            col = new ArrayList<>();
-            transitions.put(key, col);
-          }
-          col.add(new TransitionTriple(endingState, priority, tag));
+      public void addEndTagTransition(final Collection<State> froms, final State to,
+          final CaptureGroup captureGroup, final Priority priority) {
+        for (final State from : froms) {
+          put(from, InputRange.EPSILON, to, priority, captureGroup.getEndTag());
         }
       }
 
-      public static Builder builder() {
-        return new Builder();
-      }
-
-      TNFATransitionTable(
-          final NavigableMap<Pair<State, InputRange>, Collection<TransitionTriple>> transitions) {
-        super(transitions);
-      }
-
-      public Collection<InputRange> allInputRanges() {
-        final List<InputRange> ret = new ArrayList<>();
-        for (final Pair<State, InputRange> range : transitions.keySet()) {
-          final InputRange inputRange = range.getSecond();
-          if (!(inputRange instanceof InputRange.SpecialInputRange)) {
-            ret.add(inputRange);
-          }
+      public void addStartTagTransition(final Collection<State> froms, final State to,
+          final CaptureGroup cg, final Priority priority) {
+        for (final State from : froms) {
+          put(from, InputRange.EPSILON, to, priority, cg.getStartTag());
         }
-        return ret;
       }
 
-      public Collection<Tag> allTags() {
-        final Set<Tag> ret = new LinkedHashSet<>();
-        for (final Collection<TransitionTriple> triples : transitions.values()) {
-          for (final TransitionTriple triple : triples) {
-            final Tag tag = triple.getTag();
-            if (!(tag instanceof NoTag)) {
-              ret.add(tag);
-            }
-          }
-        }
-        return ret;
+      public TNFATransitionTable build() {
+        return new TNFATransitionTable(transitions);
+        // There's no unmodifiable navigable set :(
       }
 
-      public Collection<TransitionTriple> nextAvailableTransitions(final State state,
-          final Character input) {
-        final Collection<TransitionTriple> ret = getEntry(state, input);
-        if (ret == null) {
-          return Collections.emptyList();
+      public void put(final State startingState, final InputRange range, final State endingState,
+          final Priority priority, final Tag tag) {
+        // TODO Some overlapping tests
+        assert startingState != null && range != null;
+        final Pair<State, InputRange> key = new Pair<>(startingState, range);
+
+        Collection<TransitionTriple> col = transitions.get(key);
+        if (col == null) {
+          col = new ArrayList<>();
+          transitions.put(key, col);
         }
-        assert ret != null;
-        return ret;
+        col.add(new TransitionTriple(endingState, priority, tag));
       }
     }
 
-    final NavigableMap<Pair<State, InputRange>, T> transitions;
+    public static Builder builder() {
+      return new Builder();
+    }
 
-    RealTransitionTable(final NavigableMap<Pair<State, InputRange>, T> transitions) {
-      super();
+    TNFATransitionTable(
+        final NavigableMap<Pair<State, InputRange>, Collection<TransitionTriple>> transitions) {
       this.transitions = transitions;
     }
 
-    /**
-     *
-     * @param state The starting {@link State}
-     * @param character The specified {@link Character}. May be null. If so, only epsilon
-     *        transitions are returned.
-     * @return The {@link Pair} of {@link State} and {@link SequenceOfInstructions}. Null if there
-     *         isn't one.
-     */
-    T getEntry(final State state, final Character character) {
+    Collection<TransitionTriple> getEntry(final State state, final Character character) {
       // TODO(niko) get rid of Character, and use a char instead.
       final InputRange searched =
           character != null ? InputRange.make(character, character) : InputRange.EPSILON;
       final Pair<State, InputRange> searchMarker = new Pair<>(state, searched);
-      final SortedMap<Pair<State, InputRange>, T> tail =
+      final SortedMap<Pair<State, InputRange>, Collection<TransitionTriple>> tail =
           transitions.descendingMap().tailMap(searchMarker);
       // headMap and tailMap are different.
       // One is inclusive, the other is not. Therefore, reverse.
@@ -193,11 +141,46 @@ interface TransitionTable {
       return transitions.get(tail.firstKey());
     }
 
+    public Collection<InputRange> allInputRanges() {
+      final List<InputRange> ret = new ArrayList<>();
+      for (final Pair<State, InputRange> range : transitions.keySet()) {
+        final InputRange inputRange = range.getSecond();
+        if (!(inputRange instanceof InputRange.SpecialInputRange)) {
+          ret.add(inputRange);
+        }
+      }
+      return ret;
+    }
+
+    public Collection<Tag> allTags() {
+      final Set<Tag> ret = new LinkedHashSet<>();
+      for (final Collection<TransitionTriple> triples : transitions.values()) {
+        for (final TransitionTriple triple : triples) {
+          final Tag tag = triple.getTag();
+          if (!(tag instanceof NoTag)) {
+            ret.add(tag);
+          }
+        }
+      }
+      return ret;
+    }
+
+    public Collection<TransitionTriple> nextAvailableTransitions(final State state,
+        final Character input) {
+      final Collection<TransitionTriple> ret = getEntry(state, input);
+      if (ret == null) {
+        return Collections.emptyList();
+      }
+      assert ret != null;
+      return ret;
+    }
+
     @Override
     public String toString() {
       return transitions.toString();
     }
   }
+
 
   static class TDFATransitionTable {
     // TODO optimizations: use int for state, then lookup state by
@@ -380,7 +363,7 @@ interface TransitionTable {
     public String toString() {
       final StringBuilder sb = new StringBuilder();
       for (int i = 0; i < size; i++) {
-        final Entry e =
+        final Builder.Entry e =
             new Builder.Entry(froms[i], tos[i], instructions[i], states[i], newStates[i], null);
         sb.append(e.toString());
         sb.append('\n');

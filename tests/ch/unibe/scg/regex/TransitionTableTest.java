@@ -1,13 +1,12 @@
 package ch.unibe.scg.regex;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import ch.unibe.scg.regex.TransitionTable.RealTransitionTable;
-import ch.unibe.scg.regex.TransitionTable.RealTransitionTable.TNFATransitionTable;
+import ch.unibe.scg.regex.TransitionTable.TNFATransitionTable;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 @SuppressWarnings("javadoc")
@@ -47,7 +46,7 @@ public final class TransitionTableTest {
     tb.put(q2, i3, q4, Priority.NORMAL, null);
     tb.put(q0, i3, q2, Priority.NORMAL, null);
     tb.put(q3, i2, q1, Priority.NORMAL, null);
-    final RealTransitionTable.TNFATransitionTable t = tb.build();
+    final TNFATransitionTable t = tb.build();
 
     // Verify existing transitions
     assertThat(t.nextAvailableTransitions(q1, 'c').iterator().next().getState(), is(q3));
@@ -100,7 +99,7 @@ public final class TransitionTableTest {
     tb.put(q2, yz, q4, Priority.NORMAL, null);
     tb.put(q0, yz, q2, Priority.NORMAL, null);
     tb.put(q3, ko, q1, Priority.NORMAL, null);
-    final RealTransitionTable.TNFATransitionTable t = tb.build();
+    final TNFATransitionTable t = tb.build();
     // Verify existing transitions
 
     assertThat(t.nextAvailableTransitions(q1, 'z').iterator().next().getState(), is(q7));
@@ -130,7 +129,7 @@ public final class TransitionTableTest {
     final InputRange ad = InputRange.make('a', 'd');
     tb.put(q0, ad, q1, Priority.NORMAL, null);
 
-    final RealTransitionTable.TNFATransitionTable t = tb.build();
+    final TNFATransitionTable t = tb.build();
 
     assertThat(t.nextAvailableTransitions(q0, 'c').iterator().next().getState(), is(q1));
 
@@ -154,7 +153,7 @@ public final class TransitionTableTest {
     tb.put(q1, ko, q3, Priority.NORMAL, null);
     tb.put(q0, ko, q2, Priority.NORMAL, null);
 
-    final RealTransitionTable.TNFATransitionTable t = tb.build();
+    final TNFATransitionTable t = tb.build();
     assertThat(
         t.toString(),
         is("{(q0, a-d)=[q2, NORMAL, null], (q0, k-o)=[q2, NORMAL, null], (q1, k-o)=[q3, NORMAL, null]}"));
