@@ -23,7 +23,7 @@ import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 /**
  * Not thread-safe! Use only from one thread at a time!
- * 
+ *
  * @author nes
  */
 class RegexToNFA {
@@ -117,11 +117,6 @@ class RegexToNFA {
 
   }
 
-  public static <T> T assertNotNull(final T object) {
-    assert object != null;
-    return object;
-  }
-
   public static <T> T checkNotNull(final T o) {
     if (o == null) {
       throw new NullPointerException();
@@ -178,7 +173,7 @@ class RegexToNFA {
 
     assert !ret.getInitial().contains(null);
     assert !ret.getFinishing().contains(null);
-    return assertNotNull(ret);
+    return checkNotNull(ret);
   }
 
   MiniAutomaton makeAny(final MiniAutomaton last, final Builder builder) {
