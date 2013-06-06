@@ -301,8 +301,8 @@ class TNFAToTDFA {
 
   final Instruction.InstructionMaker instructionMaker = Instruction.InstructionMaker.get();
 
-  final TransitionTable.TDFATransitionTable.Builder tdfaBuilder =
-      new TransitionTable.TDFATransitionTable.Builder();
+  final TDFATransitionTable.Builder tdfaBuilder =
+      new TDFATransitionTable.Builder();
 
   final TNFA tnfa;
 

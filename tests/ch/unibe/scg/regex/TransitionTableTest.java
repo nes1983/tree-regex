@@ -6,7 +6,6 @@ import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 
-import ch.unibe.scg.regex.TransitionTable.TNFATransitionTable;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 @SuppressWarnings("javadoc")

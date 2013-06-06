@@ -27,7 +27,6 @@ import ch.unibe.scg.regex.ParserProvider.Node.Simple;
 import ch.unibe.scg.regex.ParserProvider.Node.SimpleChar;
 import ch.unibe.scg.regex.ParserProvider.Node.Union;
 
-
 /**
  * Objects not threadsafe! Use from only one thread!
  *

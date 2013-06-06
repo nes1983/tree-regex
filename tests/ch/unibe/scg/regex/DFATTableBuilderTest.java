@@ -1,8 +1,8 @@
 package ch.unibe.scg.regex;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.util.Collections;
 import java.util.List;
@@ -10,13 +10,12 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import ch.unibe.scg.regex.TDFATransitionTable.NextState;
 import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
-import ch.unibe.scg.regex.TransitionTable.NextState;
-import ch.unibe.scg.regex.TransitionTable.TDFATransitionTable;
 
 @SuppressWarnings("javadoc")
 public final class DFATTableBuilderTest {
-  ch.unibe.scg.regex.TransitionTable.TDFATransitionTable.Builder builder;
+  ch.unibe.scg.regex.TDFATransitionTable.Builder builder;
 
   @Before
   public void setUp() {

@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker;
-import ch.unibe.scg.regex.TransitionTable.TNFATransitionTable;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 interface TNFA {

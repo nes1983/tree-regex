@@ -8,17 +8,16 @@ import java.util.NavigableSet;
 import java.util.TreeSet;
 import java.util.regex.MatchResult;
 
+import ch.unibe.scg.regex.TDFATransitionTable.NextDFAState;
 import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
 import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructions;
-import ch.unibe.scg.regex.TransitionTable.NextDFAState;
 
 /** Interprets the known TDFA states. Compiles missing states on the fly. */
 class TDFAInterpreter {
   final Instruction.InstructionMaker instructionMaker = Instruction.InstructionMaker.get();
   final NavigableSet<DFAState> states = new TreeSet<>();
 
-  final TransitionTable.TDFATransitionTable.Builder tdfaBuilder =
-      new TransitionTable.TDFATransitionTable.Builder();
+  final TDFATransitionTable.Builder tdfaBuilder = new TDFATransitionTable.Builder();
   final TNFAToTDFA tnfa2tdfa;
 
 

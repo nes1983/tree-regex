@@ -1,7 +1,8 @@
 package ch.unibe.scg.regex;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
 
 import java.util.Collections;
 import java.util.List;
@@ -9,8 +10,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import ch.unibe.scg.regex.TransitionTable.NextState;
-import ch.unibe.scg.regex.TransitionTable.TDFATransitionTable;
+import ch.unibe.scg.regex.TDFATransitionTable.NextState;
 
 @SuppressWarnings("javadoc")
 public final class DFATableTest {
