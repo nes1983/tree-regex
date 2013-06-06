@@ -153,7 +153,7 @@ class TNFAToTDFA {
     /**
      * Destructively update <code>map</code> until it maps from to to. A -1 entry in map means that
      * the value can still be changed. Other values are left untouched.
-     * 
+     *
      * @param map Must be at least as big as the biggest values in both from and to. Elements must
      *        be >= -1. -1 stands for unassigned.
      * @param from same length as to.
@@ -301,8 +301,7 @@ class TNFAToTDFA {
 
   final Instruction.InstructionMaker instructionMaker = Instruction.InstructionMaker.get();
 
-  final TDFATransitionTable.Builder tdfaBuilder =
-      new TDFATransitionTable.Builder();
+  final TDFATransitionTable.Builder tdfaBuilder = new TDFATransitionTable.Builder();
 
   final TNFA tnfa;
 
@@ -347,7 +346,7 @@ class TNFAToTDFA {
 
   /**
    * Niko and Aaron's closure.
-   * 
+   *
    * @param startState if to generate the start state. If so, ignore a.
    * @param a the character that was read. Is ignored if startState == true.
    * @return The next state after state, for input a.
