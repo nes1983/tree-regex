@@ -3,7 +3,7 @@ package ch.unibe.scg.regex;
 interface CaptureGroup {
   /**
    * Returns increasing capture groups, including their tags. The first returned capture group is 1.
-   * 
+   *
    * <p>
    * Immutable.
    */
@@ -38,15 +38,18 @@ interface CaptureGroup {
         return parent;
       }
 
+      @Override
       public Tag getEndTag() {
         assert endTag != null;
         return endTag;
       }
 
+      @Override
       public int getNumber() {
         return number;
       }
 
+      @Override
       public Tag getStartTag() {
         assert startTag != null;
         return startTag;

@@ -69,6 +69,7 @@ class TDFATransitionTable {
         this.toDFA = toDFA;
       }
 
+      @Override
       public int compareTo(final Builder.Entry o) {
         final int cmp = Integer.compare(state, o.state);
         if (cmp != 0) {

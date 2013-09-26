@@ -2,7 +2,7 @@ package ch.unibe.scg.regex;
 
 /**
  * A generic class representing a {@link Pair} of two kind of {@link Object}
- * 
+ *
  * @author Fabien Dubosson
  * @param <A> The first {@link Object} {@link Class} type
  * @param <B> The second {@link Object} {@link Class} type
@@ -22,7 +22,7 @@ class Pair<A extends Comparable<A>, B extends Comparable<B>> extends XAbstractPa
 
   /**
    * Constructor taking the two {@link Object} as parameters
-   * 
+   *
    * @param first The first {@link Object} of the {@link Pair}
    * @param second The second {@link Object} of the {@link Pair}
    */
@@ -30,6 +30,7 @@ class Pair<A extends Comparable<A>, B extends Comparable<B>> extends XAbstractPa
     super(first, second);
   }
 
+  @Override
   public int compareTo(final Pair<A, B> o) {
     final int result = (this.getFirst()).compareTo(o.getFirst());
     if (result != 0) {
@@ -52,7 +53,7 @@ abstract class XAbstractPair<A, B> {
 
   /**
    * Constructor taking the two {@link Object} as parameters
-   * 
+   *
    * @param first The first {@link Object} of the {@link Pair}
    * @param second The second {@link Object} of the {@link Pair}
    */
@@ -93,7 +94,7 @@ abstract class XAbstractPair<A, B> {
 
   /**
    * Get the first {@link Object} of the {@link Pair}
-   * 
+   *
    * @return the first {@link Object} of the {@link Pair}
    */
   public A getFirst() {
@@ -102,7 +103,7 @@ abstract class XAbstractPair<A, B> {
 
   /**
    * Get the second {@link Object} of the {@link Pair}
-   * 
+   *
    * @return the second {@link Object} of the {@link Pair}
    */
   public B getSecond() {

@@ -40,10 +40,11 @@ interface Instruction {
 
     Map<Tag, Integer> tagIds = new LinkedHashMap<>();
 
+    // TODO: Delete?
     int lookup(final Tag tag) {
-      final Integer id = tagIds.get(tag);
-      if (id != null) {
-        return id;
+      final Integer tagId = tagIds.get(tag);
+      if (tagId != null) {
+        return tagId;
       }
       final int ret = nextId();
       tagIds.put(tag, ret);
@@ -93,6 +94,7 @@ interface Instruction {
       this.tag = tag;
     }
 
+    @Override
     public void execute(final Memory memory, final int pos) {
       memory.write(tag, pos);
     }

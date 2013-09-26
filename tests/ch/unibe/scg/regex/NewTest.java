@@ -1,8 +1,10 @@
 package ch.unibe.scg.regex;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +29,7 @@ public final class NewTest {
     s1 = State.get();
     s2 = State.get();
 
-    final TNFA tnfa = mock(TNFA.class);
+    final TNFA ret = mock(TNFA.class);
 
     t0 = mock(Tag.class);
     final CaptureGroup cg = mock(CaptureGroup.class);
@@ -37,22 +39,22 @@ public final class NewTest {
     when(t0.toString()).thenReturn("t0");
     when(t0.getGroup()).thenReturn(cg);
 
-    when(tnfa.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
-    when(tnfa.getInitialState()).thenReturn(s0);
-    when(tnfa.availableTransitionsFor(eq(s0), isNull(Character.class))).thenReturn(
+    when(ret.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
+    when(ret.getInitialState()).thenReturn(s0);
+    when(ret.availableTransitionsFor(eq(s0), isNull(Character.class))).thenReturn(
         Arrays.asList(new TransitionTriple(s1, Priority.NORMAL, t0), new TransitionTriple(s0,
             Priority.NORMAL, Tag.NONE)));
-    when(tnfa.availableTransitionsFor(eq(s0), eq('a'))).thenReturn(
+    when(ret.availableTransitionsFor(eq(s0), eq('a'))).thenReturn(
         Arrays.asList(new TransitionTriple(s0, Priority.NORMAL, Tag.NONE)));
-    when(tnfa.availableTransitionsFor(s1, 'a')).thenReturn(
+    when(ret.availableTransitionsFor(s1, 'a')).thenReturn(
         Arrays.asList(new TransitionTriple(s2, Priority.NORMAL, Tag.NONE), new TransitionTriple(s1,
             Priority.NORMAL, Tag.NONE)));
-    when(tnfa.availableTransitionsFor(s2, 'a')).thenReturn(new ArrayList<TransitionTriple>());
-    when(tnfa.isAccepting(eq(s2))).thenReturn(true);
-    when(tnfa.isAccepting(eq(s1))).thenReturn(false);
-    when(tnfa.isAccepting(eq(s0))).thenReturn(false);
-    when(tnfa.allTags()).thenReturn(Arrays.asList(t0));
-    return tnfa;
+    when(ret.availableTransitionsFor(s2, 'a')).thenReturn(new ArrayList<TransitionTriple>());
+    when(ret.isAccepting(eq(s2))).thenReturn(true);
+    when(ret.isAccepting(eq(s1))).thenReturn(false);
+    when(ret.isAccepting(eq(s0))).thenReturn(false);
+    when(ret.allTags()).thenReturn(Arrays.asList(t0));
+    return ret;
   }
 
   @Before

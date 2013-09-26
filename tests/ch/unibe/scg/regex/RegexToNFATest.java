@@ -1,8 +1,10 @@
 package ch.unibe.scg.regex;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
@@ -51,7 +53,7 @@ public final class RegexToNFATest {
     final RegexToNFA r = new RegexToNFA();
     final Simple s = (Simple) new ParserProvider().regexp().parse("\\.");
     final Char character = (Char) s.basics.get(0);
-    assertThat(character, is(EscapedChar.class));
+    assertThat(character, instanceOf(EscapedChar.class));
     final TNFA n = r.convert(character);
     assertThat(n.toString(), is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], (q0, .-.)=[(q1, NONE)]}"));
   }

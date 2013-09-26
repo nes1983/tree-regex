@@ -109,7 +109,7 @@ abstract class InputRange implements Comparable<InputRange> {
   @Override
   public int compareTo(InputRange o) {
     return Character.compare(getFrom(), o.getFrom());
-  };
+  }
 
   /**
    * Tell if the {@link InputRange} contains a {@link Character} within its range

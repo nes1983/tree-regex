@@ -1,8 +1,8 @@
 /*
  * dk.brics.automaton
- * 
+ *
  * Copyright (c) 2001-2011 Anders Moeller All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification, are permitted
  * provided that the following conditions are met: 1. Redistributions of source code must retain the
  * above copyright notice, this list of conditions and the following disclaimer. 2. Redistributions
@@ -10,7 +10,7 @@
  * following disclaimer in the documentation and/or other materials provided with the distribution.
  * 3. The name of the author may not be used to endorse or promote products derived from this
  * software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
  * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
@@ -46,7 +46,7 @@ package ch.unibe.scg.regex;
  * <td></td>
  * <td></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td><i>unionexp</i></td>
  * <td>::=</td>
@@ -61,7 +61,7 @@ package ch.unibe.scg.regex;
  * <td></td>
  * <td></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td><i>interexp</i></td>
  * <td>::=</td>
@@ -76,7 +76,7 @@ package ch.unibe.scg.regex;
  * <td></td>
  * <td></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td><i>concatexp</i></td>
  * <td>::=</td>
@@ -91,7 +91,7 @@ package ch.unibe.scg.regex;
  * <td></td>
  * <td></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td><i>repeatexp</i></td>
  * <td>::=</td>
@@ -141,7 +141,7 @@ package ch.unibe.scg.regex;
  * <td></td>
  * <td></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td><i>complexp</i></td>
  * <td>::=</td>
@@ -156,7 +156,7 @@ package ch.unibe.scg.regex;
  * <td></td>
  * <td></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td><i>charclassexp</i></td>
  * <td>::=</td>
@@ -178,7 +178,7 @@ package ch.unibe.scg.regex;
  * <td></td>
  * <td></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td><i>charclasses</i></td>
  * <td>::=</td>
@@ -193,7 +193,7 @@ package ch.unibe.scg.regex;
  * <td></td>
  * <td></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td><i>charclass</i></td>
  * <td>::=</td>
@@ -208,7 +208,7 @@ package ch.unibe.scg.regex;
  * <td></td>
  * <td></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td><i>simpleexp</i></td>
  * <td>::=</td>
@@ -272,7 +272,7 @@ package ch.unibe.scg.regex;
  * <td>(numerical interval)</td>
  * <td><small>[OPTIONAL]</small></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td><i>charexp</i></td>
  * <td>::=</td>
@@ -298,7 +298,7 @@ package ch.unibe.scg.regex;
  * or dash (<tt><b>-</b></tt>). Numerical intervals are specified by non-negative decimal integers
  * and include both end points, and if <tt><i>n</i></tt> and <tt><i>m</i></tt> have the same number
  * of digits, then the conforming strings must have that length (i.e. prefixed by 0's).
- * 
+ *
  * @author Anders M&oslash;ller &lt;<a href="mailto:amoeller@cs.au.dk">amoeller@cs.au.dk</a>&gt;
  * */
 class RegExp {
@@ -469,9 +469,8 @@ class RegExp {
 
   /**
    * Constructs new <code>RegExp</code> from a string.
-   * 
+   *
    * @param s regexp string
-   * @param syntax_flags boolean 'or' of optional syntax constructs to be enabled
    * @exception IllegalArgumentException if an error occured while parsing the regular expression
    */
   public RegExp(final String s) throws IllegalArgumentException {
@@ -498,11 +497,11 @@ class RegExp {
     b = null;
   }
 
-  private boolean match(final char c) {
+  private boolean match(final char ch) {
     if (pos >= b.length()) {
       return false;
     }
-    if (b.charAt(pos) == c) {
+    if (b.charAt(pos) == ch) {
       pos++;
       return true;
     }
@@ -521,16 +520,14 @@ class RegExp {
   }
 
   RegExp parseCharClass() throws IllegalArgumentException {
-    final char c = parseCharExp();
+    final char ch = parseCharExp();
     if (match('-')) {
       if (peek("]")) {
-        return makeUnion(makeChar(c), makeChar('-'));
-      } else {
-        return makeCharRange(c, parseCharExp());
+        return makeUnion(makeChar(ch), makeChar('-'));
       }
-    } else {
-      return makeChar(c);
+      return makeCharRange(ch, parseCharExp());
     }
+    return makeChar(ch);
   }
 
   RegExp parseCharClasses() throws IllegalArgumentException {
@@ -555,9 +552,8 @@ class RegExp {
         throw new IllegalArgumentException("expected ']' at position " + pos);
       }
       return e;
-    } else {
-      return parseSimpleExp();
     }
+    return parseSimpleExp();
   }
 
   char parseCharExp() throws IllegalArgumentException {
@@ -568,9 +564,8 @@ class RegExp {
   final RegExp parseComplExp() throws IllegalArgumentException {
     if (match('~')) {
       return makeComplement(parseComplExp());
-    } else {
-      return parseCharClassExp();
     }
+    return parseCharClassExp();
   }
 
   RegExp parseConcatExp() throws IllegalArgumentException {
@@ -666,8 +661,8 @@ class RegExp {
     return e;
   }
 
-  private boolean peek(final String s) {
-    return more() && s.indexOf(b.charAt(pos)) != -1;
+  private boolean peek(final String st) {
+    return more() && st.indexOf(b.charAt(pos)) != -1;
   }
 
   /**
@@ -678,90 +673,92 @@ class RegExp {
     return toStringBuilder(new StringBuilder()).toString();
   }
 
-  StringBuilder toStringBuilder(final StringBuilder b) {
+  StringBuilder toStringBuilder(final StringBuilder bu) {
     switch (kind) {
       case REGEXP_UNION:
-        b.append("(");
-        exp1.toStringBuilder(b);
-        b.append("|");
-        exp2.toStringBuilder(b);
-        b.append(")");
+        bu.append("(");
+        exp1.toStringBuilder(bu);
+        bu.append("|");
+        exp2.toStringBuilder(bu);
+        bu.append(")");
         break;
       case REGEXP_CONCATENATION:
-        exp1.toStringBuilder(b);
-        exp2.toStringBuilder(b);
+        exp1.toStringBuilder(bu);
+        exp2.toStringBuilder(bu);
         break;
       case REGEXP_INTERSECTION:
-        b.append("(");
-        exp1.toStringBuilder(b);
-        b.append("&");
-        exp2.toStringBuilder(b);
-        b.append(")");
+        bu.append("(");
+        exp1.toStringBuilder(bu);
+        bu.append("&");
+        exp2.toStringBuilder(bu);
+        bu.append(")");
         break;
       case REGEXP_OPTIONAL:
-        b.append("(");
-        exp1.toStringBuilder(b);
-        b.append(")?");
+        bu.append("(");
+        exp1.toStringBuilder(bu);
+        bu.append(")?");
         break;
       case REGEXP_REPEAT:
-        b.append("(");
-        exp1.toStringBuilder(b);
-        b.append(")*");
+        bu.append("(");
+        exp1.toStringBuilder(bu);
+        bu.append(")*");
         break;
       case REGEXP_REPEAT_MIN:
-        b.append("(");
-        exp1.toStringBuilder(b);
-        b.append("){").append(min).append(",}");
+        bu.append("(");
+        exp1.toStringBuilder(bu);
+        bu.append("){").append(min).append(",}");
         break;
       case REGEXP_REPEAT_MINMAX:
-        b.append("(");
-        exp1.toStringBuilder(b);
-        b.append("){").append(min).append(",").append(max).append("}");
+        bu.append("(");
+        exp1.toStringBuilder(bu);
+        bu.append("){").append(min).append(",").append(max).append("}");
         break;
       case REGEXP_COMPLEMENT:
-        b.append("~(");
-        exp1.toStringBuilder(b);
-        b.append(")");
+        bu.append("~(");
+        exp1.toStringBuilder(bu);
+        bu.append(")");
         break;
       case REGEXP_CHAR:
-        b.append("\\").append(c);
+        bu.append("\\").append(c);
         break;
       case REGEXP_CHAR_RANGE:
-        b.append("[\\").append(from).append("-\\").append(to).append("]");
+        bu.append("[\\").append(from).append("-\\").append(to).append("]");
         break;
       case REGEXP_ANYCHAR:
-        b.append(".");
+        bu.append(".");
         break;
       case REGEXP_EMPTY:
-        b.append("#");
+        bu.append("#");
         break;
       case REGEXP_STRING:
-        b.append("\"").append(s).append("\"");
+        bu.append("\"").append(s).append("\"");
         break;
       case REGEXP_ANYSTRING:
-        b.append("@");
+        bu.append("@");
         break;
       case REGEXP_AUTOMATON:
-        b.append("<").append(s).append(">");
+        bu.append("<").append(s).append(">");
         break;
       case REGEXP_INTERVAL:
         final String s1 = Integer.toString(min);
         final String s2 = Integer.toString(max);
-        b.append("<");
+        bu.append("<");
         if (digits > 0) {
           for (int i = s1.length(); i < digits; i++) {
-            b.append('0');
+            bu.append('0');
           }
         }
-        b.append(s1).append("-");
+        bu.append(s1).append("-");
         if (digits > 0) {
           for (int i = s2.length(); i < digits; i++) {
-            b.append('0');
+            bu.append('0');
           }
         }
-        b.append(s2).append(">");
+        bu.append(s2).append(">");
         break;
+      default:
+        throw new AssertionError();
     }
-    return b;
+    return bu;
   }
 }

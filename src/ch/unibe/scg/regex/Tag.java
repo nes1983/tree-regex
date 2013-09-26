@@ -6,9 +6,9 @@ import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker.RealCaptureGroup;
 
 /**
  * Get one from {@link CaptureGroupMaker}.
- * 
+ *
  * @author nes
- * 
+ *
  */
 interface Tag extends Comparable<Tag> {
   static abstract class AbstractTag implements Tag {
@@ -26,10 +26,12 @@ interface Tag extends Comparable<Tag> {
       none = myNone;
     }
 
+    @Override
     public int compareTo(final Tag o) {
       return Integer.compare(-1, o.getGroup().getNumber());
     }
 
+    @Override
     public CaptureGroup getGroup() {
       return none;
     }
@@ -117,8 +119,10 @@ interface Tag extends Comparable<Tag> {
       return captureGroup;
     }
 
+    @Override
     public abstract boolean isEndTag();
 
+    @Override
     public abstract boolean isStartTag();
   }
 

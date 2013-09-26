@@ -304,7 +304,7 @@ class ParserProvider {
 
     final Constructor<To> c = findConstructor(clazz, cs);
     return new Map<From, To>() {
-      public To map(final From arg0) {
+      @Override public To map(final From arg0) {
         try {
           return c.newInstance(arg0);
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
@@ -351,7 +351,7 @@ class ParserProvider {
     final Parser<String> p = Scanners.isChar('\\').next(Scanners.ANY_CHAR.source());
 
     return p.map(new Map<String, EscapedChar>() {
-      public EscapedChar map(final String arg) {
+      @Override public EscapedChar map(final String arg) {
         assert arg.length() == 1;
         return new Node.EscapedChar(arg.charAt(0));
       }
@@ -395,7 +395,7 @@ class ParserProvider {
     final Parser<Tuple3<Char, Void, Char>> p =
         Parsers.tuple(character(), Scanners.isChar('-'), character());
     return p.map(new Map<Tuple3<Char, Void, Char>, Node.Range>() {
-      public Range map(final Tuple3<Char, Void, Char> arg0) {
+      @Override public Range map(final Tuple3<Char, Void, Char> arg0) {
         assert arg0 != null;
         return new Node.Range(arg0.a.character, arg0.c.character);
       }
@@ -433,7 +433,7 @@ class ParserProvider {
     final Parser<String> p = Scanners.notAmong("[]*+()^.|?\\-$").source();
 
     return p.map(new Map<String, SimpleChar>() {
-      public SimpleChar map(final String arg) {
+      @Override public SimpleChar map(final String arg) {
         assert arg != null && arg.length() == 1;
         return new Node.SimpleChar(arg.charAt(0));
       }
@@ -451,7 +451,7 @@ class ParserProvider {
         Parsers.tuple(simple(), Scanners.isChar('|'), regexRef.lazy());
 
     return p.map(new Map<Tuple3<Simple, Void, Regex>, Union>() {
-      public Union map(final Tuple3<Simple, Void, Regex> a) {
+      @Override public Union map(final Tuple3<Simple, Void, Regex> a) {
         assert a != null;
         return new Union(notNull(a.a), notNull(a.c));
       }

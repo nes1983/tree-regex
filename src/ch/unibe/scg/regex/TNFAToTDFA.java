@@ -26,15 +26,15 @@ class TNFAToTDFA {
   static final StateAndInstructions NO_STATE;
   static {
     final List<SetInstruction> empty = Collections.emptyList();
-    NO_STATE = new StateAndInstructions(DFAState.NO_STATE, empty);
+    NO_STATE = new StateAndInstructions(DFAState.INSTRUCTIONLESS_NO_STATE, empty);
   }
   static final BitSet ZERO = new BitSet(0);
 
   static class DFAState implements Comparable<DFAState> {
-    final static DFAState NO_STATE;
+    final static DFAState INSTRUCTIONLESS_NO_STATE;
     static {
       final Map<State, int[]> e = Collections.emptyMap();
-      NO_STATE = new DFAState(e);
+      INSTRUCTIONLESS_NO_STATE = new DFAState(e);
     }
 
     public static String toString(final Map<State, int[]> states) {
@@ -55,6 +55,7 @@ class TNFAToTDFA {
       this.innerStates = Collections.unmodifiableMap(innerStates);
     }
 
+    @Override
     public int compareTo(final DFAState o) {
       return DFAStateComparator.SINGLETON.compare(this.innerStates, o.innerStates);
     }
@@ -140,9 +141,8 @@ class TNFAToTDFA {
       final int[] mapping = new int[maxLoc];
       if (this.isMappable(other, mapping)) {
         return mapping;
-      } else {
-        return null;
       }
+      return null;
     }
 
     @Override
@@ -262,6 +262,7 @@ class TNFAToTDFA {
       return true;
     }
 
+    @Override
     public State getKey() {
       return state;
     }
@@ -274,6 +275,7 @@ class TNFAToTDFA {
       return state;
     }
 
+    @Override
     public int[] getValue() {
       return memoryLocation;
     }
@@ -283,6 +285,7 @@ class TNFAToTDFA {
       return ((state == null) ? 0 : state.hashCode());
     }
 
+    @Override
     public int[] setValue(final int[] value) {
       throw new UnsupportedOperationException();
     }
@@ -344,13 +347,6 @@ class TNFAToTDFA {
     return new DFAState(Collections.unmodifiableMap(initState));
   }
 
-  /**
-   * Niko and Aaron's closure.
-   *
-   * @param startState if to generate the start state. If so, ignore a.
-   * @param a the character that was read. Is ignored if startState == true.
-   * @return The next state after state, for input a.
-   */
   static class StateAndInstructions {
     final DFAState dfaState;
     final List<SetInstruction> instructions;
@@ -361,6 +357,13 @@ class TNFAToTDFA {
     }
   }
 
+  /**
+   * Niko and Aaron's closure.
+   *
+   * @param startState if to generate the start state. If so, ignore a.
+   * @param a the character that was read. Is ignored if startState == true.
+   * @return The next state after state, for input a.
+   */
   StateAndInstructions e(final Map<State, int[]> state, final char a, boolean startState) {
     final Map<State, int[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
 

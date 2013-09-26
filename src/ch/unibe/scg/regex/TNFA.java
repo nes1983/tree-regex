@@ -100,38 +100,44 @@ interface TNFA {
       }
     }
 
+    @Override
     public Collection<InputRange> allInputRanges() {
       return transitionTable.allInputRanges();
     }
 
+    @Override
     public Collection<Tag> allTags() {
       return transitionTable.allTags();
     }
 
+    @Override
     public Collection<TransitionTriple> availableTransitionsFor(final State state,
         final Character input) {
       return transitionTable.nextAvailableTransitions(state, input);
     }
 
+    @Override
     public State getInitialState() {
       return initialState;
     }
 
+    @Override
     public boolean isAccepting(final State state) {
       return finalStates.contains(state);
     }
 
+    @Override
     public Set<State> getFinalStates() {
       return finalStates;
     }
 
     @Override
     public String toString() {
-      final Formatter formatter = new Formatter();
-      final String ret =
-          formatter.format("%s -> %s, %s", initialState, finalStates, transitionTable).toString();
-      formatter.close();
-      return ret;
+      try (final Formatter formatter = new Formatter()) {
+        final String ret =
+            formatter.format("%s -> %s, %s", initialState, finalStates, transitionTable).toString();
+        return ret;
+      }
     }
 
     @Override

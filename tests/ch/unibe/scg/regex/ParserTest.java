@@ -1,7 +1,8 @@
 package ch.unibe.scg.regex;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 
 import org.codehaus.jparsec.Parser;
 import org.codehaus.jparsec.error.ParserException;
@@ -35,9 +36,9 @@ public final class ParserTest {
   @Test
   public void testBasic() {
     final Node.Basic s = pp.basic().parse(".*");
-    assertThat(s, is(Node.Star.class));
+    assertThat(s, instanceOf(Node.Star.class));
     final Node.Star ss = (Node.Star) s;
-    assertThat(ss.elementary, is(Node.Any.class));
+    assertThat(ss.elementary, instanceOf(Node.Any.class));
     assertThat(s.toString(), is(".*"));
   }
 
@@ -70,14 +71,14 @@ public final class ParserTest {
   @Test
   public void testOptional1() {
     final Node.Optional s = pp.optional().parse("[a-fgk-zA-B]?");
-    assertThat(s.elementary, is(Node.Set.class));
+    assertThat(s.elementary, instanceOf(Node.Set.class));
     assertThat(s.toString(), is("[a-fgk-zA-B]?"));
   }
 
   @Test
   public void testOptional2() {
     final Node.Optional s = pp.optional().parse(".?");
-    assertThat(s.elementary, is(Node.Any.class));
+    assertThat(s.elementary, instanceOf(Node.Any.class));
     assertThat(s.toString(), is(".?"));
   }
 
@@ -90,14 +91,14 @@ public final class ParserTest {
   @Test
   public void testPlus1() {
     final Node.Plus s = pp.plus().parse("[a-fgk-zA-B]+");
-    assertThat(s.elementary, is(Node.Set.class));
+    assertThat(s.elementary, instanceOf(Node.Set.class));
     assertThat(s.toString(), is("[a-fgk-zA-B]+"));
   }
 
   @Test
   public void testPlus2() {
     final Node.Plus s = pp.plus().parse(".+");
-    assertThat(s.elementary, is(Node.Any.class));
+    assertThat(s.elementary, instanceOf(Node.Any.class));
     assertThat(s.toString(), is(".+"));
   }
 
@@ -123,14 +124,14 @@ public final class ParserTest {
   @Test
   public void testStar1() {
     final Node.Star s = pp.star().parse("[a-fgk-zA-B]*");
-    assertThat(s.elementary, is(Node.Set.class));
+    assertThat(s.elementary, instanceOf(Node.Set.class));
     assertThat(s.toString(), is("[a-fgk-zA-B]*"));
   }
 
   @Test
   public void testStar2() {
     final Node.Star s = pp.star().parse(".*");
-    assertThat(s.elementary, is(Node.Any.class));
+    assertThat(s.elementary, instanceOf(Node.Any.class));
     assertThat(s.toString(), is(".*"));
   }
 
@@ -141,7 +142,7 @@ public final class ParserTest {
     final Node.Union u = s.parse("[a-fgk-zA-B]*|aaa");
     assertThat(u.toString(), is("[a-fgk-zA-B]*|aaa"));
     assertThat(u.left.getClass(), is((Object) Node.Simple.class));
-    assertThat(u.right, is(Node.Simple.class));
+    assertThat(u.right, instanceOf(Node.Simple.class));
   }
 
   @Test
@@ -151,7 +152,7 @@ public final class ParserTest {
     final Node.Union u = s.parse("[a-fgk-zA-B]*|(aaa|bbb)");
     assertThat(u.toString(), is("[a-fgk-zA-B]*|(aaa|bbb)"));
     assertThat(u.left.getClass(), is((Object) Node.Simple.class));
-    assertThat(u.right, is(Node.Simple.class));
+    assertThat(u.right, instanceOf(Node.Simple.class));
   }
 
   @Test
@@ -175,13 +176,13 @@ public final class ParserTest {
     final Parser<Node.Regex> p = pp.regexp();
     final String s = "aaa|(bbb)?";
     final Node.Regex rr = p.parse(s);
-    assertThat(rr, is(Node.Union.class));
+    assertThat(rr, instanceOf(Node.Union.class));
     final Node.Union u = (Node.Union) rr;
     final Node.Regex right = u.right;
-    assertThat(right, is(Node.Simple.class));
+    assertThat(right, instanceOf(Node.Simple.class));
     final Node.Simple simple = (Node.Simple) right;
     final Node.Basic optional = simple.getBasics().get(0);
-    assertThat(optional, is(Node.Optional.class));
+    assertThat(optional, instanceOf(Node.Optional.class));
     assertThat(rr.toString(), is("aaa|(bbb)?"));
   }
 }
