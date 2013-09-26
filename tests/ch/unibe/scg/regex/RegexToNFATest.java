@@ -28,7 +28,8 @@ public final class RegexToNFATest {
     final RegexToNFA r = new RegexToNFA();
     final Any any = mock(Any.class);
     final TNFA n = r.convert(any);
-    assertThat(n.toString(), is("q0 -> [q1], {(q0, ANY)=[(q0, NONE), (q1, NONE)]}"));
+    assertThat(n.toString(), is("q0 -> [q3], {(q0, ANY)=[q0, NORMAL, NONE], "
+        + "(q0, ε)=[q1, NORMAL, ➀0], (q1, ANY)=[q2, NORMAL, NONE], (q2, ε)=[q3, NORMAL, ➁0]}"));
   }
 
   @Test
@@ -37,7 +38,9 @@ public final class RegexToNFATest {
     final Char character = mock(Char.class);
     when(character.getCharacter()).thenReturn('4');
     final TNFA n = r.convert(character);
-    assertThat(n.toString(), is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], (q0, 4-4)=[(q1, NONE)]}"));
+    assertThat(n.toString(), is("q0 -> [q3], "
+        + "{(q0, ANY)=[q0, NORMAL, NONE], (q0, ε)=[q1, NORMAL, ➀0], "
+        + "(q1, 4-4)=[q2, NORMAL, NONE], (q2, ε)=[q3, NORMAL, ➁0]}"));
   }
 
   @Test
@@ -45,7 +48,8 @@ public final class RegexToNFATest {
     final RegexToNFA r = new RegexToNFA();
     final Eos eos = mock(Eos.class);
     final TNFA n = r.convert(eos);
-    assertThat(n.toString(), is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], (q0, $)=[(q1, NONE)]}"));
+    assertThat(n.toString(), is("q0 -> [q3], {(q0, ANY)=[q0, NORMAL, NONE], "
+        + "(q0, ε)=[q1, NORMAL, ➀0], (q1, $)=[q2, NORMAL, NONE], (q2, ε)=[q3, NORMAL, ➁0]}"));
   }
 
   @Test
@@ -55,7 +59,8 @@ public final class RegexToNFATest {
     final Char character = (Char) s.basics.get(0);
     assertThat(character, instanceOf(EscapedChar.class));
     final TNFA n = r.convert(character);
-    assertThat(n.toString(), is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], (q0, .-.)=[(q1, NONE)]}"));
+    assertThat(n.toString(), is("q0 -> [q3], {(q0, ANY)=[q0, NORMAL, NONE], "
+        + "(q0, ε)=[q1, NORMAL, ➀0], (q1, .-.)=[q2, NORMAL, NONE], (q2, ε)=[q3, NORMAL, ➁0]}"));
   }
 
   @Test
@@ -63,8 +68,9 @@ public final class RegexToNFATest {
     final RegexToNFA r = new RegexToNFA();
     final Simple s = (Simple) new ParserProvider().regexp().parse("(\\.)");
     final TNFA tnfa = r.convert(s);
-    assertThat(tnfa.toString(), is("q0 -> [q3], {(q2, ε)=[(q3, ➁0)], (q1, .-.)=[(q2, NONE)], "
-        + "(q0, ANY)=[(q0, NONE), (q1, ➀0)]}"));
+    assertThat(tnfa.toString(), is("q0 -> [q5], {(q0, ANY)=[q0, NORMAL, NONE], "
+        + "(q0, ε)=[q1, NORMAL, ➀0], (q1, ε)=[q2, NORMAL, ➀1], (q2, .-.)=[q3, NORMAL, NONE], "
+        + "(q3, ε)=[q4, NORMAL, ➁1], (q4, ε)=[q5, NORMAL, ➁0]}"));
   }
 
   @Test
@@ -73,8 +79,9 @@ public final class RegexToNFATest {
     final Simple s = (Simple) new ParserProvider().regexp().parse("(\\.)*");
     final TNFA tnfa = r.convert(s);
     assertThat(tnfa.toString(),
-        is("q0 -> [q3, q0], {(q2, ε)=[(q3, ➁0), (q1, NONE)], (q1, .-.)=[(q2, NONE)], "
-            + "(q0, ANY)=[(q0, NONE), (q1, ➀0)]}"));
+        is("q0 -> [q5], {(q0, ANY)=[q0, NORMAL, NONE], (q0, ε)=[q1, NORMAL, ➀0], "
+            + "(q1, ε)=[q2, NORMAL, ➀1, q5, NORMAL, ➁0], (q2, .-.)=[q3, NORMAL, NONE], "
+            + "(q3, ε)=[q4, NORMAL, ➁1, q2, NORMAL, NONE], (q4, ε)=[q5, NORMAL, ➁0]}"));
   }
 
   @Before
@@ -91,8 +98,8 @@ public final class RegexToNFATest {
     when(c.getCharacter()).thenReturn('.');
     when(s.getBasics()).thenReturn((List) Arrays.asList(c));
     final TNFA tnfa = r.convert(s);
-    assertThat(tnfa.toString(), is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], "
-        + "(q0, .-.)=[(q1, NONE)]}"));
+    assertThat(tnfa.toString(), is("q0 -> [q3], {(q0, ANY)=[q0, NORMAL, NONE], "
+        + "(q0, ε)=[q1, NORMAL, ➀0], (q1, .-.)=[q2, NORMAL, NONE], (q2, ε)=[q3, NORMAL, ➁0]}"));
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -107,8 +114,9 @@ public final class RegexToNFATest {
     when(s.getBasics()).thenReturn((List) Arrays.asList(c));
     final TNFA tnfa = r.convert(s);
     assertThat(tnfa.toString(),
-        is("q0 -> [q1, q0], {(q1, ε)=[(q0, NONE)], (q0, ANY)=[(q0, NONE)], "
-            + "(q0, a-a)=[(q1, NONE)]}"));
+        is("q0 -> [q3], {(q0, ANY)=[q0, NORMAL, NONE], (q0, ε)=[q1, NORMAL, ➀0], "
+            + "(q1, ε)=[q3, NORMAL, ➁0], (q1, a-a)=[q2, NORMAL, NONE], "
+            + "(q2, ε)=[q1, NORMAL, NONE, q3, NORMAL, ➁0]}"));
   }
 
   @Test
@@ -116,8 +124,8 @@ public final class RegexToNFATest {
     final RegexToNFA r = new RegexToNFA();
     final Simple s = (Simple) new ParserProvider().regexp().parse("\\.");
     final TNFA tnfa = r.convert(s);
-    assertThat(tnfa.toString(), is("q0 -> [q1], {(q0, ANY)=[(q0, NONE)], "
-        + "(q0, .-.)=[(q1, NONE)]}"));
+    assertThat(tnfa.toString(), is("q0 -> [q3], {(q0, ANY)=[q0, NORMAL, NONE], "
+        + "(q0, ε)=[q1, NORMAL, ➀0], (q1, .-.)=[q2, NORMAL, NONE], (q2, ε)=[q3, NORMAL, ➁0]}"));
   }
 
   @Test
@@ -126,7 +134,8 @@ public final class RegexToNFATest {
     final Simple s = (Simple) new ParserProvider().regexp().parse("a*");
     final TNFA tnfa = r.convert(s);
     assertThat(tnfa.toString(),
-        is("q0 -> [q1, q0], {(q1, ε)=[(q0, NONE)], (q0, ANY)=[(q0, NONE)], "
-            + "(q0, a-a)=[(q1, NONE)]}"));
+        is("q0 -> [q3], {(q0, ANY)=[q0, NORMAL, NONE], (q0, ε)=[q1, NORMAL, ➀0], "
+            + "(q1, ε)=[q3, NORMAL, ➁0], (q1, a-a)=[q2, NORMAL, NONE], "
+            + "(q2, ε)=[q1, NORMAL, NONE, q3, NORMAL, ➁0]}"));
   }
 }
