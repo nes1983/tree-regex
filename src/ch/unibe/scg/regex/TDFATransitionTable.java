@@ -195,7 +195,7 @@ class TDFATransitionTable {
     int r = size - 1;
     int x = -1;
     while (r >= l) {
-      x = (l + r) / 2;
+      x = (l + r) >>> 1;  // average and stays correct if addition overflows.
       final int cmp = cmp(state, input, x);
       if (cmp == 0) {
         return new NextState(newStates[x], instructions[x]);

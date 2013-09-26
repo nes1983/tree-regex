@@ -473,7 +473,7 @@ class RegExp {
    * @param s regexp string
    * @exception IllegalArgumentException if an error occured while parsing the regular expression
    */
-  public RegExp(final String s) throws IllegalArgumentException {
+  public RegExp(final String s) {
     b = s;
     RegExp e;
     if (s.length() == 0) {

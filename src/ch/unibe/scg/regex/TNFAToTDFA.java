@@ -37,7 +37,7 @@ class TNFAToTDFA {
       INSTRUCTIONLESS_NO_STATE = new DFAState(e);
     }
 
-    public static String toString(final Map<State, int[]> states) {
+    public static String statesToString(final Map<State, int[]> states) {
       final StringBuilder sb = new StringBuilder();
       for (final Map.Entry<State, int[]> el : states.entrySet()) {
         sb.append(el.getKey());
@@ -147,7 +147,7 @@ class TNFAToTDFA {
 
     @Override
     public String toString() {
-      return toString(innerStates);
+      return statesToString(innerStates);
     }
 
     /**
@@ -410,7 +410,7 @@ class TNFAToTDFA {
         final State qDash = triple.state;
 
         // Step 1.
-        if ((R.containsKey(qDash) && triple.priority.equals(Priority.LOW)) || R.containsKey(qDash)) {
+        if ((R.containsKey(qDash) && (triple.priority == Priority.LOW)) || R.containsKey(qDash)) {
           continue nextTriple;
         }
 

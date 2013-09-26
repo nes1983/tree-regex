@@ -50,9 +50,9 @@ public final class NewTest {
         Arrays.asList(new TransitionTriple(s2, Priority.NORMAL, Tag.NONE), new TransitionTriple(s1,
             Priority.NORMAL, Tag.NONE)));
     when(ret.availableTransitionsFor(s2, 'a')).thenReturn(new ArrayList<TransitionTriple>());
-    when(ret.isAccepting(eq(s2))).thenReturn(true);
-    when(ret.isAccepting(eq(s1))).thenReturn(false);
-    when(ret.isAccepting(eq(s0))).thenReturn(false);
+    when(ret.isAccepting(eq(s2))).thenReturn(Boolean.TRUE);
+    when(ret.isAccepting(eq(s1))).thenReturn(Boolean.FALSE);
+    when(ret.isAccepting(eq(s0))).thenReturn(Boolean.FALSE);
     when(ret.allTags()).thenReturn(Arrays.asList(t0));
     return ret;
   }

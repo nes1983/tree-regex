@@ -218,10 +218,8 @@ class RegexToNFA {
     final State endGroup = builder.makeState();
     builder.addEndTagTransition(body.getFinishing(), endGroup, cg, Priority.NORMAL);
 
-    final TaggedMiniAutomaton ret =
-        new TaggedMiniAutomaton(last.getFinishing(), endGroup, body.getInitial(),
+    return new TaggedMiniAutomaton(last.getFinishing(), endGroup, body.getInitial(),
             body.getFinishing());
-    return ret;
   }
 
   MiniAutomaton makeInitialMiniAutomaton(final Builder builder, CaptureGroup entireMatch) {

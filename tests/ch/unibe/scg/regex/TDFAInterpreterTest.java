@@ -1,9 +1,11 @@
 package ch.unibe.scg.regex;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,10 +56,10 @@ public class TDFAInterpreterTest {
         Arrays.asList(new TransitionTriple(s2, Priority.NORMAL, Tag.NONE), new TransitionTriple(s1,
             Priority.LOW, Tag.NONE)));
     when(tnfa.availableTransitionsFor(s2, 'a')).thenReturn(new ArrayList<TransitionTriple>());
-    when(tnfa.isAccepting(eq(s2))).thenReturn(true);
+    when(tnfa.isAccepting(eq(s2))).thenReturn(Boolean.TRUE);
     when(tnfa.getFinalStates()).thenReturn(new HashSet<>(Arrays.asList(s2)));
-    when(tnfa.isAccepting(eq(s1))).thenReturn(false);
-    when(tnfa.isAccepting(eq(s0))).thenReturn(false);
+    when(tnfa.isAccepting(eq(s1))).thenReturn(Boolean.FALSE);
+    when(tnfa.isAccepting(eq(s0))).thenReturn(Boolean.FALSE);
     return tnfa;
   }
 

@@ -1,5 +1,7 @@
 package ch.unibe.scg.regex;
 
+import java.util.Objects;
+
 class TransitionTriple {
   static enum Priority {
     LOW, NORMAL;
@@ -63,9 +65,9 @@ class TransitionTriple {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((priority == null) ? 0 : priority.hashCode());
-    result = prime * result + ((state == null) ? 0 : state.hashCode());
-    result = prime * result + ((tag == null) ? 0 : tag.hashCode());
+    result = prime * result + Objects.hashCode(priority);
+    result = prime * result + Objects.hashCode(state);
+    result = prime * result + Objects.hashCode(tag);
     return result;
   }
 

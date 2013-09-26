@@ -207,7 +207,6 @@ class ParserProvider {
       public String toString() {
         throw new RuntimeException("Overwrite me");
       }
-
     }
 
     public static class SetItem implements Node {
@@ -408,7 +407,7 @@ class ParserProvider {
     return p;
   }
 
-  public void reInitialize() {
+  public final void reInitialize() {
     regexRef = Parser.newReference();
   }
 

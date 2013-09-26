@@ -4,10 +4,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Immutable NFA state.
- * 
+ *
  * <p>
  * The NFA keeps track of whether or not the state is final.
- * 
+ *
  * @author Fabien Dubosson
  * @author Niko Schwarz
  */
@@ -47,7 +47,7 @@ class State implements Comparable<State> {
 
   /**
    * Gets the identifier of the {@link State}
-   * 
+   *
    * @return an {@link Integer} representing the {@link State} identifier
    */
   public int getId() {
@@ -61,10 +61,7 @@ class State implements Comparable<State> {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + id;
-    return result;
+    return id;
   }
 
   @Override
