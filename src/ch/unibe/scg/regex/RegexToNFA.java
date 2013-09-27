@@ -39,10 +39,14 @@ class RegexToNFA {
     final MiniAutomaton a = make(m, builder, node, builder.captureGroupMaker.entireMatch);
 
     final State endTagger = builder.makeState();
-    builder.setAsAccepting(endTagger);
     builder.addEndTagTransition(a.getFinishing(), endTagger, builder.captureGroupMaker.entireMatch,
         Priority.NORMAL);
 
+    final State commitState = builder.makeState();
+    builder.addCommitTagTransition(endTagger, commitState, builder.captureGroupMaker.entireMatch,
+        Priority.NORMAL);
+
+    builder.setAsAccepting(commitState);
     return builder.build();
   }
 
@@ -214,11 +218,14 @@ class RegexToNFA {
     };
     final MiniAutomaton body = make(startGroupAutomaton, builder, group.getBody(), cg);
 
-    final State endGroup = builder.makeState();
-    builder.addEndTagTransition(body.getFinishing(), endGroup, cg, Priority.NORMAL);
+    final State endTag = builder.makeState();
+    builder.addEndTagTransition(body.getFinishing(), endTag, cg, Priority.NORMAL);
 
-    return new TaggedMiniAutomaton(last.getFinishing(), endGroup, body.getInitial(),
-            body.getFinishing());
+    final State commitState = builder.makeState();
+    builder.addCommitTagTransition(endTag, commitState, cg, Priority.NORMAL);
+
+    return new TaggedMiniAutomaton(last.getFinishing(), commitState, body.getInitial(),
+        body.getFinishing());
   }
 
   MiniAutomaton makeInitialMiniAutomaton(final Builder builder, CaptureGroup entireMatch) {

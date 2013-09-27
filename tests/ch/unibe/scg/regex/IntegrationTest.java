@@ -1,7 +1,7 @@
 package ch.unibe.scg.regex;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import java.util.regex.MatchResult;
 
@@ -28,13 +28,15 @@ public class IntegrationTest {
     final Regex parsed = new ParserProvider().regexp().parse("(((a+)b)+c)+");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
 
-    assertThat(tnfa.toString(),
-        is("q0 -> [q11], {(q0, ANY)=[q0, NORMAL, NONE], (q0, ε)=[q1, NORMAL, ➀0], "
-            + "(q1, ε)=[q2, NORMAL, ➀1], (q2, ε)=[q3, NORMAL, ➀2], (q3, ε)=[q4, NORMAL, ➀3],"
-            + " (q4, a-a)=[q5, NORMAL, NONE], (q5, ε)=[q4, NORMAL, NONE, q6, NORMAL, ➁3], "
-            + "(q6, b-b)=[q7, NORMAL, NONE], (q7, ε)=[q8, NORMAL, ➁2, q3, NORMAL, NONE], "
-            + "(q8, c-c)=[q9, NORMAL, NONE], (q9, ε)=[q10, NORMAL, ➁1, q2, NORMAL, NONE], "
-            + "(q10, ε)=[q11, NORMAL, ➁0]}"));
+    assertThat(
+        tnfa.toString(),
+        is("q0 -> [q15], {(q0, ANY)=[q0, NORMAL, NONE], (q0, ε)=[q1, NORMAL, ➀0], "
+            + "(q1, ε)=[q2, NORMAL, ➀1], (q2, ε)=[q3, NORMAL, ➀2], (q3, ε)=[q4, NORMAL, ➀3], "
+            + "(q4, a-a)=[q5, NORMAL, NONE], (q5, ε)=[q4, NORMAL, NONE, q6, NORMAL, ➁3], "
+            + "(q6, ε)=[q7, NORMAL, C3], (q7, b-b)=[q8, NORMAL, NONE], "
+            + "(q8, ε)=[q9, NORMAL, ➁2, q3, NORMAL, NONE], (q9, ε)=[q10, NORMAL, C2], "
+            + "(q10, c-c)=[q11, NORMAL, NONE], (q11, ε)=[q12, NORMAL, ➁1, q2, NORMAL, NONE], "
+            + "(q12, ε)=[q13, NORMAL, C1], (q13, ε)=[q14, NORMAL, ➁0], (q14, ε)=[q15, NORMAL, C0]}"));
     tdfaInterpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
   }
 

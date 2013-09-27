@@ -98,6 +98,15 @@ interface TNFA {
         tags.add(cg.getStartTag());
         tags.add(cg.getEndTag());
       }
+
+      public void addCommitTagTransition(final State from, final State to,
+          final CaptureGroup captureGroup, final Priority priority) {
+        assert from != null;
+        assert to != null;
+        assert captureGroup != null;
+        transitionTableBuilder.put(from, InputRange.EPSILON, to, priority,
+            Tag.CommitTag.make(captureGroup));
+      }
     }
 
     @Override
