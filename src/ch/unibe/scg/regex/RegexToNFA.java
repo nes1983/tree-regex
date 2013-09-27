@@ -114,7 +114,6 @@ class RegexToNFA {
     public String toString() {
       return "ȶ" + super.toString();
     }
-
   }
 
   public static <T> T checkNotNull(final T o) {
@@ -201,8 +200,8 @@ class RegexToNFA {
   }
 
   MiniAutomaton makeGroup(final MiniAutomaton last, final Builder builder, final Group group,
-      CaptureGroup captureGroup) {
-    final CaptureGroup cg = builder.makeCaptureGroup(captureGroup);
+      CaptureGroup parentCaptureGroup) {
+    final CaptureGroup cg = builder.makeCaptureGroup(parentCaptureGroup);
     builder.registerCaptureGroup(cg);
     final State startGroup = builder.makeState();
     builder.addStartTagTransition(last.getFinishing(), startGroup, cg, Priority.NORMAL);
