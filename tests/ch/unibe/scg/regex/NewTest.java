@@ -38,6 +38,7 @@ public final class NewTest {
 
     when(t0.toString()).thenReturn("t0");
     when(t0.getGroup()).thenReturn(cg);
+    when(t0.isStartTag()).thenReturn(true);
 
     when(ret.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
     when(ret.getInitialState()).thenReturn(s0);

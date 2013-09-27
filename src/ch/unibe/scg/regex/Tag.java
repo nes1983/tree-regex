@@ -10,14 +10,7 @@ import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker.RealCaptureGroup;
  * @author nes
  *
  */
-interface Tag extends Comparable<Tag> {
-  static abstract class AbstractTag implements Tag {
-    @Override
-    public int compareTo(final Tag o) {
-      return Integer.compare(getGroup().getNumber(), o.getGroup().getNumber());
-    }
-  }
-
+interface Tag {
   static class NoTag implements Tag {
     private static final CaptureGroup none;
     static {
@@ -27,23 +20,18 @@ interface Tag extends Comparable<Tag> {
     }
 
     @Override
-    public int compareTo(final Tag o) {
-      return Integer.compare(-1, o.getGroup().getNumber());
-    }
-
-    @Override
     public CaptureGroup getGroup() {
       return none;
     }
 
     @Override
     public boolean isEndTag() {
-      throw new UnsupportedOperationException();
+      return false;
     }
 
     @Override
     public boolean isStartTag() {
-      throw new UnsupportedOperationException();
+      return false;
     }
 
     @Override
@@ -52,10 +40,42 @@ interface Tag extends Comparable<Tag> {
     }
   }
 
+  static class CommitTag implements Tag {
+    final CaptureGroup captureGroup;
+
+    CommitTag(final CaptureGroup captureGroup) {
+      this.captureGroup = captureGroup;
+    }
+
+    @Override
+    public CaptureGroup getGroup() {
+      return captureGroup;
+    }
+
+    @Override
+    public boolean isEndTag() {
+      return false;
+    }
+
+    @Override
+    public boolean isStartTag() {
+      return false;
+    }
+
+    @Override
+    public String toString() {
+      return "C" + getGroup().getNumber();
+    }
+
+    public static Tag make(CaptureGroup captureGroup) {
+      return new CommitTag(captureGroup);
+    }
+  }
+
   /**
    * Don't instantiate directly. Leave it to {@link CaptureGroupMaker}.
    */
-  static abstract class RealTag extends AbstractTag {
+  static abstract class RealTag implements Tag {
     static class EndTag extends RealTag {
       private EndTag(final CaptureGroup captureGroup) {
         super(captureGroup);
@@ -110,7 +130,6 @@ interface Tag extends Comparable<Tag> {
     final CaptureGroup captureGroup;
 
     RealTag(final CaptureGroup captureGroup) {
-      super();
       this.captureGroup = captureGroup;
     }
 

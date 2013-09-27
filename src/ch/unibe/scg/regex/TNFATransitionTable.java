@@ -11,12 +11,11 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker;
-import ch.unibe.scg.regex.Tag.NoTag;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 /**
  * All possible transitions from one state to another.
- * 
+ *
  * @author Niko Schwarz, Fabien Dubosson
  */
 class TNFATransitionTable {
@@ -109,7 +108,7 @@ class TNFATransitionTable {
     for (final Collection<TransitionTriple> triples : transitions.values()) {
       for (final TransitionTriple triple : triples) {
         final Tag tag = triple.getTag();
-        if (!(tag instanceof NoTag)) {
+        if (tag.isEndTag() || tag.isStartTag()) {
           ret.add(tag);
         }
       }

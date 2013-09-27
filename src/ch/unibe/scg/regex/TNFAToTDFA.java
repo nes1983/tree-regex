@@ -417,7 +417,7 @@ class TNFAToTDFA {
         // Step 2.
         final Tag tau = triple.tag;
         int[] tdash;
-        if (!tau.equals(Tag.NONE)) {
+        if (tau.isEndTag() || tau.isStartTag()) {
           tdash = Arrays.copyOf(l, l.length);
           final int pos = nextInt();
           tdash[positionFor(tau)] = pos;
@@ -532,6 +532,8 @@ class TNFAToTDFA {
   }
 
   private int positionFor(final Tag tau) {
+    assert tau.isEndTag() || tau.isStartTag();
+
     int r = 2 * tau.getGroup().getNumber();
     if (tau.isEndTag()) {
       r += 1;

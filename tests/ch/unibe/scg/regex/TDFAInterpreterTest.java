@@ -43,6 +43,7 @@ public class TDFAInterpreterTest {
 
     when(t0.toString()).thenReturn("t0");
     when(t0.getGroup()).thenReturn(cg);
+    when(t0.isStartTag()).thenReturn(true);
 
     when(tnfa.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
     when(tnfa.getInitialState()).thenReturn(s0);
