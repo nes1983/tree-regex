@@ -37,11 +37,15 @@ interface Instruction {
       return ++id;
     }
 
-    public Instruction reorder(final int from, final int to) {
+    Instruction commit(final int memoryPos) {
+      return new CommitInstruction(memoryPos);
+    }
+
+    Instruction reorder(final int from, final int to) {
       return new ReorderInstruction(from, to);
     }
 
-    public Instruction storePos(final int tag) {
+    Instruction storePos(final int tag) {
       return new SetInstruction(tag);
     }
   }
