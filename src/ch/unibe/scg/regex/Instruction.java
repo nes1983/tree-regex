@@ -37,8 +37,12 @@ interface Instruction {
       return ++id;
     }
 
-    Instruction commit(final int memoryPos) {
-      return new CommitInstruction(memoryPos);
+    Instruction openingCommit(final int memoryPos) {
+      return new OpeningCommitInstruction(memoryPos);
+    }
+
+    Instruction closingCommit(final int memoryPos) {
+      return new ClosingCommitInstruction(memoryPos);
     }
 
     Instruction reorder(final int from, final int to) {
@@ -87,10 +91,23 @@ interface Instruction {
     }
   }
 
-  static class CommitInstruction implements Instruction {
+  static class ClosingCommitInstruction implements Instruction {
     final int memoryPos;
 
-    CommitInstruction(final int memoryPos) {
+    ClosingCommitInstruction(final int memoryPos) {
+      this.memoryPos = memoryPos;
+    }
+
+    @Override
+    public void execute(Memory memory, int unusedPos) {
+      memory.commit(memoryPos);
+    }
+  }
+
+  static class OpeningCommitInstruction implements Instruction {
+    final int memoryPos;
+
+    OpeningCommitInstruction(final int memoryPos) {
       this.memoryPos = memoryPos;
     }
 
