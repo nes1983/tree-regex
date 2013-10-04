@@ -60,7 +60,7 @@ interface Instruction {
     }
 
     public Instruction storePos(final int tag) {
-      return SetInstruction.make(tag);
+      return new SetInstruction(tag);
     }
   }
 
@@ -84,13 +84,9 @@ interface Instruction {
   }
 
   static class SetInstruction implements Instruction {
-    static SetInstruction make(final int tag) {
-      return new SetInstruction(tag);
-    }
-
     final int tag;
 
-    public SetInstruction(final int tag) {
+    SetInstruction(final int tag) {
       this.tag = tag;
     }
 
@@ -102,6 +98,19 @@ interface Instruction {
     @Override
     public String toString() {
       return "" + tag + "<- pos";
+    }
+  }
+
+  static class CommitInstruction implements Instruction {
+    final int memoryPos;
+
+    CommitInstruction(final int memoryPos) {
+      this.memoryPos = memoryPos;
+    }
+
+    @Override
+    public void execute(Memory memory, int unusedPos) {
+      memory.commit(memoryPos);
     }
   }
 
