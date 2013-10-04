@@ -1,7 +1,6 @@
 package ch.unibe.scg.regex;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.NavigableSet;
@@ -10,7 +9,7 @@ import java.util.regex.MatchResult;
 
 import ch.unibe.scg.regex.TDFATransitionTable.NextDFAState;
 import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
-import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructions;
+import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructionsAndNewLocations;
 
 /** Interprets the known TDFA states. Compiles missing states on the fly. */
 class TDFAInterpreter {
@@ -50,7 +49,7 @@ class TDFAInterpreter {
     final Memory memory = new Memory();
     DFAState t;
     {
-      final StateAndInstructions stateAndInstructions = tnfa2tdfa.makeStartState();
+      final StateAndInstructionsAndNewLocations stateAndInstructions = tnfa2tdfa.makeStartState();
       t = stateAndInstructions.dfaState;
       for (final Instruction instruction : stateAndInstructions.instructions) {
         instruction.execute(memory, 0);
@@ -80,14 +79,12 @@ class TDFAInterpreter {
       }
 
       // TODO this is ugly. Clearly, e should return StateAndPositions.
-      final StateAndInstructions uu = tnfa2tdfa.e(t.getData(), a, false);
+      final StateAndInstructionsAndNewLocations uu = tnfa2tdfa.e(t.getData(), a, false);
       final DFAState u = uu.dfaState;
 
       if (u.getData().isEmpty()) { // There is no matching NFA state.
         return RealMatchResult.NoMatchResult.SINGLETON;
       }
-
-      final BitSet newLocations = tnfa2tdfa.extractStorePositions(uu.instructions);
 
       int[] mapping = new int[tnfa2tdfa.highestMapping];
       final DFAState mappedState = tnfa2tdfa.findMappableState(states, u, mapping);
@@ -101,10 +98,10 @@ class TDFAInterpreter {
       DFAState newState;
       if (mapping != null) {
         final Collection<? extends Instruction> moves =
-            tnfa2tdfa.mappingInstructions(mapping, u, newLocations);
+            tnfa2tdfa.mappingInstructions(mapping, u, uu.newLocations);
         c = new ArrayList<>(uu.instructions.size() + moves.size());
         c.addAll(moves);
-        for (int i = newLocations.nextSetBit(0); i >= 0; i = newLocations.nextSetBit(i + 1)) {
+        for (int i = uu.newLocations.nextSetBit(0); i >= 0; i = uu.newLocations.nextSetBit(i + 1)) {
           c.add(instructionMaker.storePos(mapping[i]));
         }
         newState = mappedState;
@@ -116,7 +113,7 @@ class TDFAInterpreter {
 
       // Free up new slots that weren't really needed.
       if (mappedState != null) {
-        tnfa2tdfa.highestMapping -= newLocations.cardinality();
+        tnfa2tdfa.highestMapping -= uu.newLocations.cardinality();
       }
 
       assert newState != null;
