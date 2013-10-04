@@ -1,12 +1,12 @@
 package ch.unibe.scg.regex;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 import java.util.regex.MatchResult;
 
+import ch.unibe.scg.regex.Instruction.Instructions;
 import ch.unibe.scg.regex.TDFATransitionTable.NextDFAState;
 import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
 import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructionsAndNewLocations;
@@ -93,14 +93,13 @@ class TDFAInterpreter {
         mapping = null;
       }
 
-      List<Instruction> c;
+      Instructions c;
 
       DFAState newState;
       if (mapping != null) {
         final Collection<? extends Instruction> moves =
             tnfa2tdfa.mappingInstructions(mapping, u, uu.newLocations);
-        c = new ArrayList<>(uu.instructions.size() + moves.size());
-        c.addAll(moves);
+        c = new Instructions(moves);
         for (int i = uu.newLocations.nextSetBit(0); i >= 0; i = uu.newLocations.nextSetBit(i + 1)) {
           c.add(instructionMaker.storePos(mapping[i]));
         }
@@ -108,7 +107,7 @@ class TDFAInterpreter {
       } else {
         states.add(u);
         newState = u;
-        c = new ArrayList<Instruction>(uu.instructions);
+        c = new Instructions(uu.instructions);
       }
 
       // Free up new slots that weren't really needed.

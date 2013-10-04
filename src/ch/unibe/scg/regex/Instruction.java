@@ -1,5 +1,9 @@
 package ch.unibe.scg.regex;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 
 interface Instruction {
   static class CopyInstruction implements Instruction {
@@ -114,6 +118,55 @@ interface Instruction {
     @Override
     public void execute(Memory memory, int unusedPos) {
       memory.commit(memoryPos);
+    }
+  }
+
+  static class Instructions implements Iterable<Instruction> {
+    final List<ReorderInstruction> moves = new ArrayList<>();
+    final List<OpeningCommitInstruction> openingCommits = new ArrayList<>();
+    final List<SetInstruction> stores = new ArrayList<>();
+    final List<ClosingCommitInstruction> closingCommits = new ArrayList<>();
+
+    Instructions() {}
+
+    Instructions(Iterable<? extends Instruction> instructions) {
+      for (Instruction i: instructions) {
+        add(i);
+      }
+    }
+
+    @Override
+    public Iterator<Instruction> iterator() {
+      // TODO(nikoschwarz): make iterator that does not copy the lists.
+      List<Instruction> all = new ArrayList<>(moves.size() + openingCommits.size() + stores.size() + closingCommits.size());
+      all.addAll(moves);
+      all.addAll(openingCommits);
+      all.addAll(stores);
+      all.addAll(closingCommits);
+      return all.iterator();
+    }
+
+    final void add(Instruction i) {
+      if (i instanceof ReorderInstruction) {
+        moves.add((ReorderInstruction) i);
+      } else if (i instanceof OpeningCommitInstruction) {
+        openingCommits.add((OpeningCommitInstruction) i);
+      } else if (i instanceof SetInstruction) {
+        stores.add((SetInstruction) i);
+      } else if (i instanceof ClosingCommitInstruction) {
+        closingCommits.add((ClosingCommitInstruction) i);
+      } else {
+        throw new AssertionError("Unknown instruction type: " + i.getClass());
+      }
+    }
+
+    @Override
+    public String toString() {
+      List<Instruction> all = new ArrayList<>();
+      for (Instruction i : this) {
+        all.add(i);
+      }
+      return all.toString();
     }
   }
 

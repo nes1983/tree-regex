@@ -18,15 +18,15 @@ import java.util.Map.Entry;
 import java.util.NavigableSet;
 import java.util.Set;
 
+import ch.unibe.scg.regex.Instruction.Instructions;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 
 class TNFAToTDFA {
-  static final StateAndInstructionsAndNewLocations NO_STATE;
-  static {
-    final List<Instruction> empty = Collections.emptyList();
-    NO_STATE = new StateAndInstructionsAndNewLocations(DFAState.INSTRUCTIONLESS_NO_STATE, empty, new BitSet());
-  }
+  static final StateAndInstructionsAndNewLocations NO_STATE =
+      new StateAndInstructionsAndNewLocations(
+        DFAState.INSTRUCTIONLESS_NO_STATE, Collections.<Instruction> emptyList(), new BitSet());
+
   static final BitSet ZERO = new BitSet(0);
 
   static class DFAState implements Comparable<DFAState> {
@@ -348,10 +348,10 @@ class TNFAToTDFA {
 
   static class StateAndInstructionsAndNewLocations {
     final DFAState dfaState;
-    final List<Instruction> instructions;
+    final Iterable<Instruction> instructions;
     final BitSet newLocations;
 
-    StateAndInstructionsAndNewLocations(final DFAState dfaState, final List<Instruction> instructions, final BitSet newLocations) {
+    StateAndInstructionsAndNewLocations(final DFAState dfaState, final Iterable<Instruction> instructions, final BitSet newLocations) {
       this.dfaState = dfaState;
       this.instructions = instructions;
       this.newLocations = newLocations;
@@ -394,7 +394,7 @@ class TNFAToTDFA {
       return NO_STATE;
     }
 
-    List<Instruction> instructions = Collections.emptyList();
+    Instructions instructions = new Instructions();
     final BitSet newLocations = new BitSet();
     do {
       final Entry<State, int[]> s = stack.isEmpty() ? lowStack.pop() : stack.pop();
@@ -424,9 +424,6 @@ class TNFAToTDFA {
           final int pos = nextInt();
           newLocations.set(pos);
           tdash[positionFor(tau)] = pos;
-          if (instructions.isEmpty()) {
-            instructions = new ArrayList<>();
-          }
           instructions.add(instructionMaker.storePos(pos));
         } else {
           tdash = l;

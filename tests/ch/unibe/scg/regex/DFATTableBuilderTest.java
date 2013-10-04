@@ -33,6 +33,6 @@ public final class DFATTableBuilderTest {
     assertThat(dfa.toString(), is("q0-a-c -> q1 []\n"));
     final NextState pr = dfa.newStateAndInstructions(0, 'b');
     assertThat(pr.getNextState(), is(1));
-    assertThat(pr.getInstructions(), is(empty));
+    assertThat(pr.getInstructions().iterator().hasNext(), is(Boolean.FALSE));
   }
 }

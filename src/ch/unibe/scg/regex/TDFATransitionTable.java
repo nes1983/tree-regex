@@ -12,37 +12,37 @@ import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
 
 class TDFATransitionTable {
   static class NextState {
-    List<Instruction> instructions;
-    int nextState;
+    final Iterable<Instruction> instructions;
+    final int nextState;
 
-    public NextState(final int nextState, final List<Instruction> instructions) {
+    NextState(final int nextState, final Iterable<Instruction> instructions) {
       this.nextState = nextState;
       this.instructions = instructions;
     }
 
-    public List<Instruction> getInstructions() {
+    Iterable<Instruction> getInstructions() {
       return instructions;
     }
 
-    public int getNextState() {
+    int getNextState() {
       return nextState;
     }
   }
 
   static class NextDFAState {
-    List<Instruction> instructions;
-    DFAState nextState;
+    final Iterable<Instruction> instructions;
+    final DFAState nextState;
 
-    public NextDFAState(List<Instruction> instructions, DFAState nextState) {
+    NextDFAState(Iterable<Instruction> instructions, DFAState nextState) {
       this.instructions = instructions;
       this.nextState = nextState;
     }
 
-    public List<Instruction> getInstructions() {
+    Iterable<Instruction> getInstructions() {
       return instructions;
     }
 
-    public DFAState getNextState() {
+    DFAState getNextState() {
       return nextState;
     }
 
@@ -55,15 +55,15 @@ class TDFATransitionTable {
   static class Builder {
     static class Entry implements Comparable<Builder.Entry> {
       final char from, to;
-      final List<Instruction> instructions;
+      final Iterable<Instruction> instructions;
       final int state, newState;
       final DFAState toDFA;
 
-      public Entry(final char from, final char to, final List<Instruction> instructions,
+      public Entry(final char from, final char to, final Iterable<Instruction> c,
           final int state, final int newState, DFAState toDFA) {
         this.from = from;
         this.to = to;
-        this.instructions = instructions;
+        this.instructions = c;
         this.state = state;
         this.newState = newState;
         this.toDFA = toDFA;
@@ -113,10 +113,10 @@ class TDFATransitionTable {
     final NavigableSet<Builder.Entry> transitions = new TreeSet<>();
 
     public void addTransition(final DFAState t, final InputRange inputRange,
-        final DFAState newState, final List<Instruction> instructions) {
+        final DFAState newState, final Iterable<Instruction> c) {
 
       final Builder.Entry e =
-          new Entry(inputRange.getFrom(), inputRange.getTo(), instructions,
+          new Entry(inputRange.getFrom(), inputRange.getTo(), c,
               mapping.lookupOrMake(t), mapping.lookupOrMake(newState), newState);
       transitions.add(e);
     }
@@ -145,7 +145,7 @@ class TDFATransitionTable {
       final char[] froms = new char[size];
       @SuppressWarnings("unchecked")
       // Suppress seems unavoidable. Checked on Stackoverflow.
-      final List<Instruction>[] instructions = new List[size];
+      final Iterable<Instruction>[] instructions = new Iterable[size];
       final int[] newStates = new int[size];
       final int[] states = new int[size];
       final char[] tos = new char[size];
@@ -164,14 +164,14 @@ class TDFATransitionTable {
   }
 
   final char[] froms;
-  final List<Instruction>[] instructions;
+  final Iterable<Instruction>[] instructions;
   final int[] newStates;
   final int size;
   final int[] states;
   final char[] tos;
 
   TDFATransitionTable(final char[] froms, final char[] tos, final int[] states,
-      final int[] newStates, final List<Instruction>[] instructions) {
+      final int[] newStates, final Iterable<Instruction>[] instructions) {
     this.size = froms.length;
     assert tos.length == size && states.length == size && froms.length == size
         && newStates.length == size && instructions.length == size;
