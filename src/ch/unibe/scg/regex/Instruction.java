@@ -1,32 +1,27 @@
 package ch.unibe.scg.regex;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 interface Instruction {
   static class CopyInstruction implements Instruction {
-    public static Instruction make(final int fromTag, final int fromPos, final int toTag,
-        final int toPos) {
-      return new CopyInstruction(fromTag, fromPos, toTag, toPos);
+    static Instruction make(final int fromPos, final int toPos) {
+      return new CopyInstruction(fromPos, toPos);
     }
 
-    final int fromTag, fromPos, toTag, toPos;
+    final int fromPos, toPos;
 
-    public CopyInstruction(final int fromTag, final int fromPos, final int toTag, final int toPos) {
-      this.fromTag = fromTag;
+    public CopyInstruction(final int fromPos, final int toPos) {
       this.fromPos = fromPos;
-      this.toTag = toTag;
       this.toPos = toPos;
     }
 
     @Override
-    public void execute(Memory memory, int pos) {
-      throw new RuntimeException("Not implemented");
+    public void execute(Memory memory, int unusedPos) {
+      memory.copyTo(fromPos, toPos);
     }
 
     @Override
     public String toString() {
-      return "" + fromTag + "," + fromPos + " <- " + toTag + "," + toPos;
+      return "," + fromPos + " <- " + toPos;
     }
   }
 
@@ -37,8 +32,6 @@ interface Instruction {
     }
 
     int id = -1;
-
-    Map<Tag, Integer> tagIds = new LinkedHashMap<>();
 
     public int nextId() {
       return ++id;
