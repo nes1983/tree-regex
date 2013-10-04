@@ -40,17 +40,6 @@ interface Instruction {
 
     Map<Tag, Integer> tagIds = new LinkedHashMap<>();
 
-    // TODO: Delete?
-    int lookup(final Tag tag) {
-      final Integer tagId = tagIds.get(tag);
-      if (tagId != null) {
-        return tagId;
-      }
-      final int ret = nextId();
-      tagIds.put(tag, ret);
-      return ret;
-    }
-
     public int nextId() {
       return ++id;
     }
