@@ -141,9 +141,10 @@ class TDFAInterpreter {
     final int[] extracted = new int[mapping.length];
     for (int i = 0; i < mapping.length; i++) {
       if (mapping[i] < 0) {
-        continue; // TODO delete. Nice for the current unit test, but broken in general.
+        continue; // TODO delete. Nice for the cur unit test, but broken in general.
       }
-      extracted[i] = memory.histories[mapping[i]].latestValue();
+      // TODO take whole history into account for mapping.
+      extracted[i] = memory.getLatestValue(mapping[i]);
     }
     return new RealMatchResult(extracted, input);
   }

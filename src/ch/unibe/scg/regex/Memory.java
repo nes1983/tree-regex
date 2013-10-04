@@ -1,45 +1,30 @@
 package ch.unibe.scg.regex;
 
 import java.util.Arrays;
-import java.util.NoSuchElementException;
 
 class Memory {
   History[] histories = new History[8];
 
-  static class History {
-    int[] entries = new int[1];
-    int pos = 0;
+  /**
+   * Flyweight for the shared history of the memory cells. Singly-linked list where the
+   * head (and it's {@code cur}) is mutable, but the rest (everything visible from {@code prev})
+   * is immutable.
+   */
+  private static class History {
+    int cur;
+    final History prev;
 
     History(History history) {
-      this.entries = Arrays.copyOf(history.entries, history.entries.length);
-      this.pos = history.pos;
+      cur = history.cur;
+      prev = history.prev;
     }
 
-    History() {}
-
-    void push(int entry) {
-      if (pos + 1 >= entries.length) {
-        grow();
-      }
-      entries[pos] = entry;
-      pos++;
-    }
-
-    private void grow() {
-      final int[] newEntries = new int[Math.max(3 * entries.length / 2, 2)];
-      System.arraycopy(entries, 0, newEntries, 0, entries.length);
-      entries = newEntries;
+    History() {
+      prev = null;
     }
 
     IntIterator iterator() {
       return new RealIntIterator(this);
-    }
-
-    int latestValue() {
-      if (pos <= 0) {
-        throw new NoSuchElementException("This history was never written into, but is read.");
-      }
-      return entries[pos - 1];
     }
 
     @Override
@@ -55,8 +40,7 @@ class Memory {
     }
 
     static class RealIntIterator implements IntIterator {
-      final History history;
-      int pos = 0;
+      History history;
 
       RealIntIterator(History history) {
         this.history = history;
@@ -64,13 +48,13 @@ class Memory {
 
       @Override
       public boolean hasNext() {
-        return pos < history.pos;
+        return history != null;
       }
 
       @Override
       public int next() {
-        final int ret = history.entries[pos];
-        pos++;
+        final int ret = history.cur;
+        history = history.prev;
         return ret;
       }
     }
@@ -89,11 +73,16 @@ class Memory {
     if (histories[pos] == null) {
       histories[pos] = new History();
     }
-    histories[pos].push(value);
+    histories[pos].cur = value;
   }
 
   void copyTo(int from, int to) {
+    // Copies the head of `from`, because it is mutable.
     histories[to] = new History(histories[from]);
+  }
+
+  void commit(int pos) {
+    histories[pos] = new History(histories[pos]);
   }
 
   void grow(int pos) {
@@ -105,5 +94,10 @@ class Memory {
   @Override
   public String toString() {
     return Arrays.toString(histories);
+  }
+
+  // TODO kill this.
+  int getLatestValue(int i) {
+    return histories[i].cur;
   }
 }
