@@ -1,7 +1,7 @@
 package ch.unibe.scg.regex;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -25,16 +25,16 @@ public final class MemoryTest {
             + " (13 ), (14 ), (15 ), (16 ), (17 ), null, null, null, null, null, "
             + "null, null, null, null, null, null, null, null, null]"));
   }
-  
+
   @Test
   public void testCommiting() {
 	  memory.write(0, 0);
 	  memory.commit(0);
 	  memory.write(0, 5);
-	  
-	  assertThat(memory.getHistory(0).toString(), is("(5 0 )"));
+
+	  assertThat(memory.readHistory(0).toString(), is("(5 0 )"));
   }
-  
+
   @Test
   public void testHistorySharing() {
 	  memory.write(0, 0);
@@ -42,20 +42,8 @@ public final class MemoryTest {
 	  memory.write(0, 1);
 	  memory.copyTo(1, 0);
 	  memory.write(1, 2);
-	  
-	  assertThat(memory.getHistory(0).toString(), is("(1 0 )"));
-	  assertThat(memory.getHistory(1).toString(), is("(2 0 )"));
-  }
-  
-  @Test
-  public void testHistorySharing() {
-	  memory.write(0, 0);
-	  memory.commit(0);
-	  memory.write(0, 1);
-	  memory.copyTo(1, 0);
-	  memory.write(1, 2);
-	  
-	  assertThat(memory.histories[0].toString(), is("(1 0 )"));
-	  assertThat(memory.histories[1].toString(), is("(2 0 )"));
+
+	  assertThat(memory.readHistory(0).toString(), is("(1 0 )"));
+	  assertThat(memory.readHistory(1).toString(), is("(2 0 )"));
   }
 }
