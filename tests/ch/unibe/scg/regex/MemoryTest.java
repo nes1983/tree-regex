@@ -25,4 +25,25 @@ public final class MemoryTest {
             + " (13 ), (14 ), (15 ), (16 ), (17 ), null, null, null, null, null, "
             + "null, null, null, null, null, null, null, null, null]"));
   }
+  
+  @Test
+  public void testCommiting() {
+	  memory.write(0, 0);
+	  memory.commit(0);
+	  memory.write(0, 5);
+	  
+	  assertThat(memory.getHistory(0).toString(), is("(5 0 )"));
+  }
+  
+  @Test
+  public void testHistorySharing() {
+	  memory.write(0, 0);
+	  memory.commit(0);
+	  memory.write(0, 1);
+	  memory.copyTo(1, 0);
+	  memory.write(1, 2);
+	  
+	  assertThat(memory.getHistory(0).toString(), is("(1 0 )"));
+	  assertThat(memory.getHistory(1).toString(), is("(2 0 )"));
+  }
 }

@@ -20,7 +20,7 @@ interface Instruction {
 
     @Override
     public void execute(Memory memory, int unusedPos) {
-      memory.copyTo(fromPos, toPos);
+      memory.copyTo(toPos, fromPos);
     }
 
     @Override
@@ -68,7 +68,7 @@ interface Instruction {
 
     @Override
     public void execute(Memory memory, int pos) {
-      memory.copyTo(from, to);
+      memory.copyTo(to, from);
     }
 
     @Override

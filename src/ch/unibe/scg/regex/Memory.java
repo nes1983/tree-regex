@@ -10,20 +10,22 @@ class Memory {
    * head (and it's {@code cur}) is mutable, but the rest (everything visible from {@code prev})
    * is immutable.
    */
-  private static class History {
+  private static class History implements IntIterable {
     int cur;
     final History prev;
 
-    History(History history) {
-      cur = history.cur;
-      prev = history.prev;
+    History(int head, History history) {
+      cur = head;
+      prev = history;
+    }
+    
+    /** @return Shallow copy. History can safely be shared b/c it's immutable. */
+    History copy() {
+    	return new History(cur, prev);
     }
 
-    History() {
-      prev = null;
-    }
-
-    IntIterator iterator() {
+    @Override
+    public IntIterator iterator() {
       return new RealIntIterator(this);
     }
 
@@ -65,24 +67,28 @@ class Memory {
 
     public int next();
   }
+  
+  static interface IntIterable {
+	  public IntIterator iterator();
+  }
 
   void write(int pos, int value) {
     if (histories.length <= pos) {
       grow(pos);
     }
     if (histories[pos] == null) {
-      histories[pos] = new History();
+      histories[pos] = new History(0, null);
     }
     histories[pos].cur = value;
   }
 
-  void copyTo(int from, int to) {
+  void copyTo(int to, int from) {
     // Copies the head of `from`, because it is mutable.
-    histories[to] = new History(histories[from]);
+    histories[to] = histories[from].copy();
   }
 
   void commit(int pos) {
-    histories[pos] = new History(histories[pos]);
+    histories[pos] = new History(0, histories[pos]);  // 0 because some value has to be given.
   }
 
   void grow(int pos) {
@@ -99,5 +105,9 @@ class Memory {
   // TODO kill this.
   int getLatestValue(int i) {
     return histories[i].cur;
+  }
+
+  IntIterable readHistory(int i) {
+	return histories[i];
   }
 }
