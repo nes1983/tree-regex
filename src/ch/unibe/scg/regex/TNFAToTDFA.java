@@ -502,11 +502,7 @@ class TNFAToTDFA {
   }
 
   StateAndInstructionsAndNewLocations makeStartState() {
-    DFAState start;
-    {
-      final State nfaStart = tnfa.getInitialState();
-      start = convertToDfaState(nfaStart);
-    }
+    DFAState start = convertToDfaState(tnfa.getInitialState());
 
     return e(start.getData(), Character.MAX_VALUE, true);
   }
