@@ -28,11 +28,8 @@ class TNFAToTDFA {
         DFAState.INSTRUCTIONLESS_NO_STATE, Collections.<Instruction> emptyList(), new BitSet());
 
   static class DFAState implements Comparable<DFAState> {
-    final static DFAState INSTRUCTIONLESS_NO_STATE;
-    static {
-      final Map<State, int[]> e = Collections.emptyMap();
-      INSTRUCTIONLESS_NO_STATE = new DFAState(e);
-    }
+    private final static DFAState INSTRUCTIONLESS_NO_STATE
+        = new DFAState(Collections.<State, int[]> emptyMap());
 
     public static String statesToString(final Map<State, int[]> states) {
       final StringBuilder sb = new StringBuilder();
