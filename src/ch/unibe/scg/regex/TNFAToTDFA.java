@@ -397,7 +397,12 @@ class TNFAToTDFA {
     Instructions instructions = new Instructions();
     final BitSet newLocations = new BitSet();
     do {
-      final Entry<State, int[]> s = stack.isEmpty() ? lowStack.pop() : stack.pop();
+      Entry<State, int[]> s;
+      if (stack.isEmpty()) {
+        s = lowStack.pop();
+      } else {
+        s = stack.pop();
+      }
       assert s != null;
 
       if (R.containsKey(s.getKey())) {
