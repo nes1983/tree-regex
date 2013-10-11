@@ -27,8 +27,6 @@ class TNFAToTDFA {
       new StateAndInstructionsAndNewLocations(
         DFAState.INSTRUCTIONLESS_NO_STATE, Collections.<Instruction> emptyList(), new BitSet());
 
-  static final BitSet ZERO = new BitSet(0);
-
   static class DFAState implements Comparable<DFAState> {
     final static DFAState INSTRUCTIONLESS_NO_STATE;
     static {
@@ -518,13 +516,6 @@ class TNFAToTDFA {
     }
 
     return ret;
-  }
-
-  BitSet newMemoryLocations(final Map<State, int[]> oldState, final Map<State, int[]> newState) {
-    final BitSet oldLocs = extractLocs(oldState);
-    final BitSet newLocs = extractLocs(newState);
-    newLocs.andNot(oldLocs);
-    return newLocs;
   }
 
   int nextInt() {
