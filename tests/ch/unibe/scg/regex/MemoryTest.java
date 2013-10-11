@@ -46,4 +46,16 @@ public final class MemoryTest {
 	  assertThat(memory.getHistory(0).toString(), is("(1 0 )"));
 	  assertThat(memory.getHistory(1).toString(), is("(2 0 )"));
   }
+  
+  @Test
+  public void testHistorySharing() {
+	  memory.write(0, 0);
+	  memory.commit(0);
+	  memory.write(0, 1);
+	  memory.copyTo(1, 0);
+	  memory.write(1, 2);
+	  
+	  assertThat(memory.histories[0].toString(), is("(1 0 )"));
+	  assertThat(memory.histories[1].toString(), is("(2 0 )"));
+  }
 }
