@@ -106,6 +106,11 @@ interface Instruction {
     public void execute(Memory memory, int unusedPos) {
       memory.commit(memoryPos);
     }
+
+    @Override
+    public String toString() {
+      return "c↓(" + memoryPos + ")";
+    }
   }
 
   static class OpeningCommitInstruction implements Instruction {
@@ -118,6 +123,11 @@ interface Instruction {
     @Override
     public void execute(Memory memory, int unusedPos) {
       memory.commit(memoryPos);
+    }
+
+    @Override
+    public String toString() {
+      return "c↑(" + memoryPos + ")";
     }
   }
 

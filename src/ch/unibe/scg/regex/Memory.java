@@ -18,7 +18,7 @@ class Memory {
       cur = head;
       prev = history;
     }
-    
+
     /** @return Shallow copy. History can safely be shared b/c it's immutable. */
     History copy() {
     	return new History(cur, prev);
@@ -67,7 +67,7 @@ class Memory {
 
     public int next();
   }
-  
+
   static interface IntIterable {
 	  public IntIterator iterator();
   }
@@ -88,7 +88,7 @@ class Memory {
   }
 
   void commit(int pos) {
-    histories[pos] = new History(0, histories[pos]);  // 0 because some value has to be given.
+    histories[pos] = new History(histories[pos].cur, histories[pos]);
   }
 
   void grow(int pos) {
