@@ -47,13 +47,10 @@ class TDFAInterpreter {
     final List<InputRange> inputRanges = tnfa2tdfa.allInputRanges();
 
     final Memory memory = new Memory();
-    DFAState t;
-    {
-      final StateAndInstructionsAndNewLocations stateAndInstructions = tnfa2tdfa.makeStartState();
-      t = stateAndInstructions.dfaState;
-      for (final Instruction instruction : stateAndInstructions.instructions) {
-        instruction.execute(memory, 0);
-      }
+    StateAndInstructionsAndNewLocations startState = tnfa2tdfa.makeStartState();
+    DFAState t = startState.dfaState;
+    for (final Instruction instruction : startState.instructions) {
+      instruction.execute(memory, 0);
     }
 
     states.add(t);
@@ -62,8 +59,8 @@ class TDFAInterpreter {
       final char a = input.charAt(pos);
 
       {
-        NextDFAState nextState;
-        if ((nextState = tdfaBuilder.availableTransition(t, a)) != null) {
+        NextDFAState nextState = tdfaBuilder.availableTransition(t, a);
+        if (nextState != null) {
           // TODO check for fail state.
           for (final Instruction instruction : nextState.getInstructions()) {
             instruction.execute(memory, pos);

@@ -31,7 +31,13 @@ class TNFAToTDFA {
     private final static DFAState INSTRUCTIONLESS_NO_STATE
         = new DFAState(Collections.<State, int[]> emptyMap());
 
-    public static String statesToString(final Map<State, int[]> states) {
+    private final Map<State, int[]> innerStates;
+
+    DFAState(final Map<State, int[]> innerStates) {
+      this.innerStates = Collections.unmodifiableMap(innerStates);
+    }
+
+    static String statesToString(final Map<State, int[]> states) {
       final StringBuilder sb = new StringBuilder();
       for (final Map.Entry<State, int[]> el : states.entrySet()) {
         sb.append(el.getKey());
@@ -41,12 +47,6 @@ class TNFAToTDFA {
       }
       sb.delete(sb.length() - 2, sb.length());
       return sb.toString();
-    }
-
-    final Map<State, int[]> innerStates;
-
-    public DFAState(final Map<State, int[]> innerStates) {
-      this.innerStates = Collections.unmodifiableMap(innerStates);
     }
 
     @Override
