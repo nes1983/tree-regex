@@ -421,10 +421,14 @@ class TNFAToTDFA {
         int[] tdash;
         if (tau.isEndTag() || tau.isStartTag()) {
           tdash = Arrays.copyOf(l, l.length);
-          final int pos = nextInt();
-          newLocations.set(pos);
-          tdash[positionFor(tau)] = pos;
-          instructions.add(instructionMaker.storePos(pos));
+          final int newLoc = nextInt();
+          newLocations.set(newLoc);
+          tdash[positionFor(tau)] = newLoc;
+          instructions.add(instructionMaker.storePos(newLoc));
+          if (tau.isEndTag()) {
+            instructions.add(instructionMaker.closingCommit(newLoc));
+            instructions.add(instructionMaker.openingCommit(tdash[positionFor(tau.getGroup().getStartTag())]));
+          }
         } else {
           tdash = l;
         }
