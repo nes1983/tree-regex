@@ -39,6 +39,9 @@ interface Instruction {
     final int from, to;
 
     ReorderInstruction(int from, int to) {
+      assert from >= 0;
+      assert to >= 0;
+
       this.from = from;
       this.to = to;
     }
@@ -63,6 +66,7 @@ interface Instruction {
     final int memoryPos;
 
     SetInstruction(final int tag) {
+      assert tag >= 0;
       this.memoryPos = tag;
     }
 
@@ -86,6 +90,7 @@ interface Instruction {
     final int memoryPos;
 
     ClosingCommitInstruction(final int memoryPos) {
+      assert memoryPos >= 0;
       this.memoryPos = memoryPos;
     }
 
@@ -109,6 +114,7 @@ interface Instruction {
     final int memoryPos;
 
     OpeningCommitInstruction(final int memoryPos) {
+      assert memoryPos >= 0;
       this.memoryPos = memoryPos;
     }
 
