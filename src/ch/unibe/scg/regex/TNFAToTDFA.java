@@ -39,6 +39,7 @@ class TNFAToTDFA {
 
     static String statesToString(final Map<State, int[]> states) {
       final StringBuilder sb = new StringBuilder();
+      sb.append('(');
       for (final Map.Entry<State, int[]> el : states.entrySet()) {
         sb.append(el.getKey());
         sb.append("->");
@@ -46,6 +47,7 @@ class TNFAToTDFA {
         sb.append(", ");
       }
       sb.delete(sb.length() - 2, sb.length());
+      sb.append(')');
       return sb.toString();
     }
 
@@ -495,7 +497,7 @@ class TNFAToTDFA {
     return e(start.getData(), Character.MAX_VALUE, true);
   }
 
-  Collection<? extends Instruction> mappingInstructions(final int[] mapping, final DFAState to,
+  Collection<Instruction> mappingInstructions(final int[] mapping, final DFAState to,
       BitSet newLocations) {
     final BitSet locs = extractLocs(to.getData());
     locs.andNot(newLocations); // New locations already led to stores.
