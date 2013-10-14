@@ -68,6 +68,6 @@ public final class NewTest {
   public void testInitialState() {
     assertEquals("[t0]", tnfa.allTags().toString());
     final DFAState converted = nfa2dfa.makeStartState().dfaState;
-    assertEquals("(q0->[-1, -2], q1->[0, -2])", converted.toString());
+    assertEquals("(q0->[-1], q1->[0])", converted.toString());
   }
 }

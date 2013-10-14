@@ -147,10 +147,13 @@ class TNFAToTDFA {
      */
     private boolean updateMap(final int[] map, final int[] from, final int[] to) {
       assert from.length == to.length;
+
+      // Go over the tag list and iteratively try to find counterexample.
       for (int i = 0; i < from.length; i++) {
+        // if the tag hasn't been set in either state, it's ok.
         if (from[i] < 0 && to[i] < 0) {
           continue; // Both leave i unspecified: that's fine.
-        } else if (from[i] < 0 && to[i] >= 0) {
+        } else if ((from[i] < 0 && to[i] >= 0) || (from[i] >= 0 && to[i] < 0)) {
           return false; // Only from specifies the mapping, that won't do.
         } else if (map[from[i]] == -1) {
           map[from[i]] = to[i];
@@ -484,7 +487,7 @@ class TNFAToTDFA {
   }
 
   private int[] makeInitialMemoryLocations(final int numTags) {
-    final int[] ret = new int[numTags * 2];
+    final int[] ret = new int[numTags];
     for (int i = 0; i < ret.length; i++) {
       ret[i] = -1 * i - 1;
     }
