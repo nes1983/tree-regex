@@ -4,31 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
+/** Immutable instruction for interpretation in tagged automata. */
 interface Instruction {
-  static class CopyInstruction implements Instruction {
-    static Instruction make(final int fromPos, final int toPos) {
-      return new CopyInstruction(fromPos, toPos);
-    }
-
-    final int fromPos, toPos;
-
-    public CopyInstruction(final int fromPos, final int toPos) {
-      this.fromPos = fromPos;
-      this.toPos = toPos;
-    }
-
-    @Override
-    public void execute(Memory memory, int unusedPos) {
-      memory.copyTo(toPos, fromPos);
-    }
-
-    @Override
-    public String toString() {
-      return "," + fromPos + " <- " + toPos;
-    }
-  }
-
   /** Not threadsafe. */
   class InstructionMaker {
     public static InstructionMaker get() {
@@ -75,23 +52,33 @@ interface Instruction {
     public String toString() {
       return String.valueOf(from) + "->" + to;
     }
+
+    @Override
+    public Instruction remap(int[] mapping) {
+      throw new UnsupportedOperationException("Mappings should not be mapped again.");
+    }
   }
 
   static class SetInstruction implements Instruction {
-    final int tag;
+    final int memoryPos;
 
     SetInstruction(final int tag) {
-      this.tag = tag;
+      this.memoryPos = tag;
     }
 
     @Override
-    public void execute(final Memory memory, final int pos) {
-      memory.write(tag, pos);
+    public void execute(final Memory memory, final int inputPos) {
+      memory.write(memoryPos, inputPos);
     }
 
     @Override
     public String toString() {
-      return "" + tag + "<- pos";
+      return "" + memoryPos + "<- pos";
+    }
+
+    @Override
+    public Instruction remap(int[] mapping) {
+      return new SetInstruction(mapping[memoryPos]);
     }
   }
 
@@ -111,6 +98,11 @@ interface Instruction {
     public String toString() {
       return "c↓(" + memoryPos + ")";
     }
+
+    @Override
+    public Instruction remap(int[] mapping) {
+      return new ClosingCommitInstruction(mapping[memoryPos]);
+    }
   }
 
   static class OpeningCommitInstruction implements Instruction {
@@ -128,6 +120,11 @@ interface Instruction {
     @Override
     public String toString() {
       return "c↑(" + memoryPos + ")";
+    }
+
+    @Override
+    public Instruction remap(int[] mapping) {
+      return new OpeningCommitInstruction(mapping[memoryPos]);
     }
   }
 
@@ -181,4 +178,7 @@ interface Instruction {
   }
 
   public void execute(Memory memory, int pos);
+
+  /** @return Same instruction as if the mapping was prepended. */
+  public Instruction remap(int[] mapping);
 }
