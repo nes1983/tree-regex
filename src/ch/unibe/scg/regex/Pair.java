@@ -58,7 +58,6 @@ abstract class XAbstractPair<A, B> {
    * @param second The second {@link Object} of the {@link Pair}
    */
   public XAbstractPair(final A first, final B second) {
-    super();
     this.first = first;
     this.second = second;
   }
