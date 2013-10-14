@@ -1,6 +1,5 @@
 package ch.unibe.scg.regex;
 
-import java.util.Arrays;
 
 class Memory {
   History[] histories = new History[8];
@@ -99,7 +98,14 @@ class Memory {
 
   @Override
   public String toString() {
-    return Arrays.toString(histories);
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < histories.length; i++) {
+      sb.append(Integer.toString(i));
+      sb.append(':');
+      sb.append(histories[i]);
+      sb.append('\n');
+    }
+    return sb.toString();
   }
 
   // TODO kill this.

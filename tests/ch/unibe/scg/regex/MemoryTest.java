@@ -21,9 +21,10 @@ public final class MemoryTest {
       memory.write(i, i);
     }
     assertThat(memory.toString(),
-        is("[(0 ), (1 ), (2 ), (3 ), (4 ), (5 ), (6 ), (7 ), (8 ), (9 ), (10 ), (11 ), (12 ),"
-            + " (13 ), (14 ), (15 ), (16 ), (17 ), null, null, null, null, null, "
-            + "null, null, null, null, null, null, null, null, null]"));
+        is("0:(0 )\n1:(1 )\n2:(2 )\n3:(3 )\n4:(4 )\n5:(5 )\n6:(6 )\n7:(7 )\n8:(8 )\n9:(9 )\n"
+            + "10:(10 )\n11:(11 )\n12:(12 )\n13:(13 )\n14:(14 )\n15:(15 )\n16:(16 )\n17:(17 )\n"
+            + "18:null\n19:null\n20:null\n21:null\n22:null\n23:null\n24:null\n25:null\n"
+            + "26:null\n27:null\n28:null\n29:null\n30:null\n31:null\n"));
   }
 
   @Test
