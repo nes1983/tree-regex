@@ -83,36 +83,33 @@ class TDFAInterpreter {
         return RealMatchResult.NoMatchResult.SINGLETON;
       }
 
-      int[] mapping = new int[tnfa2tdfa.highestMapping];
+      int[] mapping = new int[tnfa2tdfa.highestMapping]; // TODO: Recycle array?
+
+      // If there is a valid mapping, findMappableStates will modify mapping into it.
       final DFAState mappedState = tnfa2tdfa.findMappableState(states, u, mapping);
 
+      DFAState newState = mappedState;
+      Instructions c = new Instructions();
       if (mappedState == null) {
-        mapping = null;
-      }
-
-      Instructions c;
-
-      DFAState newState;
-      if (mapping != null) {
-        final Collection<? extends Instruction> moves =
-            tnfa2tdfa.mappingInstructions(mapping, u, uu.newLocations);
-        c = new Instructions(moves);
-        for (int i = uu.newLocations.nextSetBit(0); i >= 0; i = uu.newLocations.nextSetBit(i + 1)) {
-          c.add(instructionMaker.storePos(mapping[i]));
+        // Set mapping to identity mapping. Note that findMappableStates could have messed up mapping.
+        for (int i = 0; i < mapping.length; i++) {
+          mapping[i] = i;
         }
-        newState = mappedState;
-      } else {
-        states.add(u);
         newState = u;
-        c = new Instructions(uu.instructions);
-      }
-
-      // Free up new slots that weren't really needed.
-      if (mappedState != null) {
+        states.add(newState);
+      } else {
+        // Free up new slots that weren't really needed.
         tnfa2tdfa.highestMapping -= uu.newLocations.cardinality();
+        Collection<Instruction> mappingInstructions = tnfa2tdfa.mappingInstructions(mapping, u, uu.newLocations);
+        for (final Instruction i : mappingInstructions) {
+          c.add(i);
+        }
       }
-
       assert newState != null;
+
+      for (final Instruction i : uu.instructions) {
+        c.add(i.remap(mapping));
+      }
 
       for (final Instruction instruction : c) {
         instruction.execute(memory, pos);

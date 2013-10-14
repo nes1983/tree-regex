@@ -134,14 +134,6 @@ interface Instruction {
     final List<SetInstruction> stores = new ArrayList<>();
     final List<ClosingCommitInstruction> closingCommits = new ArrayList<>();
 
-    Instructions() {}
-
-    Instructions(Iterable<? extends Instruction> instructions) {
-      for (Instruction i: instructions) {
-        add(i);
-      }
-    }
-
     @Override
     public Iterator<Instruction> iterator() {
       // TODO(nikoschwarz): make iterator that does not copy the lists.

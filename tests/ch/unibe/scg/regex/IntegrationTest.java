@@ -44,8 +44,9 @@ public class IntegrationTest {
   public void shouldNotMatch() {
     final MatchResult res = tdfaInterpreter.interpret("aabbccaaaa");
     assertThat(res.toString(), is("NO_MATCH"));
-    assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is("q0-a-a -> q1 [4<- pos]\n"
-        + "q1-a-a -> q1 [5<- pos]\n" + "q1-b-b -> q2 [6<- pos, 7<- pos]\n"));
+    assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is("q0-a-a -> q1 [c↑(3), 4<- pos, c↓(4)]\n"
+        + "q1-a-a -> q1 [c↑(3), 5<- pos, c↓(5)]\n"
+        + "q1-b-b -> q2 [c↑(2), 6<- pos, 7<- pos, c↓(6)]\n"));
   }
 
   @Test
@@ -61,8 +62,11 @@ public class IntegrationTest {
     assertThat(
         tdfaInterpreter.tdfaBuilder.build().toString(),
         // It's ok that stores start at 4. The previous 3 were stored in the initializer.
-        is("q0-a-a -> q1 [4<- pos]\nq1-a-a -> q1 [5<- pos]\n" + "q1-b-b -> q2 [6<- pos, 7<- pos]\n"
-            + "q2-c-c -> q3 [8<- pos, 9<- pos, 10<- pos, 11<- pos]\n" + "q3-a-a -> q1 [12<- pos]\n"));
+        is("q0-a-a -> q1 [c↑(3), 4<- pos, c↓(4)]\n"
+            + "q1-a-a -> q1 [c↑(3), 5<- pos, c↓(5)]\n"
+            + "q1-b-b -> q2 [c↑(2), 6<- pos, 7<- pos, c↓(6)]\n"
+            + "q2-c-c -> q3 [c↑(1), c↑(0), 8<- pos, 9<- pos, 10<- pos, 11<- pos, c↓(8), c↓(10)]\n"
+            + "q3-a-a -> q1 [c↑(11), 12<- pos, c↓(12)]\n"));
   }
 
   @Test
@@ -91,7 +95,7 @@ public class IntegrationTest {
     final MatchResult result = interpreter.interpret("aba");
 
     assertThat(interpreter.tdfaBuilder.build().toString(),
-        is("q0-a-a -> q1 []\nq1-b-b -> q2 [1<- pos]\n"));
+        is("q0-a-a -> q1 []\nq1-b-b -> q2 [c↑(0), 1<- pos, c↓(1)]\n"));
     assertThat(result.toString(), is("NO_MATCH"));
   }
 }
