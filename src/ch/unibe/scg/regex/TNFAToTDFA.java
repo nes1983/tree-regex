@@ -128,17 +128,6 @@ class TNFAToTDFA {
       return true;
     }
 
-    /**
-     * @return a mapping from this state to another, if there is one. Otherwise, return null.
-     */
-    int[] mappingIfAny(final DFAState other, final int maxLoc) {
-      final int[] mapping = new int[maxLoc];
-      if (this.isMappable(other, mapping)) {
-        return mapping;
-      }
-      return null;
-    }
-
     @Override
     public String toString() {
       return statesToString(innerStates);
