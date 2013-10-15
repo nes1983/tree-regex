@@ -1,5 +1,7 @@
 package ch.unibe.scg.regex;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,7 +30,7 @@ import ch.unibe.scg.regex.TransitionTriple.Priority;
  */
 class RegexToNFA {
   public TNFA convert(final Node node) {
-    checkNotNull(node);
+    requireNonNull(node);
     final Builder builder = new Builder();
 
     builder.registerCaptureGroup(builder.captureGroupMaker.entireMatch);
@@ -81,13 +83,6 @@ class RegexToNFA {
     }
   }
 
-  public static <T> T checkNotNull(final T o) {
-    if (o == null) {
-      throw new NullPointerException();
-    }
-    return o;
-  }
-
   InputRange inputRangeFor(final Node.Char character) {
     return InputRange.make(character.getCharacter());
   }
@@ -137,7 +132,7 @@ class RegexToNFA {
 
     assert !ret.getInitial().contains(null);
     assert !ret.getFinishing().contains(null);
-    return checkNotNull(ret);
+    return ret;
   }
 
   MiniAutomaton makeAny(final MiniAutomaton last, final Builder builder) {

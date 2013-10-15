@@ -1,5 +1,7 @@
 package ch.unibe.scg.regex;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Formatter;
@@ -75,8 +77,8 @@ interface TNFA {
       }
 
       public State makeInitialState() {
-        initialState = State.get();
-        return RegexToNFA.checkNotNull(initialState);
+        initialState = requireNonNull(State.get());
+        return initialState;
       }
 
       /** @return a new non-final state */
