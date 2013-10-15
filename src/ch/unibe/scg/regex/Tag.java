@@ -40,38 +40,6 @@ interface Tag {
     }
   }
 
-  static class CommitTag implements Tag {
-    final CaptureGroup captureGroup;
-
-    CommitTag(final CaptureGroup captureGroup) {
-      this.captureGroup = captureGroup;
-    }
-
-    @Override
-    public CaptureGroup getGroup() {
-      return captureGroup;
-    }
-
-    @Override
-    public boolean isEndTag() {
-      return false;
-    }
-
-    @Override
-    public boolean isStartTag() {
-      return false;
-    }
-
-    @Override
-    public String toString() {
-      return "C" + getGroup().getNumber();
-    }
-
-    public static Tag make(CaptureGroup captureGroup) {
-      return new CommitTag(captureGroup);
-    }
-  }
-
   /**
    * Don't instantiate directly. Leave it to {@link CaptureGroupMaker}.
    */

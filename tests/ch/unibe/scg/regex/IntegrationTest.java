@@ -22,13 +22,22 @@ public final class IntegrationTest {
 
     assertThat(
         tnfa.toString(),
-        is("q0 -> [q15], {(q0, ANY)=[q0, NORMAL, NONE], (q0, ε)=[q1, NORMAL, ➀0], "
-            + "(q1, ε)=[q2, NORMAL, ➀1], (q2, ε)=[q3, NORMAL, ➀2], (q3, ε)=[q4, NORMAL, ➀3], "
-            + "(q4, a-a)=[q5, NORMAL, NONE], (q5, ε)=[q4, NORMAL, NONE, q6, NORMAL, ➁3], "
-            + "(q6, ε)=[q7, NORMAL, C3], (q7, b-b)=[q8, NORMAL, NONE], "
-            + "(q8, ε)=[q9, NORMAL, ➁2, q3, NORMAL, NONE], (q9, ε)=[q10, NORMAL, C2], "
-            + "(q10, c-c)=[q11, NORMAL, NONE], (q11, ε)=[q12, NORMAL, ➁1, q2, NORMAL, NONE], "
-            + "(q12, ε)=[q13, NORMAL, C1], (q13, ε)=[q14, NORMAL, ➁0], (q14, ε)=[q15, NORMAL, C0]}"));
+        is("q0 -> [q14], "
+            + "{(q0, ANY)=[q0, NORMAL, NONE], "
+            + "(q0, ε)=[q1, NORMAL, ➀0], "
+            + "(q1, ε)=[q2, NORMAL, ➀1], "
+            + "(q2, ε)=[q3, NORMAL, ➀2], "
+            + "(q3, ε)=[q4, NORMAL, ➀3], "
+            + "(q4, a-a)=[q5, NORMAL, NONE], "
+            + "(q5, ε)=[q6, LOW, NONE, q4, NORMAL, NONE], "
+            + "(q6, ε)=[q7, NORMAL, ➁3], "
+            + "(q7, b-b)=[q8, NORMAL, NONE], "
+            + "(q8, ε)=[q9, NORMAL, ➁2], "
+            + "(q9, ε)=[q10, LOW, NONE, q2, NORMAL, NONE], "
+            + "(q10, c-c)=[q11, NORMAL, NONE], "
+            + "(q11, ε)=[q12, NORMAL, ➁1], "
+            + "(q12, ε)=[q13, LOW, NONE, q1, NORMAL, NONE], "
+            + "(q13, ε)=[q14, NORMAL, ➁0]}"));
     tdfaInterpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
   }
 

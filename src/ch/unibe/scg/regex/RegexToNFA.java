@@ -42,11 +42,7 @@ class RegexToNFA {
     builder.addEndTagTransition(a.getFinishing(), endTagger, builder.captureGroupMaker.entireMatch,
         Priority.NORMAL);
 
-    final State commitState = builder.makeState();
-    builder.addCommitTagTransition(endTagger, commitState, builder.captureGroupMaker.entireMatch,
-        Priority.NORMAL);
-
-    builder.setAsAccepting(commitState);
+    builder.setAsAccepting(endTagger);
     return builder.build();
   }
 
@@ -71,16 +67,8 @@ class RegexToNFA {
       this(Arrays.asList(initial), Arrays.asList(finishing));
     }
 
-    public Collection<State> getBeginRepeatHandle() {
-      return initial;
-    }
-
     public Collection<State> getFinishing() {
       return finishing;
-    }
-
-    public Collection<State> getFinishingRepeatHandles() {
-      return getFinishing();
     }
 
     public Collection<State> getInitial() {
@@ -90,33 +78,6 @@ class RegexToNFA {
     @Override
     public String toString() {
       return "" + initial + " -> " + finishing;
-    }
-  }
-
-  static class TaggedMiniAutomaton extends MiniAutomaton {
-    final Collection<State> beginRepeatHandle;
-    final Collection<State> finishRepeatHandles;
-
-    public TaggedMiniAutomaton(final Collection<State> initial, final State finishing,
-        final Collection<State> repeatBeginHandle, final Collection<State> repeatHandles) {
-      super(initial, finishing);
-      this.finishRepeatHandles = repeatHandles;
-      this.beginRepeatHandle = repeatBeginHandle;
-    }
-
-    @Override
-    public Collection<State> getBeginRepeatHandle() {
-      return beginRepeatHandle;
-    }
-
-    @Override
-    public Collection<State> getFinishingRepeatHandles() {
-      return finishRepeatHandles;
-    }
-
-    @Override
-    public String toString() {
-      return "ȶ" + super.toString();
     }
   }
 
@@ -221,11 +182,7 @@ class RegexToNFA {
     final State endTag = builder.makeState();
     builder.addEndTagTransition(body.getFinishing(), endTag, cg, Priority.NORMAL);
 
-    final State commitState = builder.makeState();
-    builder.addCommitTagTransition(endTag, commitState, cg, Priority.NORMAL);
-
-    return new TaggedMiniAutomaton(last.getFinishing(), commitState, body.getInitial(),
-        body.getFinishing());
+    return new MiniAutomaton(last.getFinishing(), endTag);
   }
 
   MiniAutomaton makeInitialMiniAutomaton(final Builder builder, CaptureGroup entireMatch) {
@@ -250,15 +207,15 @@ class RegexToNFA {
 
   MiniAutomaton makePlus(final MiniAutomaton last, final Builder builder, final Plus plus,
       CaptureGroup captureGroup) {
-    // TODO(niko) priority guard is missing.
     final MiniAutomaton inner = make(last, builder, plus.getElementary(), captureGroup);
 
-    final Collection<State> f = inner.getFinishing();
+    Collection<State> out = Arrays.asList(builder.makeState());
+    builder.makeUntaggedEpsilonTransitionFromTo(inner.getFinishing(), out, Priority.LOW);
 
-    final MiniAutomaton ret = new MiniAutomaton(last.getFinishing(), f);
+    final MiniAutomaton ret = new MiniAutomaton(last.getFinishing(), out);
 
-    builder.makeUntaggedEpsilonTransitionFromTo(inner.getFinishingRepeatHandles(),
-        inner.getBeginRepeatHandle(), Priority.NORMAL);
+    builder.makeUntaggedEpsilonTransitionFromTo(inner.getFinishing(),
+        inner.getInitial(), Priority.NORMAL);
     return ret;
   }
 
@@ -294,8 +251,8 @@ class RegexToNFA {
 
     final MiniAutomaton ret = new MiniAutomaton(last.getFinishing(), f);
 
-    builder.makeUntaggedEpsilonTransitionFromTo(inner.getFinishingRepeatHandles(),
-        inner.getBeginRepeatHandle(), Priority.NORMAL);
+    builder.makeUntaggedEpsilonTransitionFromTo(inner.getFinishing(), inner.getInitial(),
+        Priority.NORMAL);
     return ret;
   }
 }
