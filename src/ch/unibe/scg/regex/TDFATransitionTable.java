@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
-import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
-
 class TDFATransitionTable {
   static class NextState {
     final Iterable<Instruction> instructions;

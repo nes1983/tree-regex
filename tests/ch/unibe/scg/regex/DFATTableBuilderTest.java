@@ -11,7 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import ch.unibe.scg.regex.TDFATransitionTable.NextState;
-import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
 
 @SuppressWarnings("javadoc")
 public final class DFATTableBuilderTest {

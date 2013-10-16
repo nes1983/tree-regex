@@ -8,7 +8,6 @@ import java.util.regex.MatchResult;
 
 import ch.unibe.scg.regex.Instruction.Instructions;
 import ch.unibe.scg.regex.TDFATransitionTable.NextDFAState;
-import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
 import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructionsAndNewLocations;
 
 /** Interprets the known TDFA states. Compiles missing states on the fly. */

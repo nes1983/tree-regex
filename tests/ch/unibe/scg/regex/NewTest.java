@@ -12,7 +12,6 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
-import ch.unibe.scg.regex.TNFAToTDFA.DFAState;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 @SuppressWarnings("javadoc")
