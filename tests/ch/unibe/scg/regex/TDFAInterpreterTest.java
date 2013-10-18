@@ -7,13 +7,11 @@ import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.regex.MatchResult;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ch.unibe.scg.regex.TransitionTriple.Priority;
@@ -26,6 +24,7 @@ public class TDFAInterpreterTest {
   @Before
   public void setUp() throws Exception {
     interpreter = new TDFAInterpreter(new TNFAToTDFA(makeTheNFA()));
+    History.resetCount();
   }
 
   private TNFA makeTheNFA() {
@@ -51,9 +50,12 @@ public class TDFAInterpreterTest {
     when(t0Close.getGroup()).thenReturn(cg);
     when(t0Close.isEndTag()).thenReturn(true);
 
+    when(cg.getStartTag()).thenReturn(t0Open);
+    when(cg.getEndTag()).thenReturn(t0Close);
+
     when(tnfa.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
     when(tnfa.getInitialState()).thenReturn(s0);
-    when(tnfa.allTags()).thenReturn(Arrays.asList(Tag.NONE));
+    when(tnfa.allTags()).thenReturn(Arrays.asList(t0Open, t0Close));
     when(tnfa.availableTransitionsFor(eq(s0), isNull(Character.class))).thenReturn(
         Arrays.asList(new TransitionTriple(s1, Priority.NORMAL, t0Open), new TransitionTriple(s0,
             Priority.LOW, Tag.NONE)));
@@ -62,9 +64,9 @@ public class TDFAInterpreterTest {
     when(tnfa.availableTransitionsFor(s1, 'a')).thenReturn(
         Arrays.asList(new TransitionTriple(s2, Priority.NORMAL, t0Close), new TransitionTriple(s1,
             Priority.LOW, Tag.NONE)));
-    when(tnfa.availableTransitionsFor(s2, 'a')).thenReturn(new ArrayList<TransitionTriple>());
+    when(tnfa.availableTransitionsFor(s2, 'a')).thenReturn(Collections.<TransitionTriple> emptyList());
     when(tnfa.isAccepting(eq(s2))).thenReturn(Boolean.TRUE);
-    when(tnfa.getFinalStates()).thenReturn(new HashSet<>(Arrays.asList(s2)));
+    when(tnfa.getFinalState()).thenReturn(s2);
     when(tnfa.isAccepting(eq(s1))).thenReturn(Boolean.FALSE);
     when(tnfa.isAccepting(eq(s0))).thenReturn(Boolean.FALSE);
     return tnfa;
@@ -93,7 +95,6 @@ public class TDFAInterpreterTest {
 
 
   @Test
-  @Ignore("Broken for the time being.")
   public void testMatch() {
     final MatchResult matchResult = interpreter.interpret("aaaaaa");
     assertThat(matchResult.toString(), is("4-0"));

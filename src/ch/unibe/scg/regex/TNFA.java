@@ -5,32 +5,29 @@ import static java.util.Objects.requireNonNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Formatter;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 interface TNFA {
   static class RealNFA implements TNFA {
-    final Set<State> finalStates;
+    final State finalState;
     final State initialState;
     final TNFATransitionTable transitionTable;
     final List<Tag> tags;
 
     RealNFA(final TNFATransitionTable transitionTable, final State initialState,
-        final Set<State> finalStates, List<Tag> tags) {
+        final State finalState, List<Tag> tags) {
       this.transitionTable = transitionTable;
-      this.initialState = initialState;
-      this.finalStates = finalStates;
+      this.initialState = requireNonNull(initialState);
+      this.finalState = requireNonNull(finalState);
       this.tags = tags;
     }
 
     static class Builder {
       final CaptureGroupMaker captureGroupMaker = new CaptureGroupMaker();
-      final Set<State> finalStates = new TreeSet<>();
+      State finalState;
       State initialState;
       final TNFATransitionTable.Builder transitionTableBuilder = TNFATransitionTable.builder();
       final List<Tag> tags = new ArrayList<>();
@@ -69,7 +66,7 @@ interface TNFA {
 
       public RealNFA build() {
         return new RealNFA(transitionTableBuilder.build(), initialState,
-            new HashSet<>(finalStates), new ArrayList<>(tags));
+            finalState, new ArrayList<>(tags));
       }
 
       public CaptureGroup makeCaptureGroup(CaptureGroup parent) {
@@ -77,7 +74,7 @@ interface TNFA {
       }
 
       public State makeInitialState() {
-        initialState = requireNonNull(State.get());
+        initialState = State.get();
         return initialState;
       }
 
@@ -91,8 +88,13 @@ interface TNFA {
         addUntaggedTransition(InputRange.EPSILON, from, to, priority);
       }
 
-      public void setAsAccepting(final State finishing) {
-        finalStates.add(finishing);
+      /** Sets the argument to be the single final state of the automaton. Must be called exactly once. */
+      public void setAsAccepting(final State finalState) {
+        if (this.finalState != null) {
+          throw new IllegalStateException("Only one final state can be handled.\n"
+              + String.format("Old final state was %s\n New final state is %s", this.finalState, finalState));
+        }
+        this.finalState = finalState;
       }
 
       public void registerCaptureGroup(CaptureGroup cg) {
@@ -125,19 +127,19 @@ interface TNFA {
 
     @Override
     public boolean isAccepting(final State state) {
-      return finalStates.contains(state);
+      return finalState.equals(state);
     }
 
     @Override
-    public Set<State> getFinalStates() {
-      return finalStates;
+    public State getFinalState() {
+      return finalState;
     }
 
     @Override
     public String toString() {
       try (final Formatter formatter = new Formatter()) {
         final String ret =
-            formatter.format("%s -> %s, %s", initialState, finalStates, transitionTable).toString();
+            formatter.format("%s -> %s, %s", initialState, finalState, transitionTable).toString();
         return ret;
       }
     }
@@ -165,7 +167,7 @@ interface TNFA {
    */
   public boolean isAccepting(State state);
 
-  public Set<State> getFinalStates();
+  public State getFinalState();
 
   public List<Tag> getTags();
 }

@@ -22,6 +22,7 @@ public final class MatchingTest {
   @Before
   public void setUp() {
     State.resetCount();
+    History.resetCount();
   }
 
   @Test

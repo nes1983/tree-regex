@@ -51,11 +51,11 @@ class RealMatchResult implements MatchResult {
     }
   }
 
-  final int[] captureGroupPositions;
+  final History[] captureGroupPositions;
   final CharSequence input;
 
-  RealMatchResult(int[] captureGroupPositions, CharSequence input) {
-    this.captureGroupPositions = captureGroupPositions;
+  RealMatchResult(History[] fin, CharSequence input) {
+    this.captureGroupPositions = fin;
     this.input = input;
   }
 
@@ -66,7 +66,7 @@ class RealMatchResult implements MatchResult {
 
   @Override
   public int end(final int group) {
-    return captureGroupPositions[group * 2 + 1];
+    return captureGroupPositions[group * 2 + 1].iterator().next();
   }
 
   @Override
@@ -91,7 +91,7 @@ class RealMatchResult implements MatchResult {
 
   @Override
   public int start(final int group) {
-    return captureGroupPositions[group * 2];
+    return captureGroupPositions[group * 2].iterator().next();
   }
 
   @Override

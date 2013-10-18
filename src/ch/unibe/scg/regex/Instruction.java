@@ -1,8 +1,11 @@
 package ch.unibe.scg.regex;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /** Immutable instruction for interpretation in tagged automata. */
 interface Instruction {
@@ -18,119 +21,114 @@ interface Instruction {
       return ++id;
     }
 
-    Instruction openingCommit(final int memoryPos) {
-      return new OpeningCommitInstruction(memoryPos);
+    Instruction openingCommit(final History tdash) {
+      return new OpeningCommitInstruction(tdash);
     }
 
-    Instruction closingCommit(final int memoryPos) {
-      return new ClosingCommitInstruction(memoryPos);
+    Instruction closingCommit(final History newHistory) {
+      return new ClosingCommitInstruction(newHistory);
     }
 
-    Instruction reorder(final int from, final int to) {
-      return new ReorderInstruction(from, to);
+    Instruction reorder(History target, History source) {
+      return new ReorderInstruction(target, source);
     }
 
-    Instruction storePos(final int tag) {
-      return new SetInstruction(tag);
+    Instruction storePos(final History newHistory) {
+      return new SetInstruction(newHistory);
     }
   }
 
   static class ReorderInstruction implements Instruction {
-    final int from, to;
+    final History from, to;
 
-    ReorderInstruction(int from, int to) {
-      assert from >= 0;
-      assert to >= 0;
-
-      this.from = from;
-      this.to = to;
+    ReorderInstruction(History from, History to) {
+      this.from = requireNonNull(from);
+      this.to = requireNonNull(to);
     }
 
     @Override
-    public void execute(Memory memory, int pos) {
-      memory.copyTo(to, from);
+    public void execute(int pos) {
+      from.cur = to.cur;
+      from.prev = to.prev;
     }
 
     @Override
     public String toString() {
-      return String.valueOf(from) + "->" + to;
+      return String.valueOf(from.id) + "->" + to.id;
     }
 
     @Override
-    public Instruction remap(int[] mapping) {
+    public Instruction remap(Map<History, History> mapping) {
       throw new UnsupportedOperationException("Mappings should not be mapped again.");
     }
   }
 
   static class SetInstruction implements Instruction {
-    final int memoryPos;
+    final History history;
 
-    SetInstruction(final int tag) {
-      assert tag >= 0;
-      this.memoryPos = tag;
+    SetInstruction(final History newHistory) {
+      this.history = requireNonNull(newHistory);
     }
 
     @Override
-    public void execute(final Memory memory, final int inputPos) {
-      memory.write(memoryPos, inputPos);
+    public void execute(final int inputPos) {
+      history.cur = inputPos;
     }
 
     @Override
     public String toString() {
-      return "" + memoryPos + "<- pos";
+      return "" + history.id + "<- pos";
     }
 
     @Override
-    public Instruction remap(int[] mapping) {
-      return new SetInstruction(mapping[memoryPos]);
+    public Instruction remap(Map<History, History> mapping) {
+      return new SetInstruction(mapping.get(history));
     }
   }
 
   static class ClosingCommitInstruction implements Instruction {
-    final int memoryPos;
+    final History history;
 
-    ClosingCommitInstruction(final int memoryPos) {
-      assert memoryPos >= 0;
-      this.memoryPos = memoryPos;
+    ClosingCommitInstruction(final History newHistory) {
+      this.history = requireNonNull(newHistory);
     }
 
     @Override
-    public void execute(Memory memory, int unusedPos) {
-      memory.commit(memoryPos);
+    public void execute(final int unusedPos) {
+      history.prev = new History(-1L, history.cur, history.prev);
     }
 
     @Override
     public String toString() {
-      return "c↓(" + memoryPos + ")";
+      return "c↓(" + history.id + ")";
     }
 
     @Override
-    public Instruction remap(int[] mapping) {
-      return new ClosingCommitInstruction(mapping[memoryPos]);
+    public Instruction remap(Map<History, History> mapping) {
+      return new ClosingCommitInstruction(mapping.get(history));
     }
   }
 
   static class OpeningCommitInstruction implements Instruction {
-    final int memoryPos;
+    final History history;
 
-    OpeningCommitInstruction(final int memoryPos) {
-      assert memoryPos >= 0;
-      this.memoryPos = memoryPos;
+    OpeningCommitInstruction(final History history) {
+      this.history = requireNonNull(history);
     }
 
     @Override
-    public void execute(Memory memory, int unusedPos) {
-      memory.commit(memoryPos);
+    public void execute(int unusedPos) {
+      history.prev = new History(-1L, history.cur, history.prev);
     }
 
     @Override
     public String toString() {
-      return "c↑(" + memoryPos + ")";
+      return "c↑(" + history.id + ")";
     }
 
     @Override
-    public Instruction remap(int[] mapping) {
-      return new OpeningCommitInstruction(mapping[memoryPos]);
+    public Instruction remap(Map<History, History> mapping) {
+      return new OpeningCommitInstruction(mapping.get(history));
     }
   }
 
@@ -175,8 +173,8 @@ interface Instruction {
     }
   }
 
-  public void execute(Memory memory, int pos);
+  public void execute(int pos);
 
   /** @return Same instruction as if the mapping was prepended. */
-  public Instruction remap(int[] mapping);
+  public Instruction remap(Map<History, History> mapping);
 }

@@ -3,12 +3,12 @@ package ch.unibe.scg.regex;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,60 +17,69 @@ import java.util.Map.Entry;
 import java.util.NavigableSet;
 
 import ch.unibe.scg.regex.Instruction.Instructions;
-import ch.unibe.scg.regex.TransitionTriple.Priority;
 
 
 class TNFAToTDFA {
-  static final StateAndInstructionsAndNewLocations NO_STATE =
-      new StateAndInstructionsAndNewLocations(
-        DFAState.INSTRUCTIONLESS_NO_STATE, Collections.<Instruction> emptyList(), new BitSet());
+  static final StateAndInstructionsAndNewHistories NO_STATE =
+      new StateAndInstructionsAndNewHistories(
+        DFAState.INSTRUCTIONLESS_NO_STATE,
+        Collections.<Instruction> emptyList(),
+        Collections.<History> emptyList());
 
-  static enum DFAStateComparator implements Comparator<Map<State, int[]>> {
+  static enum DFAStateComparator implements Comparator<Map<State, History[]>> {
     SINGLETON;
 
-    private int compare(final int[] a, final int[] b) {
-      {
-        final int cmp = Integer.compare(a.length, b.length);
+    private int compare(final History[] o1, final History[] o2) {
+      assert o1 != null || o2 != null;
+
+      int len1 = -1;
+      if (o1 != null) {
+        len1 = o1.length;
+      }
+
+      int len2 = -1;
+      if (o2 != null) {
+        len2 = o2.length;
+      }
+
+      final int lenCmp = Integer.compare(len1, len2);
+      if (lenCmp != 0) {
+        return lenCmp;
+      }
+
+      assert o1 != null && o2 != null; // The previous return, plus the initial assert ensure this.
+
+      for (int i = 0; i < o1.length; i++) {
+        long id1 = -1L;
+        if (o1[i] != null) {
+          id1 = o1[i].id;
+        }
+        long id2 = -1L;
+        if (o2[i] != null) {
+          id2 = o2[i].id;
+        }
+        final int cmp = Long.compare(id1, id2);
         if (cmp != 0) {
           return cmp;
         }
       }
-      for (int i = 0; i < a.length; i++) {
-        final int cmp = Integer.compare(a[i], b[i]);
-        if (cmp != 0) {
-          return cmp;
-        }
-      }
+
       return 0;
     }
 
     @Override
-    public int compare(final Map<State, int[]> o1, final Map<State, int[]> o2) {
-      {
-        final int cmp = Integer.compare(o1.size(), o2.size());
-        if (cmp != 0) {
-          return cmp;
-        }
+    public int compare(final Map<State, History[]> o1, final Map<State, History[]> o2) {
+      final int sizeCmp = Integer.compare(o1.size(), o2.size());
+      if (sizeCmp != 0) {
+        return sizeCmp;
       }
 
-      final List<State> states1 = new ArrayList<>(o1.keySet());
-      Collections.sort(states1);
-      final List<State> states2 = new ArrayList<>(o2.keySet());
-      Collections.sort(states2);
+      HashSet<State> keys = new HashSet<>(o1.size() + o2.size());
+      keys.addAll(o1.keySet());
+      keys.addAll(o2.keySet());
 
-      assert states1.size() == states2.size();
-
-      for (int i = 0; i < states1.size(); i++) {
-        final int cmp = states1.get(i).compareTo(states2.get(i));
-        if (cmp != 0) {
-          return cmp;
-        }
-      }
-
-      for (int i = 0; i < states1.size(); i++) {
-        assert states1.get(i).compareTo(states2.get(i)) == 0;
-        final State s = states1.get(i);
-        final int cmp = compare(o1.get(s), o2.get(s));
+      for (State k : keys) {
+        final int cmp = compare(o1.get(k), o2.get(k));
         if (cmp != 0) {
           return cmp;
         }
@@ -79,12 +88,12 @@ class TNFAToTDFA {
     }
   }
 
-  static class StateWithMemoryLocation implements Map.Entry<State, int[]> {
-    final int[] memoryLocation;
+  static class StateWithMemoryLocation implements Map.Entry<State, History[]> {
+    final History[] memoryLocation;
     final State state;
 
-    StateWithMemoryLocation(final State state, final int[] memoryLocation) {
-      this.memoryLocation = memoryLocation;
+    StateWithMemoryLocation(final State state, final History[] histories) {
+      this.memoryLocation = histories;
       this.state = state;
     }
 
@@ -115,7 +124,7 @@ class TNFAToTDFA {
       return state;
     }
 
-    public int[] getMemoryLocation() {
+    public History[] getMemoryLocation() {
       return memoryLocation;
     }
 
@@ -124,7 +133,7 @@ class TNFAToTDFA {
     }
 
     @Override
-    public int[] getValue() {
+    public History[] getValue() {
       return memoryLocation;
     }
 
@@ -134,7 +143,7 @@ class TNFAToTDFA {
     }
 
     @Override
-    public int[] setValue(final int[] value) {
+    public History[] setValue(final History[] value) {
       throw new UnsupportedOperationException();
     }
 
@@ -147,8 +156,6 @@ class TNFAToTDFA {
   public static TNFAToTDFA make(final TNFA tnfa) {
     return new TNFAToTDFA(tnfa);
   }
-
-  int highestMapping = 0;
 
   final Instruction.InstructionMaker instructionMaker = Instruction.InstructionMaker.get();
 
@@ -188,22 +195,23 @@ class TNFAToTDFA {
 
   /** Used to create the initial state of the DFA. */
   private DFAState convertToDfaState(final State s) {
-    final Map<State, int[]> initState = new HashMap<>();
+    final Map<State, History[]> initState = new HashMap<>();
     final int numTags = tnfa.allTags().size();
-    final int[] initialMemoryLocations = makeInitialMemoryLocations(numTags);
+    final History[] initialMemoryLocations = new History[numTags];
     initState.put(s, initialMemoryLocations);
     return new DFAState(Collections.unmodifiableMap(initState));
   }
 
-  static class StateAndInstructionsAndNewLocations {
+  static class StateAndInstructionsAndNewHistories {
     final DFAState dfaState;
     final Iterable<Instruction> instructions;
-    final BitSet newLocations;
+    final Collection<History> newHistories;
 
-    StateAndInstructionsAndNewLocations(final DFAState dfaState, final Iterable<Instruction> instructions, final BitSet newLocations) {
+    StateAndInstructionsAndNewHistories(final DFAState dfaState, final Iterable<Instruction> instructions,
+          final Collection<History> newHistories) {
       this.dfaState = dfaState;
       this.instructions = instructions;
-      this.newLocations = newLocations;
+      this.newHistories = newHistories;
     }
   }
 
@@ -214,17 +222,17 @@ class TNFAToTDFA {
    * @param a the character that was read. Is ignored if startState == true.
    * @return The next state after state, for input a.
    */
-  StateAndInstructionsAndNewLocations e(final Map<State, int[]> state, final char a, boolean startState) {
-    final Map<State, int[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
+  StateAndInstructionsAndNewHistories e(final Map<State, History[]> innerStates, final char a, boolean startState) {
+    final Map<State, History[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
 
-    final Deque<Map.Entry<State, int[]>> stack = new ArrayDeque<>(); // normal priority
-    final Deque<Map.Entry<State, int[]>> lowStack = new ArrayDeque<>(); // low priority
+    final Deque<Map.Entry<State, History[]>> stack = new ArrayDeque<>(); // normal priority
+    final Deque<Map.Entry<State, History[]>> lowStack = new ArrayDeque<>(); // low priority
 
     if (startState) { // TODO(nikoschwarz): Beautify.
-      stack.addAll(state.entrySet());
+      stack.addAll(innerStates.entrySet());
     } else {
-      for (final Entry<State, int[]> pr : state.entrySet()) {
-        final int[] k = pr.getValue();
+      for (final Entry<State, History[]> pr : innerStates.entrySet()) {
+        final History[] k = pr.getValue();
         final Collection<TransitionTriple> ts = tnfa.availableTransitionsFor(pr.getKey(), a);
         for (final TransitionTriple t : ts) {
           switch (t.getPriority()) {
@@ -244,9 +252,9 @@ class TNFAToTDFA {
     }
 
     Instructions instructions = new Instructions();
-    final BitSet newLocations = new BitSet();
+    final Collection<History> newHistories = new ArrayList<>();
     do {
-      Entry<State, int[]> s;
+      Entry<State, History[]> s;
       if (stack.isEmpty()) {
         s = lowStack.pop();
       } else {
@@ -260,27 +268,27 @@ class TNFAToTDFA {
       R.put(s.getKey(), s.getValue());
 
       final State q = s.getKey();
-      final int[] l = s.getValue();
+      final History[] l = s.getValue();
 
       nextTriple: for (final TransitionTriple triple : tnfa.availableTransitionsFor(q, null)) {
         final State qDash = triple.state;
 
         // Step 1.
-        if ((R.containsKey(qDash) && (triple.priority == Priority.LOW)) || R.containsKey(qDash)) {
+        if (R.containsKey(qDash)) {
           continue nextTriple;
         }
 
         // Step 2.
         final Tag tau = triple.tag;
-        int[] tdash;
+        History[] tdash;
         if (tau.isEndTag() || tau.isStartTag()) {
           tdash = Arrays.copyOf(l, l.length);
-          final int newLoc = nextInt();
-          newLocations.set(newLoc);
-          tdash[positionFor(tau)] = newLoc;
-          instructions.add(instructionMaker.storePos(newLoc));
+          final History newHistory = new History();
+          newHistories.add(newHistory);
+          tdash[positionFor(tau)] = newHistory;
+          instructions.add(instructionMaker.storePos(newHistory));
           if (tau.isEndTag()) {
-            instructions.add(instructionMaker.closingCommit(newLoc));
+            instructions.add(instructionMaker.closingCommit(newHistory));
             instructions.add(instructionMaker.openingCommit(tdash[positionFor(tau.getGroup().getStartTag())]));
           }
         } else {
@@ -304,33 +312,25 @@ class TNFAToTDFA {
         }
       }
     } while (!(stack.isEmpty() && lowStack.isEmpty()));
-    return new StateAndInstructionsAndNewLocations(new DFAState(R), instructions, newLocations);
+    return new StateAndInstructionsAndNewHistories(new DFAState(R), instructions, newHistories);
   }
 
-  private BitSet extractLocs(final Map<State, int[]> oldState) {
-    final BitSet ret = new BitSet();
-    for (final int[] ary : oldState.values()) {
-      for (final int val : ary) {
-        if (val >= 0) { // TODO(nikoschwarz): Is this correct? Do we need negative indices or not?
-          ret.set(val);
-        }
-      }
-    }
-    return ret;
-  }
-
-  DFAState findMappableState(NavigableSet<DFAState> states, DFAState u, int[] mapping) {
-    final Map<State, int[]> fromElement = new LinkedHashMap<>(u.getData());
+  DFAState findMappableState(NavigableSet<DFAState> states, DFAState u, Map<History, History> mapping) {
+    // DFA state that describes the lower bound of possibly mappable states:
+    //    1. The range of `states` that we're looking for all contains exactly u.innerStates as states.
+    //    2. As per DFAStateComparator, min is smaller than any other History array (because they're all bigger).
+    //    3. As per DFAStateComparator, max is bigger than any other History array (because they're all smaller).
+    final Map<State, History[]> fromElement = new HashMap<>(u.innerStates);
     {
-      final int[] min = new int[0];
-      for (final Entry<State, int[]> e : fromElement.entrySet()) {
+      final History[] min = new History[0];
+      for (final Entry<State, History[]> e : fromElement.entrySet()) {
         e.setValue(min);
       }
     }
-    final Map<State, int[]> toElement = new LinkedHashMap<>(u.getData());
+    final Map<State, History[]> toElement = new HashMap<>(u.innerStates);
     {
-      final int[] max = new int[highestMapping + 1];
-      for (final Entry<State, int[]> e : toElement.entrySet()) {
+      final History[] max = new History[tnfa.allTags().size() + 1];
+      for (final Entry<State, History[]> e : toElement.entrySet()) {
         e.setValue(max);
       }
     }
@@ -338,7 +338,7 @@ class TNFAToTDFA {
         states.subSet(new DFAState(fromElement), true, new DFAState(toElement), true);
 
     for (final DFAState candidate : range) {
-      if (u.isMappable(candidate, mapping)) {
+      if (isMappable(u, candidate, mapping)) {
         return candidate;
       }
     }
@@ -346,35 +346,78 @@ class TNFAToTDFA {
     return null;
   }
 
-  private int[] makeInitialMemoryLocations(final int numTags) {
-    final int[] ret = new int[numTags];
-    for (int i = 0; i < ret.length; i++) {
-      ret[i] = -1 * i - 1;
+  /** @return a mapping into {@code mapping} if one exists and returns false otherwise. */
+  private boolean isMappable(final DFAState first, final DFAState second, final Map<History, History> mapping) {
+    // We checked that the same NFA states exist in findMappableState
+    if (!first.innerStates.keySet().equals(second.innerStates.keySet())) {
+      throw new AssertionError("The candidate range must contain the right states!");
     }
-    return ret;
+    mapping.clear();
+
+    // A state is only mappable if its histories are mappable too.
+    for (final Map.Entry<State, History[]> entry : first.innerStates.entrySet()) {
+      final History[] mine = entry.getValue();
+      final History[] theirs = second.innerStates.get(entry.getKey());
+      final boolean success = updateMap(mapping, mine, theirs);
+      if (!success) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
-  StateAndInstructionsAndNewLocations makeStartState() {
+  /**
+   * Destructively update <code>map</code> until it maps from to to. A -1 entry in map means that
+   * the value can still be changed. Other values are left untouched.
+   *
+   * @param map Must be at least as big as the biggest values in both from and to. Elements must
+   *        be >= -1. -1 stands for unassigned.
+   * @param from same length as to.
+   * @param to same length as from.
+   * @return True if the mapping was successful; false otherwise.
+   */
+  private boolean updateMap(final Map<History, History> map, final History[] from, final History[] to) {
+    assert from.length == to.length;
+
+    // Go over the tag list and iteratively try to find counterexample.
+    for (int i = 0; i < from.length; i++) {
+      // if the tag hasn't been set in either state, it's ok.
+      if (from[i] == null && to[i] == null) {
+        continue; // Both leave i unspecified: that's fine.
+      } else if ((from[i] == null && to[i] != null) || (from[i] != null && to[i] == null)) {
+        return false; // Only from specifies the mapping, that won't do.
+      }
+
+      if (!map.containsKey(from[i])) {
+        // If we don't know any mapping for from[i], we set it to the only mapping that can work.
+        map.put(from[i], to[i]);
+      } else if (!map.get(from[i]).equals(to[i])) {
+        // Only mapping that could be chosen for from[i] and to[i] contradicts existing mapping.
+        return false;
+      } // That means the existing mapping matches.
+    }
+    return true;
+  }
+
+  StateAndInstructionsAndNewHistories makeStartState() {
     DFAState start = convertToDfaState(tnfa.getInitialState());
 
-    return e(start.getData(), Character.MAX_VALUE, true);
+    return e(start.innerStates, Character.MAX_VALUE, true);
   }
 
-  Collection<Instruction> mappingInstructions(final int[] mapping, final DFAState to,
-      BitSet newLocations) {
-    final BitSet locs = extractLocs(to.getData());
-    locs.andNot(newLocations); // New locations already led to stores.
+  Collection<Instruction> mappingInstructions(final Map<History, History> mapping,
+        Iterable<History> oldHistories) {
     final List<Instruction> ret = new ArrayList<>();
 
-    for (int i = locs.nextSetBit(0); i >= 0; i = locs.nextSetBit(i + 1)) {
-      ret.add(instructionMaker.reorder(i, mapping[i]));
+    for (History to : oldHistories) {
+      History from = mapping.get(to);
+      if (!from.equals(to)) {
+        ret.add(instructionMaker.reorder(to, from));
+      }
     }
 
     return ret;
-  }
-
-  int nextInt() {
-    return highestMapping++;
   }
 
   private int positionFor(final Tag tau) {
