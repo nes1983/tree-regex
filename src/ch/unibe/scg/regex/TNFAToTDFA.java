@@ -194,12 +194,11 @@ class TNFAToTDFA {
   }
 
   /** Used to create the initial state of the DFA. */
-  private DFAState convertToDfaState(final State s) {
+  private Map<State, History[]> convertToDfaState(final State s) {
     final Map<State, History[]> initState = new HashMap<>();
-    final int numTags = tnfa.allTags().size();
-    final History[] initialMemoryLocations = new History[numTags];
+    final History[] initialMemoryLocations = new History[tnfa.allTags().size()];
     initState.put(s, initialMemoryLocations);
-    return new DFAState(Collections.unmodifiableMap(initState));
+    return Collections.unmodifiableMap(initState);
   }
 
   static class StateAndInstructionsAndNewHistories {
@@ -262,13 +261,13 @@ class TNFAToTDFA {
       }
       assert s != null;
 
-      if (R.containsKey(s.getKey())) {
-        continue;
-      }
-      R.put(s.getKey(), s.getValue());
-
       final State q = s.getKey();
       final History[] l = s.getValue();
+
+      if (R.containsKey(q)) {
+        continue;
+      }
+      R.put(q, l);
 
       nextTriple: for (final TransitionTriple triple : tnfa.availableTransitionsFor(q, null)) {
         final State qDash = triple.state;
@@ -280,35 +279,37 @@ class TNFAToTDFA {
 
         // Step 2.
         final Tag tau = triple.tag;
-        History[] tdash;
-        if (tau.isEndTag() || tau.isStartTag()) {
-          tdash = Arrays.copyOf(l, l.length);
-          final History newHistory = new History();
-          newHistories.add(newHistory);
-          tdash[positionFor(tau)] = newHistory;
-          instructions.add(instructionMaker.storePos(newHistory));
-          if (tau.isEndTag()) {
-            instructions.add(instructionMaker.closingCommit(newHistory));
-            instructions.add(instructionMaker.openingCommit(tdash[positionFor(tau.getGroup().getStartTag())]));
+        History[] tdash = Arrays.copyOf(l, l.length);
+
+        if (tau.isStartTag() || tau.isEndTag()) {
+          final History newHistoryOpening = new History();
+          newHistories.add(newHistoryOpening);
+          int pos = positionFor(tau);
+          if (tdash[pos] != null) {
+            instructions.add(instructionMaker.reorder(newHistoryOpening, tdash[pos]));
           }
-        } else {
-          tdash = l;
+
+          if (tau.isStartTag()) {
+            instructions.add(instructionMaker.storePosPlusOne(newHistoryOpening));
+          } else {
+            final History newHistoryClosing = new History();
+            newHistories.add(newHistoryClosing);
+            instructions.add(instructionMaker.storePos(newHistoryClosing));
+            instructions.add(instructionMaker.openingCommit(newHistoryOpening));
+            instructions.add(instructionMaker.closingCommit(newHistoryClosing));
+          }
         }
 
-        // Step 3. (TODO)
-
-        // Step 4.
-        if (!R.containsKey(triple.getState())) {
-          switch (triple.getPriority()) {
-            case LOW:
-              lowStack.add(new StateWithMemoryLocation(triple.getState(), tdash));
-              break;
-            case NORMAL:
-              stack.add(new StateWithMemoryLocation(triple.getState(), tdash));
-              break;
-            default:
-              throw new AssertionError();
-          }
+        // Step 3.
+        switch (triple.getPriority()) {
+          case LOW:
+            lowStack.add(new StateWithMemoryLocation(triple.getState(), tdash));
+            break;
+          case NORMAL:
+            stack.add(new StateWithMemoryLocation(triple.getState(), tdash));
+            break;
+          default:
+            throw new AssertionError();
         }
       }
     } while (!(stack.isEmpty() && lowStack.isEmpty()));
@@ -401,9 +402,9 @@ class TNFAToTDFA {
   }
 
   StateAndInstructionsAndNewHistories makeStartState() {
-    DFAState start = convertToDfaState(tnfa.getInitialState());
+    Map<State, History[]> start = convertToDfaState(tnfa.getInitialState());
 
-    return e(start.innerStates, Character.MAX_VALUE, true);
+    return e(start, Character.MAX_VALUE, true);
   }
 
   Collection<Instruction> mappingInstructions(final Map<History, History> mapping,

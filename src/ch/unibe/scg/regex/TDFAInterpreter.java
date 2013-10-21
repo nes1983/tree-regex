@@ -100,7 +100,10 @@ class TDFAInterpreter {
         }
       } else {
         for (final Instruction i : uu.instructions) {
-          c.add(i.remap(mapping));
+          Iterable<Instruction> remap = i.remap(mapping);
+          for (Instruction r : remap) {
+            c.add(r);
+          }
         }
         Set<History> oldHistories = new HashSet<>();
         for (History[] hs : u.innerStates.values()) {

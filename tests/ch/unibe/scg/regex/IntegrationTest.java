@@ -3,6 +3,7 @@ package ch.unibe.scg.regex;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.util.Arrays;
 import java.util.regex.MatchResult;
 
 import org.junit.Before;
@@ -49,8 +50,8 @@ public final class IntegrationTest {
     final MatchResult res = tdfaInterpreter.interpret("aabbccaaaa");
     assertThat(res.toString(), is("NO_MATCH"));
     assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is("q0-a-a -> q1 [c↑(3), 4<- pos, c↓(4)]\n"
-        + "q1-a-a -> q1 [c↑(3), 5<- pos, c↓(5)]\n"
-        + "q1-b-b -> q2 [c↑(2), 6<- pos, 7<- pos, c↓(6)]\n"));
+        + "q1-a-a -> q1 [c↑(3), 4<- pos, c↓(4)]\n"
+        + "q1-b-b -> q2 [c↑(2), 6<- pos, 7<- pos, 8<- pos, c↓(6)]\n"));
   }
 
   @Test
@@ -63,18 +64,31 @@ public final class IntegrationTest {
   public void testMatch2() {
     final MatchResult res = tdfaInterpreter.interpret("aaabcaaabcaabc");
     assertThat(res.toString(), is("0-13"));
-    assertThat(
-        tdfaInterpreter.tdfaBuilder.build().toString(),
-        // It's ok that stores start at 4. The previous 3 were stored in the initializer.
-        is("q0-a-a -> q1 [c↑(3), 4<- pos, c↓(4)]\n"
-            + "q1-a-a -> q1 [c↑(3), 5<- pos, c↓(5)]\n"
-            + "q1-b-b -> q2 [c↑(2), 6<- pos, 7<- pos, c↓(6)]\n"
-            + "q2-c-c -> q3 [c↑(1), c↑(0), 8<- pos, 9<- pos, 10<- pos, 11<- pos, c↓(8), c↓(10)]\n"
-            + "q3-a-a -> q1 [c↑(11), 12<- pos, c↓(12)]\n"));
+    assertThat(tdfaInterpreter.tdfaBuilder.build().toString(),
+      is("q0-a-a -> q1 [c↑(3), 4<- pos, c↓(4)]\n"
+          + "q1-a-a -> q1 [c↑(3), 4<- pos, c↓(4)]\n"
+          + "q1-b-b -> q2 [c↑(2), 6<- pos, 7<- pos, 8<- pos, c↓(6)]\n"
+          + "q2-c-c -> q3 [c↑(1), c↑(0), 9<- pos, 10<- pos, 11<- pos, 12<- pos, 13<- pos, c↓(9), c↓(13)]\n"
+          + "q3-a-a -> q1 [c↑(12), 14<- pos, c↓(14)]\n"
+      ));
   }
 
   @Test
   public void testMemoryAfterExecution() {
-    tdfaInterpreter.interpret("aaabcaaabcaabc");
+    RealMatchResult res = (RealMatchResult) tdfaInterpreter.interpret("aaabcaaabcaabc");
+    assertThat(Arrays.toString(res.captureGroupPositions), is(""));
+  }
+
+  @Test
+  public void testGroupMatch() {
+    MatchResult result = tdfaInterpreter.interpret("aaabcaaabcaabc");
+    assertThat(result.start(),  is(0));
+    assertThat(result.end(),    is(13));
+    assertThat(result.start(1), is(10));
+    assertThat(result.end(1),   is(13));
+    assertThat(result.start(2), is(10));
+    assertThat(result.end(2),   is(12));
+    assertThat(result.start(3), is(10));
+    assertThat(result.end(3),   is(11));
   }
 }
