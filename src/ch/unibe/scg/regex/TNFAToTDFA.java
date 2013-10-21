@@ -425,7 +425,7 @@ class TNFAToTDFA {
 
     int r = 2 * tau.getGroup().getNumber();
     if (tau.isEndTag()) {
-      r += 1;
+      r++;
     }
     return r;
   }
