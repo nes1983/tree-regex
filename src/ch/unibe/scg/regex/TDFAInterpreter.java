@@ -16,7 +16,6 @@ import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructionsAndNewHistories;
 
 /** Interprets the known TDFA states. Compiles missing states on the fly. */
 class TDFAInterpreter {
-  final Instruction.InstructionMaker instructionMaker = Instruction.InstructionMaker.get();
   final NavigableSet<DFAState> states = new TreeSet<>();
 
   final TDFATransitionTable.Builder tdfaBuilder = new TDFATransitionTable.Builder();
