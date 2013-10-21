@@ -41,15 +41,15 @@ interface Instruction {
   static class ReorderInstruction implements Instruction {
     final History from, to;
 
-    ReorderInstruction(History from, History to) {
+    ReorderInstruction(History to, History from) {
       this.from = requireNonNull(from);
       this.to = requireNonNull(to);
     }
 
     @Override
     public void execute(int pos) {
-      from.cur = to.cur;
-      from.prev = to.prev;
+      to.cur = from.cur;
+      to.prev = from.prev;
     }
 
     @Override
