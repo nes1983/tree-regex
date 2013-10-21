@@ -50,11 +50,11 @@ class TDFAInterpreter {
 
     StateAndInstructionsAndNewHistories startState = tnfa2tdfa.makeStartState();
     DFAState t = startState.dfaState;
+    states.add(t);
+
     for (final Instruction instruction : startState.instructions) {
       instruction.execute(0);
     }
-
-    states.add(t);
 
     for (int pos = 0; pos < input.length(); pos++) {
       final char a = input.charAt(pos);
