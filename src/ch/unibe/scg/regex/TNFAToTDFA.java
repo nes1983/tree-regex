@@ -284,15 +284,17 @@ class TNFAToTDFA {
         if (tau.isStartTag() || tau.isEndTag()) {
           final History newHistoryOpening = new History();
           newHistories.add(newHistoryOpening);
-          int pos = positionFor(tau);
-          if (tdash[pos] != null) {
-            instructions.add(instructionMaker.reorder(newHistoryOpening, tdash[pos]));
+          int openingPos = positionFor(tau.getGroup().getStartTag());
+          if (tdash[openingPos] != null) {
+            instructions.add(instructionMaker.reorder(newHistoryOpening, tdash[openingPos]));
           }
+          tdash[openingPos] = newHistoryOpening;
 
           if (tau.isStartTag()) {
             instructions.add(instructionMaker.storePosPlusOne(newHistoryOpening));
           } else {
             final History newHistoryClosing = new History();
+            tdash[positionFor(tau.getGroup().getEndTag())] = newHistoryClosing;
             newHistories.add(newHistoryClosing);
             instructions.add(instructionMaker.storePos(newHistoryClosing));
             instructions.add(instructionMaker.openingCommit(newHistoryOpening));
