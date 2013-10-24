@@ -88,4 +88,11 @@ class History implements IntIterable {
     History other = (History) obj;
     return this.id == other.id;
   }
+
+  int size() {
+    if (prev == null) {
+      return 1;
+    }
+    return prev.size() + 1;
+  }
 }

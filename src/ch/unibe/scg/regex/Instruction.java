@@ -2,10 +2,7 @@ package ch.unibe.scg.regex;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 /** Immutable instruction for interpretation in tagged automata. */
@@ -81,7 +78,7 @@ interface Instruction {
 
     @Override
     public void execute(final int inputPos) {
-      history.cur = inputPos;
+      history.cur = inputPos + offset;
     }
 
     @Override
@@ -171,51 +168,10 @@ interface Instruction {
       throw new UnsupportedOperationException(
         "ResetInstructions are only produced in the remapping phase.");
     }
-  }
-
-  static class Instructions implements Iterable<Instruction> {
-    final List<ResetInstruction> resets = new ArrayList<>();
-    final List<ReorderInstruction> moves = new ArrayList<>();
-    final List<SetInstruction> stores = new ArrayList<>();
-    final List<OpeningCommitInstruction> openingCommits = new ArrayList<>();
-    final List<ClosingCommitInstruction> closingCommits = new ArrayList<>();
-
-    @Override
-    public Iterator<Instruction> iterator() {
-      // TODO(nikoschwarz): make iterator that does not copy the lists.
-      List<Instruction> all = new ArrayList<>(
-          resets.size() + moves.size() + openingCommits.size() + closingCommits.size() + stores.size());
-      all.addAll(resets);
-      all.addAll(moves);
-      all.addAll(stores);
-      all.addAll(openingCommits);
-      all.addAll(closingCommits);
-      return all.iterator();
-    }
-
-    final void add(Instruction i) {
-      if (i instanceof ResetInstruction) {
-        resets.add((ResetInstruction) i);
-      } else if (i instanceof ReorderInstruction) {
-        moves.add((ReorderInstruction) i);
-      } else if (i instanceof SetInstruction) {
-        stores.add((SetInstruction) i);
-      } else if (i instanceof OpeningCommitInstruction) {
-        openingCommits.add((OpeningCommitInstruction) i);
-      } else if (i instanceof ClosingCommitInstruction) {
-        closingCommits.add((ClosingCommitInstruction) i);
-      } else {
-        throw new AssertionError("Unknown instruction type: " + i.getClass());
-      }
-    }
 
     @Override
     public String toString() {
-      List<Instruction> all = new ArrayList<>();
-      for (Instruction i : this) {
-        all.add(i);
-      }
-      return all.toString();
+      return "r(" + history.id + ")";
     }
   }
 

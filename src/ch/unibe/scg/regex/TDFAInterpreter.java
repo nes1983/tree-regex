@@ -1,5 +1,6 @@
 package ch.unibe.scg.regex;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,7 +11,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.MatchResult;
 
-import ch.unibe.scg.regex.Instruction.Instructions;
 import ch.unibe.scg.regex.TDFATransitionTable.NextDFAState;
 import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructionsAndNewHistories;
 
@@ -53,7 +53,7 @@ class TDFAInterpreter {
     states.add(t);
 
     for (final Instruction instruction : startState.instructions) {
-      instruction.execute(0);
+      instruction.execute(-1);
     }
 
     for (int pos = 0; pos < input.length(); pos++) {
@@ -61,7 +61,7 @@ class TDFAInterpreter {
 
       {
         NextDFAState nextState = tdfaBuilder.availableTransition(t, a);
-        if (nextState != null) {
+        if (false && nextState != null) {
           // TODO check for fail state.
           for (final Instruction instruction : nextState.getInstructions()) {
             instruction.execute(pos);
@@ -90,7 +90,7 @@ class TDFAInterpreter {
       final DFAState mappedState = tnfa2tdfa.findMappableState(states, u, mapping);
 
       DFAState newState = mappedState;
-      Instructions c = new Instructions();
+      List<Instruction> c = new ArrayList<>();
       if (mappedState == null) {
         mapping = null; // Won't be needed then.
         newState = u;
@@ -123,6 +123,16 @@ class TDFAInterpreter {
 
       for (final Instruction instruction : c) {
         instruction.execute(pos);
+      }
+      for (final History[] s : newState.innerStates.values()) {
+        for (int i = 0; i < s.length; i += 2) {
+          if (s[i+1] != null) {
+            assert s[i] != null;
+            if (s[i].size() != s[i+1].size()) {
+              assert false;
+            }
+          }
+        }
       }
 
       tdfaBuilder.addTransition(t, inputRange, newState, c);

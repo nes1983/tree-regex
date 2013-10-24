@@ -16,8 +16,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableSet;
 
-import ch.unibe.scg.regex.Instruction.Instructions;
-
 
 class TNFAToTDFA {
   static final StateAndInstructionsAndNewHistories NO_STATE =
@@ -250,7 +248,7 @@ class TNFAToTDFA {
       return NO_STATE;
     }
 
-    Instructions instructions = new Instructions();
+    List<Instruction> instructions = new ArrayList<>();
     final Collection<History> newHistories = new ArrayList<>();
     do {
       Entry<State, History[]> s;
@@ -294,7 +292,11 @@ class TNFAToTDFA {
             instructions.add(instructionMaker.storePosPlusOne(newHistoryOpening));
           } else {
             final History newHistoryClosing = new History();
-            tdash[positionFor(tau.getGroup().getEndTag())] = newHistoryClosing;
+            int closingPos = positionFor(tau.getGroup().getEndTag());
+            if (tdash[closingPos] != null) {
+              instructions.add(instructionMaker.reorder(newHistoryClosing, tdash[closingPos]));
+            }
+            tdash[closingPos] = newHistoryClosing;
             newHistories.add(newHistoryClosing);
             instructions.add(instructionMaker.storePos(newHistoryClosing));
             instructions.add(instructionMaker.openingCommit(newHistoryOpening));
