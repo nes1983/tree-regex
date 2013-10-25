@@ -1,7 +1,7 @@
 package ch.unibe.scg.regex;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -80,7 +80,7 @@ class TDFAInterpreter {
         return RealMatchResult.NoMatchResult.SINGLETON;
       }
 
-      Map<History, History> mapping = new HashMap<>();
+      Map<History, History> mapping = new LinkedHashMap<>();
 
       // If there is a valid mapping, findMappableStates will modify mapping into it.
       final DFAState mappedState = tnfa2tdfa.findMappableState(states, u, mapping);

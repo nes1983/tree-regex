@@ -7,10 +7,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -73,7 +72,7 @@ class TNFAToTDFA {
         return sizeCmp;
       }
 
-      HashSet<State> keys = new HashSet<>(o1.size() + o2.size());
+      Set<State> keys = new LinkedHashSet<>();
       keys.addAll(o1.keySet());
       keys.addAll(o2.keySet());
 
@@ -194,7 +193,7 @@ class TNFAToTDFA {
 
   /** Used to create the initial state of the DFA. */
   private Map<State, History[]> convertToDfaState(final State s) {
-    final Map<State, History[]> initState = new HashMap<>();
+    final Map<State, History[]> initState = new LinkedHashMap<>();
     final History[] initialMemoryLocations = new History[tnfa.allTags().size()];
     for (int i = 0; i < initialMemoryLocations.length; i++) {
       initialMemoryLocations[i] = new History();
@@ -325,14 +324,14 @@ class TNFAToTDFA {
     //    1. The range of `states` that we're looking for all contains exactly u.innerStates as states.
     //    2. As per DFAStateComparator, min is smaller than any other History array (because they're all bigger).
     //    3. As per DFAStateComparator, max is bigger than any other History array (because they're all smaller).
-    final Map<State, History[]> fromElement = new HashMap<>(u.innerStates);
+    final Map<State, History[]> fromElement = new LinkedHashMap<>(u.innerStates);
     {
       final History[] min = new History[0];
       for (final Entry<State, History[]> e : fromElement.entrySet()) {
         e.setValue(min);
       }
     }
-    final Map<State, History[]> toElement = new HashMap<>(u.innerStates);
+    final Map<State, History[]> toElement = new LinkedHashMap<>(u.innerStates);
     {
       final History[] max = new History[tnfa.allTags().size() + 1];
       for (final Entry<State, History[]> e : toElement.entrySet()) {
@@ -414,7 +413,7 @@ class TNFAToTDFA {
     List<Instruction> ret = new ArrayList<>(map.size());
     Deque<History> stack = new ArrayDeque<>();
     //
-    Set<History> visitedSources = new HashSet<>();
+    Set<History> visitedSources = new LinkedHashSet<>();
     // Go through the edges of the graph:
 
     for (History source : map.keySet()) {
