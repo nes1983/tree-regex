@@ -1,5 +1,7 @@
 package ch.unibe.scg.regex;
 
+import static java.util.Objects.requireNonNull;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -303,11 +305,6 @@ class ParserProvider {
     };
   }
 
-  static <T> T notNull(final T o) {
-    assert o != null;
-    return o;
-  }
-
   Parser.Reference<Regex> regexRef;
 
   ParserProvider() {
@@ -433,6 +430,7 @@ class ParserProvider {
     return p.map(fromConstructor(Node.Star.class));
   }
 
+  /** @return the alternation in posix. */
   Parser<Union> union() {
     final Parser<Tuple3<Simple, Void, Regex>> p =
         Parsers.tuple(simple(), Scanners.isChar('|'), regexRef.lazy());
@@ -440,7 +438,7 @@ class ParserProvider {
     return p.map(new Map<Tuple3<Simple, Void, Regex>, Union>() {
       @Override public Union map(final Tuple3<Simple, Void, Regex> a) {
         assert a != null;
-        return new Union(notNull(a.a), notNull(a.c));
+        return new Union(requireNonNull(a.a), requireNonNull(a.c));
       }
     });
   }
