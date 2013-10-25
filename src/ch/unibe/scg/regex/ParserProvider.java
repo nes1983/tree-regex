@@ -27,46 +27,40 @@ import ch.unibe.scg.regex.ParserProvider.Node.Simple;
 import ch.unibe.scg.regex.ParserProvider.Node.SimpleChar;
 import ch.unibe.scg.regex.ParserProvider.Node.Union;
 
-/**
- * Objects not threadsafe! Use from only one thread!
- *
- * @author nes
- *
- */
+/** Parse regexes into trees. Not threadsafe! */
+// Constructors must be public because they're used reflectively.
 class ParserProvider {
-  public static interface Node {
-    public static class Any implements Elementary {
-      Any() {}
-
+   static interface Node {
+    static class Any implements Elementary {
       @Override
       public String toString() {
         return ".";
       }
     }
 
-    public static interface Basic extends Node {
+    static interface Basic extends Node {
       // <star> | <plus> | <elementary-RE>
     }
 
-    public static abstract class Char extends SetItem implements Elementary {
+     static abstract class Char extends SetItem implements Elementary {
       final char character;
 
       Char(final char character) {
         this.character = character;
       }
 
-      public char getCharacter() {
+      char getCharacter() {
         return character;
       }
     }
 
-    public static interface Elementary extends Basic {
+    static interface Elementary extends Basic {
       // <group> | <any> | <eos> | <char> | <set>
     }
 
-    public static class Eos implements Elementary {}
+    static class Eos implements Elementary {}
 
-    public static class EscapedChar extends Char {
+    static class EscapedChar extends Char {
       public EscapedChar(final char character) {
         super(character);
       }
@@ -77,14 +71,14 @@ class ParserProvider {
       }
     }
 
-    public static final class Group implements Elementary {
+    static final class Group implements Elementary {
       final Node body;
 
       public Group(final Node body) {
         this.body = body;
       }
 
-      public Node getBody() {
+      Node getBody() {
         return body;
       }
 
@@ -94,8 +88,7 @@ class ParserProvider {
       }
     }
 
-    public static final class NegativeSet extends Set {
-
+    static final class NegativeSet extends Set {
       public NegativeSet(final List<SetItem> items) {
         super(items);
       }
@@ -112,14 +105,14 @@ class ParserProvider {
       }
     }
 
-    public static class Optional implements Basic {
+    static class Optional implements Basic {
       final Elementary elementary;
 
       public Optional(final Elementary elementary) {
         this.elementary = elementary;
       }
 
-      public Node getElementary() {
+      Node getElementary() {
         return elementary;
       }
 
@@ -129,14 +122,14 @@ class ParserProvider {
       }
     }
 
-    public static final class Plus implements Basic {
+    static final class Plus implements Basic {
       final Elementary elementary;
 
       public Plus(final Elementary elementary) {
         this.elementary = elementary;
       }
 
-      public Node getElementary() {
+      Node getElementary() {
         return elementary;
       }
 
@@ -146,8 +139,7 @@ class ParserProvider {
       }
     }
 
-    public static final class PositiveSet extends Set {
-
+    static final class PositiveSet extends Set {
       public PositiveSet(final List<SetItem> items) {
         super(items);
       }
@@ -162,22 +154,21 @@ class ParserProvider {
         s.append("]");
         return s.toString();
       }
-
     }
 
-    public static final class Range extends SetItem {
+    static final class Range extends SetItem {
       final char from, to;
 
-      Range(final char from, final char to) {
+      public Range(final char from, final char to) {
         this.from = from;
         this.to = to;
       }
 
-      public char getFrom() {
+      char getFrom() {
         return from;
       }
 
-      public char getTo() {
+      char getTo() {
         return to;
       }
 
@@ -187,19 +178,19 @@ class ParserProvider {
       }
     }
 
-    public static interface Regex extends Node {
+    static interface Regex extends Node {
       // <union> | <simple-RE>
     }
 
-    public static abstract class Set implements Elementary {
+    static abstract class Set implements Elementary {
       final List<SetItem> items;
 
-      Set(final List<SetItem> items) {
+      public Set(final List<SetItem> items) {
         super();
         this.items = Collections.unmodifiableList(items);
       }
 
-      public List<SetItem> getItems() {
+      List<SetItem> getItems() {
         return items;
       }
 
@@ -209,18 +200,17 @@ class ParserProvider {
       }
     }
 
-    public static class SetItem implements Node {
-      SetItem() {}
+    static class SetItem implements Node {
     }
 
-    public class Simple implements Regex {
+    class Simple implements Regex {
       final List<? extends Basic> basics;
 
       public Simple(final List<? extends Basic> basics) {
         this.basics = Collections.unmodifiableList(basics);
       }
 
-      public List<? extends Basic> getBasics() {
+      List<? extends Basic> getBasics() {
         return basics;
       }
 
@@ -234,7 +224,7 @@ class ParserProvider {
       }
     }
 
-    public static class SimpleChar extends Char {
+    static class SimpleChar extends Char {
       public SimpleChar(final char character) {
         super(character);
       }
@@ -245,14 +235,14 @@ class ParserProvider {
       }
     }
 
-    public static class Star implements Basic {
+    static class Star implements Basic {
       final Elementary elementary;
 
       public Star(final Elementary elementary) {
         this.elementary = elementary;
       }
 
-      public Node getElementary() {
+      Node getElementary() {
         return elementary;
       }
 
@@ -262,12 +252,11 @@ class ParserProvider {
       }
     }
 
-    public static final class Union implements Regex {
+    static final class Union implements Regex {
       final Simple left;
       final Regex right;
 
       public Union(final Simple left, final Regex right) {
-        super();
         this.left = left;
         this.right = right;
       }
@@ -298,7 +287,7 @@ class ParserProvider {
     return c;
   }
 
-  public static <From, To> Map<From, To> fromConstructor(final Class<To> clazz) {
+  static <From, To> Map<From, To> fromConstructor(final Class<To> clazz) {
     final Constructor<To>[] cs = (Constructor<To>[]) clazz.getConstructors();
 
     final Constructor<To> c = findConstructor(clazz, cs);
@@ -314,7 +303,7 @@ class ParserProvider {
     };
   }
 
-  public static <T> T notNull(final T o) {
+  static <T> T notNull(final T o) {
     assert o != null;
     return o;
   }
@@ -337,7 +326,7 @@ class ParserProvider {
     return Parsers.or(simpleCharacter(), escapedCharacter());
   }
 
-  public Parser<? extends Elementary> elementary() {
+  Parser<? extends Elementary> elementary() {
     return Parsers.or(any(), character(), eos(), set(), group());
   }
 
@@ -357,7 +346,7 @@ class ParserProvider {
     });
   }
 
-  public Parser<Group> group() {
+  Parser<Group> group() {
     final Parser<Regex> p =
         Parsers.between(Scanners.isChar('('), regexRef.lazy(), Scanners.isChar(')'));
     return p.map(fromConstructor(Group.class));
@@ -401,13 +390,13 @@ class ParserProvider {
     });
   }
 
-  public Parser<Regex> regexp() {
+  Parser<Regex> regexp() {
     final Parser<Regex> p = Parsers.or(union(), simple());
     regexRef.set(p);
     return p;
   }
 
-  public final void reInitialize() {
+  final void reInitialize() {
     regexRef = Parser.newReference();
   }
 
@@ -445,7 +434,6 @@ class ParserProvider {
   }
 
   Parser<Union> union() {
-
     final Parser<Tuple3<Simple, Void, Regex>> p =
         Parsers.tuple(simple(), Scanners.isChar('|'), regexRef.lazy());
 
@@ -455,6 +443,5 @@ class ParserProvider {
         return new Union(notNull(a.a), notNull(a.c));
       }
     });
-
   }
 }
