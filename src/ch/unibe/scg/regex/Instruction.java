@@ -2,9 +2,6 @@ package ch.unibe.scg.regex;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.Arrays;
-import java.util.Map;
-
 /** Immutable instruction for interpretation in tagged automata. */
 interface Instruction {
   /** Not threadsafe. */
@@ -58,13 +55,6 @@ interface Instruction {
     public String toString() {
       return String.valueOf(from.id) + "->" + to.id;
     }
-
-    @Override
-    public Iterable<Instruction> remap(Map<History, History> mapping) {
-      assert mapping.containsKey(to);
-
-      return Arrays.<Instruction> asList(new ReorderInstruction(mapping.get(to), from));
-    }
   }
 
   static class SetInstruction implements Instruction {
@@ -89,13 +79,6 @@ interface Instruction {
 
       return "" + history.id + "<- pos+" + offset;
     }
-
-    @Override
-    public Iterable<Instruction> remap(Map<History, History> mapping) {
-      assert mapping.containsKey(history) : String.format("%s %s", history, mapping);
-
-      return Arrays.<Instruction> asList(new SetInstruction(mapping.get(history), offset));
-    }
   }
 
   static class OpeningCommitInstruction implements Instruction {
@@ -113,13 +96,6 @@ interface Instruction {
     @Override
     public String toString() {
       return "c↑(" + history.id + ")";
-    }
-
-    @Override
-    public Iterable<Instruction> remap(Map<History, History> mapping) {
-      assert mapping.containsKey(history);
-
-      return Arrays.<Instruction> asList(new OpeningCommitInstruction(mapping.get(history)));
     }
   }
 
@@ -139,44 +115,7 @@ interface Instruction {
     public String toString() {
       return "c↓(" + history.id + ")";
     }
-
-    @Override
-    public Iterable<Instruction> remap(Map<History, History> mapping) {
-      assert mapping.containsKey(history);
-
-      final History mappedHistory = mapping.get(history);
-      return Arrays.<Instruction> asList(
-        new ResetInstruction(mappedHistory),
-        new ClosingCommitInstruction(mappedHistory));
-    }
-  }
-
-  static class ResetInstruction implements Instruction {
-    final History history;
-
-    ResetInstruction(History history) {
-      this.history = history;
-    }
-
-    @Override
-    public void execute(int pos) {
-      history.prev = null;
-    }
-
-    @Override
-    public Iterable<Instruction> remap(Map<History, History> mapping) {
-      throw new UnsupportedOperationException(
-        "ResetInstructions are only produced in the remapping phase.");
-    }
-
-    @Override
-    public String toString() {
-      return "r(" + history.id + ")";
-    }
   }
 
   public void execute(int pos);
-
-  /** @return Same instruction as if the mapping was prepended. */
-  public Iterable<Instruction> remap(Map<History, History> mapping);
 }
