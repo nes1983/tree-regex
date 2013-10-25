@@ -19,6 +19,7 @@ import ch.unibe.scg.regex.ParserProvider.Node.PositiveSet;
 import ch.unibe.scg.regex.ParserProvider.Node.SetItem;
 import ch.unibe.scg.regex.ParserProvider.Node.Simple;
 import ch.unibe.scg.regex.ParserProvider.Node.Star;
+import ch.unibe.scg.regex.ParserProvider.Node.Union;
 import ch.unibe.scg.regex.TNFA.RealNFA.Builder;
 import ch.unibe.scg.regex.TransitionTriple.Priority;
 
@@ -124,8 +125,8 @@ class RegexToNFA {
       ret = makeChar(last, builder, (Node.Char) node);
     } else if (node instanceof Node.PositiveSet) {
       ret = makePositiveSet(last, builder, (Node.PositiveSet) node);
-    } else if (node instanceof Node.NegativeSet) {
-      throw new AssertionError("Unknown node type: " + node);
+    } else if (node instanceof Node.Union) {
+      ret = makeUnion(last, builder, (Node.Union) node, captureGroup);
     } else {
       throw new AssertionError("Unknown node type: " + node);
     }
@@ -212,6 +213,18 @@ class RegexToNFA {
     builder.makeUntaggedEpsilonTransitionFromTo(inner.getFinishing(),
         inner.getInitial(), Priority.NORMAL);
     return ret;
+  }
+
+  MiniAutomaton makeUnion(MiniAutomaton last, Builder builder, Union union,
+      CaptureGroup captureGroup) {
+    MiniAutomaton left = make(last, builder, union.left, captureGroup);
+    MiniAutomaton right = make(last, builder, union.right, captureGroup);
+
+    List<State> out = Arrays.asList(builder.makeState());
+    builder.makeUntaggedEpsilonTransitionFromTo(left.getFinishing(), out, Priority.NORMAL);
+    builder.makeUntaggedEpsilonTransitionFromTo(right.getFinishing(), out, Priority.LOW);
+
+    return new MiniAutomaton(last.getFinishing(), out);
   }
 
   MiniAutomaton makePositiveSet(final MiniAutomaton last, final Builder builder,
