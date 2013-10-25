@@ -1,13 +1,10 @@
 package ch.unibe.scg.regex;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.MatchResult;
 
@@ -20,7 +17,6 @@ class TDFAInterpreter {
 
   final TDFATransitionTable.Builder tdfaBuilder = new TDFATransitionTable.Builder();
   final TNFAToTDFA tnfa2tdfa;
-
 
   TDFAInterpreter(TNFAToTDFA tnfa2tdfa) {
     this.tnfa2tdfa = tnfa2tdfa;
@@ -90,40 +86,22 @@ class TDFAInterpreter {
       final DFAState mappedState = tnfa2tdfa.findMappableState(states, u, mapping);
 
       DFAState newState = mappedState;
-      List<Instruction> c = new ArrayList<>();
+      List<Instruction> c = new ArrayList<>(uu.instructions);
       if (mappedState == null) {
         mapping = null; // Won't be needed then.
         newState = u;
         states.add(newState);
-        for (Instruction i : uu.instructions) {
-          c.add(i);
-        }
       } else {
-        for (final Instruction i : uu.instructions) {
-          Iterable<Instruction> remap = i.remap(mapping);
-          for (Instruction r : remap) {
-            c.add(r);
-          }
-        }
-        Set<History> oldHistories = new HashSet<>();
-        for (History[] hs : u.innerStates.values()) {
-          for (History h : hs) {
-            if (h != null) {
-              oldHistories.add(h);
-            }
-          }
-        }
-        oldHistories.removeAll(uu.newHistories);
-        Collection<Instruction> mappingInstructions = tnfa2tdfa.mappingInstructions(mapping, oldHistories);
-        for (final Instruction i : mappingInstructions) {
-          c.add(i);
-        }
+        final List<Instruction> mappingInstructions = tnfa2tdfa.mappingInstructions(mapping);
+        c.addAll(mappingInstructions);
       }
-      assert newState != null;
 
       for (final Instruction instruction : c) {
         instruction.execute(pos);
       }
+
+      // TODO: delete?
+      // Invariant: opening and closing tags must have same length histories.
       for (final History[] s : newState.innerStates.values()) {
         for (int i = 0; i < s.length; i += 2) {
           if (s[i+1] != null) {
@@ -136,6 +114,7 @@ class TDFAInterpreter {
       }
 
       tdfaBuilder.addTransition(t, inputRange, newState, c);
+
       t = newState;
     }
 

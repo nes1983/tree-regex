@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableSet;
+import java.util.Set;
 
 
 class TNFAToTDFA {
@@ -195,16 +196,19 @@ class TNFAToTDFA {
   private Map<State, History[]> convertToDfaState(final State s) {
     final Map<State, History[]> initState = new HashMap<>();
     final History[] initialMemoryLocations = new History[tnfa.allTags().size()];
+    for (int i = 0; i < initialMemoryLocations.length; i++) {
+      initialMemoryLocations[i] = new History();
+    }
     initState.put(s, initialMemoryLocations);
     return Collections.unmodifiableMap(initState);
   }
 
   static class StateAndInstructionsAndNewHistories {
     final DFAState dfaState;
-    final Iterable<Instruction> instructions;
+    final Collection<Instruction> instructions;
     final Collection<History> newHistories;
 
-    StateAndInstructionsAndNewHistories(final DFAState dfaState, final Iterable<Instruction> instructions,
+    StateAndInstructionsAndNewHistories(final DFAState dfaState, final Collection<Instruction> instructions,
           final Collection<History> newHistories) {
       this.dfaState = dfaState;
       this.instructions = instructions;
@@ -283,9 +287,7 @@ class TNFAToTDFA {
           final History newHistoryOpening = new History();
           newHistories.add(newHistoryOpening);
           int openingPos = positionFor(tau.getGroup().getStartTag());
-          if (tdash[openingPos] != null) {
-            instructions.add(instructionMaker.reorder(newHistoryOpening, tdash[openingPos]));
-          }
+          instructions.add(instructionMaker.reorder(newHistoryOpening, tdash[openingPos]));
           tdash[openingPos] = newHistoryOpening;
 
           if (tau.isStartTag()) {
@@ -293,9 +295,7 @@ class TNFAToTDFA {
           } else {
             final History newHistoryClosing = new History();
             int closingPos = positionFor(tau.getGroup().getEndTag());
-            if (tdash[closingPos] != null) {
-              instructions.add(instructionMaker.reorder(newHistoryClosing, tdash[closingPos]));
-            }
+            instructions.add(instructionMaker.reorder(newHistoryClosing, tdash[closingPos]));
             tdash[closingPos] = newHistoryClosing;
             newHistories.add(newHistoryClosing);
             instructions.add(instructionMaker.storePos(newHistoryClosing));
@@ -387,13 +387,6 @@ class TNFAToTDFA {
 
     // Go over the tag list and iteratively try to find counterexample.
     for (int i = 0; i < from.length; i++) {
-      // if the tag hasn't been set in either state, it's ok.
-      if (from[i] == null && to[i] == null) {
-        continue; // Both leave i unspecified: that's fine.
-      } else if ((from[i] == null && to[i] != null) || (from[i] != null && to[i] == null)) {
-        return false; // Only from specifies the mapping, that won't do.
-      }
-
       if (!map.containsKey(from[i])) {
         // If we don't know any mapping for from[i], we set it to the only mapping that can work.
         map.put(from[i], to[i]);
@@ -411,17 +404,45 @@ class TNFAToTDFA {
     return e(start, Character.MAX_VALUE, true);
   }
 
-  Collection<Instruction> mappingInstructions(final Map<History, History> mapping,
-        Iterable<History> oldHistories) {
-    final List<Instruction> ret = new ArrayList<>();
+  /** @return Ordered instructions for mapping. The ordering is such that they don't interfere with each other. */
+  List<Instruction> mappingInstructions(final Map<History, History> map) {
+    // Reverse topological sort of map.
+    // For the purpose of this method, map is a restricted DAG.
+    // Nodes have at most one incoming and outgoing edges.
+    // The instructions that we return are the *edges* of the graph, histories are the nodes.
+    // Because of the instructions, we can identify every edge by its *source* node.
+    List<Instruction> ret = new ArrayList<>(map.size());
+    Deque<History> stack = new ArrayDeque<>();
+    //
+    Set<History> visitedSources = new HashSet<>();
+    // Go through the edges of the graph:
 
-    for (History to : oldHistories) {
-      History from = mapping.get(to);
-      if (!from.equals(to)) {
-        ret.add(instructionMaker.reorder(to, from));
+    for (History source : map.keySet()) {
+
+      // Push e on stack, unless e deleted
+      if (visitedSources.contains(source)) {
+        continue;
       }
-    }
+      stack.push(source);
+      // Set cur to e.
 
+      // while cur has undeleted following edges, mark cur as deleted, follow the edge, repeat.
+      for (History cur = source; cur != null && !visitedSources.contains(cur); cur = map.get(cur)) {
+        stack.push(cur);
+        visitedSources.add(cur);
+      }
+      // walk stack backward, add to ret.
+      stack.pop();  // top element is no source node.
+      while (!stack.isEmpty()) {
+        History cur = stack.pop();
+        History target = map.get(cur);
+        if (!cur.equals(target)) {
+          ret.add(instructionMaker.reorder(map.get(cur), cur));
+        }
+      }
+      // mark e as deleted
+      visitedSources.add(source);
+    }
     return ret;
   }
 
