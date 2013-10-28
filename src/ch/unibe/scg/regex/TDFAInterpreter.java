@@ -57,7 +57,7 @@ class TDFAInterpreter {
 
       {
         NextDFAState nextState = tdfaBuilder.availableTransition(t, a);
-        if (false && nextState != null) {
+        if (nextState != null) {
           // TODO check for fail state.
           for (final Instruction instruction : nextState.getInstructions()) {
             instruction.execute(pos);
