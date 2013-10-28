@@ -18,11 +18,10 @@ import java.util.Set;
 
 
 class TNFAToTDFA {
-  static final StateAndInstructionsAndNewHistories NO_STATE =
-      new StateAndInstructionsAndNewHistories(
+  static final StateAndInstructions NO_STATE =
+      new StateAndInstructions(
         DFAState.INSTRUCTIONLESS_NO_STATE,
-        Collections.<Instruction> emptyList(),
-        Collections.<History> emptyList());
+        Collections.<Instruction> emptyList());
 
   static class StateWithMemoryLocation implements Map.Entry<State, History[]> {
     final History[] memoryLocation;
@@ -140,16 +139,14 @@ class TNFAToTDFA {
     return Collections.unmodifiableMap(initState);
   }
 
-  static class StateAndInstructionsAndNewHistories {
+  static class StateAndInstructions {
     final DFAState dfaState;
     final Collection<Instruction> instructions;
-    final Collection<History> newHistories;
 
-    StateAndInstructionsAndNewHistories(final DFAState dfaState, final Collection<Instruction> instructions,
-          final Collection<History> newHistories) {
+    StateAndInstructions(final DFAState dfaState,
+        final Collection<Instruction> instructions) {
       this.dfaState = dfaState;
       this.instructions = instructions;
-      this.newHistories = newHistories;
     }
   }
 
@@ -160,7 +157,7 @@ class TNFAToTDFA {
    * @param a the character that was read. Is ignored if startState == true.
    * @return The next state after state, for input a.
    */
-  StateAndInstructionsAndNewHistories e(final Map<State, History[]> innerStates, final char a, boolean startState) {
+  StateAndInstructions e(final Map<State, History[]> innerStates, final char a, boolean startState) {
     final Map<State, History[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
 
     final Deque<Map.Entry<State, History[]>> stack = new ArrayDeque<>(); // normal priority
@@ -190,7 +187,6 @@ class TNFAToTDFA {
     }
 
     List<Instruction> instructions = new ArrayList<>();
-    final Collection<History> newHistories = new ArrayList<>();
     do {
       Entry<State, History[]> s;
       if (stack.isEmpty()) {
@@ -222,7 +218,6 @@ class TNFAToTDFA {
 
         if (tau.isStartTag() || tau.isEndTag()) {
           final History newHistoryOpening = new History();
-          newHistories.add(newHistoryOpening);
           int openingPos = positionFor(tau.getGroup().getStartTag());
           instructions.add(instructionMaker.reorder(newHistoryOpening, tdash[openingPos]));
           tdash[openingPos] = newHistoryOpening;
@@ -234,7 +229,6 @@ class TNFAToTDFA {
             int closingPos = positionFor(tau.getGroup().getEndTag());
             instructions.add(instructionMaker.reorder(newHistoryClosing, tdash[closingPos]));
             tdash[closingPos] = newHistoryClosing;
-            newHistories.add(newHistoryClosing);
             instructions.add(instructionMaker.storePos(newHistoryClosing));
             instructions.add(instructionMaker.openingCommit(newHistoryOpening));
             instructions.add(instructionMaker.closingCommit(newHistoryClosing));
@@ -254,7 +248,9 @@ class TNFAToTDFA {
         }
       }
     } while (!(stack.isEmpty() && lowStack.isEmpty()));
-    return new StateAndInstructionsAndNewHistories(new DFAState(R, DFAState.makeComparisonKey(R)), instructions, newHistories);
+    return new StateAndInstructions(
+      new DFAState(R, DFAState.makeComparisonKey(R)),
+      instructions);
   }
 
   DFAState findMappableState(NavigableSet<DFAState> states, DFAState u, Map<History, History> mapping) {
@@ -328,7 +324,7 @@ class TNFAToTDFA {
     return true;
   }
 
-  StateAndInstructionsAndNewHistories makeStartState() {
+  StateAndInstructions makeStartState() {
     Map<State, History[]> start = convertToDfaState(tnfa.getInitialState());
 
     return e(start, Character.MAX_VALUE, true);

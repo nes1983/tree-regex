@@ -9,7 +9,7 @@ import java.util.TreeSet;
 import java.util.regex.MatchResult;
 
 import ch.unibe.scg.regex.TDFATransitionTable.NextDFAState;
-import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructionsAndNewHistories;
+import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructions;
 
 /** Interprets the known TDFA states. Compiles missing states on the fly. */
 class TDFAInterpreter {
@@ -44,7 +44,7 @@ class TDFAInterpreter {
   public MatchResult interpret(CharSequence input) {
     final List<InputRange> inputRanges = tnfa2tdfa.allInputRanges();
 
-    StateAndInstructionsAndNewHistories startState = tnfa2tdfa.makeStartState();
+    StateAndInstructions startState = tnfa2tdfa.makeStartState();
     DFAState t = startState.dfaState;
     states.add(t);
 
@@ -73,7 +73,7 @@ class TDFAInterpreter {
       }
 
       // TODO this is ugly. Clearly, e should return StateAndPositions.
-      final StateAndInstructionsAndNewHistories uu = tnfa2tdfa.e(t.innerStates, a, false);
+      final StateAndInstructions uu = tnfa2tdfa.e(t.innerStates, a, false);
       final DFAState u = uu.dfaState;
 
       if (u.innerStates.isEmpty()) { // There is no matching NFA state.
