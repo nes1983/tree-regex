@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -23,68 +23,6 @@ class TNFAToTDFA {
         DFAState.INSTRUCTIONLESS_NO_STATE,
         Collections.<Instruction> emptyList(),
         Collections.<History> emptyList());
-
-  static enum DFAStateComparator implements Comparator<Map<State, History[]>> {
-    SINGLETON;
-
-    private int compare(final History[] o1, final History[] o2) {
-      assert o1 != null || o2 != null;
-
-      int len1 = -1;
-      if (o1 != null) {
-        len1 = o1.length;
-      }
-
-      int len2 = -1;
-      if (o2 != null) {
-        len2 = o2.length;
-      }
-
-      final int lenCmp = Integer.compare(len1, len2);
-      if (lenCmp != 0) {
-        return lenCmp;
-      }
-
-      assert o1 != null && o2 != null; // The previous return, plus the initial assert ensure this.
-
-      for (int i = 0; i < o1.length; i++) {
-        long id1 = -1L;
-        if (o1[i] != null) {
-          id1 = o1[i].id;
-        }
-        long id2 = -1L;
-        if (o2[i] != null) {
-          id2 = o2[i].id;
-        }
-        final int cmp = Long.compare(id1, id2);
-        if (cmp != 0) {
-          return cmp;
-        }
-      }
-
-      return 0;
-    }
-
-    @Override
-    public int compare(final Map<State, History[]> o1, final Map<State, History[]> o2) {
-      final int sizeCmp = Integer.compare(o1.size(), o2.size());
-      if (sizeCmp != 0) {
-        return sizeCmp;
-      }
-
-      Set<State> keys = new LinkedHashSet<>();
-      keys.addAll(o1.keySet());
-      keys.addAll(o2.keySet());
-
-      for (State k : keys) {
-        final int cmp = compare(o1.get(k), o2.get(k));
-        if (cmp != 0) {
-          return cmp;
-        }
-      }
-      return 0;
-    }
-  }
 
   static class StateWithMemoryLocation implements Map.Entry<State, History[]> {
     final History[] memoryLocation;
@@ -193,7 +131,7 @@ class TNFAToTDFA {
 
   /** Used to create the initial state of the DFA. */
   private Map<State, History[]> convertToDfaState(final State s) {
-    final Map<State, History[]> initState = new LinkedHashMap<>();
+    final Map<State, History[]> initState = new HashMap<>();
     final History[] initialMemoryLocations = new History[tnfa.allTags().size()];
     for (int i = 0; i < initialMemoryLocations.length; i++) {
       initialMemoryLocations[i] = new History();
@@ -316,31 +254,24 @@ class TNFAToTDFA {
         }
       }
     } while (!(stack.isEmpty() && lowStack.isEmpty()));
-    return new StateAndInstructionsAndNewHistories(new DFAState(R), instructions, newHistories);
+    return new StateAndInstructionsAndNewHistories(new DFAState(R, DFAState.makeComparisonKey(R)), instructions, newHistories);
   }
 
   DFAState findMappableState(NavigableSet<DFAState> states, DFAState u, Map<History, History> mapping) {
-    // DFA state that describes the lower bound of possibly mappable states:
-    //    1. The range of `states` that we're looking for all contains exactly u.innerStates as states.
-    //    2. As per DFAStateComparator, min is smaller than any other History array (because they're all bigger).
-    //    3. As per DFAStateComparator, max is bigger than any other History array (because they're all smaller).
-    final Map<State, History[]> fromElement = new LinkedHashMap<>(u.innerStates);
-    {
-      final History[] min = new History[0];
-      for (final Entry<State, History[]> e : fromElement.entrySet()) {
-        e.setValue(min);
+    // `from` is a key that is smaller than all possible full keys. Likewise, `to` is bigger than all.
+    DFAState from = new DFAState(null, DFAState.makeStateComparisonKey(u.innerStates.keySet()));
+    byte[] toKey = DFAState.makeStateComparisonKey(u.innerStates.keySet());
+    // Assume that toKey is not full of Byte.MAX_VALUE. That would be really unlucky.
+    // Also a bit unlikely, given that it's an MD5 hash, and therefore pretty random.
+    for (int i = 0; true; i++) {
+      if (toKey[i] != Byte.MAX_VALUE) {
+        toKey[i]++;
+        break;
       }
     }
-    final Map<State, History[]> toElement = new LinkedHashMap<>(u.innerStates);
-    {
-      final History[] max = new History[tnfa.allTags().size() + 1];
-      for (final Entry<State, History[]> e : toElement.entrySet()) {
-        e.setValue(max);
-      }
-    }
-    final NavigableSet<DFAState> range =
-        states.subSet(new DFAState(fromElement), true, new DFAState(toElement), true);
+    DFAState to = new DFAState(null, toKey);
 
+    final NavigableSet<DFAState> range = states.subSet(from, true, to, false);
     for (final DFAState candidate : range) {
       if (isMappable(u, candidate, mapping)) {
         return candidate;
@@ -413,7 +344,7 @@ class TNFAToTDFA {
     List<Instruction> ret = new ArrayList<>(map.size());
     Deque<History> stack = new ArrayDeque<>();
     //
-    Set<History> visitedSources = new LinkedHashSet<>();
+    Set<History> visitedSources = new HashSet<>();
     // Go through the edges of the graph:
 
     for (History source : map.keySet()) {
