@@ -1,9 +1,9 @@
 package ch.unibe.scg.regex;
 
+import static java.util.Collections.singleton;
 import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -59,15 +59,15 @@ class RegexToNFA {
     }
 
     public MiniAutomaton(final Collection<State> initial, final State finishing) {
-      this(initial, Arrays.asList(finishing));
+      this(initial, singleton(finishing));
     }
 
     public MiniAutomaton(final State initial, final Collection<State> finishing) {
-      this(Arrays.asList(initial), finishing);
+      this(singleton(initial), finishing);
     }
 
     public MiniAutomaton(final State initial, final State finishing) {
-      this(Arrays.asList(initial), Arrays.asList(finishing));
+      this(singleton(initial), singleton(finishing));
     }
 
     public Collection<State> getFinishing() {
@@ -187,7 +187,7 @@ class RegexToNFA {
     builder.addUntaggedTransition(InputRange.ANY, init, init, Priority.NORMAL);
 
     final State startTagger = builder.makeState();
-    builder.addStartTagTransition(Arrays.asList(init), startTagger, entireMatch, Priority.NORMAL);
+    builder.addStartTagTransition(singleton(init), startTagger, entireMatch, Priority.NORMAL);
     return new MiniAutomaton(init, startTagger);
   }
 
@@ -205,7 +205,7 @@ class RegexToNFA {
       CaptureGroup captureGroup) {
     final MiniAutomaton inner = make(last, builder, plus.getElementary(), captureGroup);
 
-    Collection<State> out = Arrays.asList(builder.makeState());
+    Collection<State> out = singleton(builder.makeState());
     builder.makeUntaggedEpsilonTransitionFromTo(inner.getFinishing(), out, Priority.LOW);
 
     final MiniAutomaton ret = new MiniAutomaton(last.getFinishing(), out);
@@ -220,7 +220,7 @@ class RegexToNFA {
     MiniAutomaton left = make(last, builder, union.left, captureGroup);
     MiniAutomaton right = make(last, builder, union.right, captureGroup);
 
-    List<State> out = Arrays.asList(builder.makeState());
+    Collection<State> out = singleton(builder.makeState());
     builder.makeUntaggedEpsilonTransitionFromTo(left.getFinishing(), out, Priority.NORMAL);
     builder.makeUntaggedEpsilonTransitionFromTo(right.getFinishing(), out, Priority.LOW);
 
