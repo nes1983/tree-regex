@@ -8,11 +8,11 @@ import java.util.TreeSet;
 
 /**
  * Gets a sorted set of possibly intersecting input ranges, and makes them non-intersecting.
- * 
+ *
  * @author nes
  */
 class InputRangeCleanup {
-  public SortedSet<InputRange> cleanUp(final SortedSet<InputRange> ranges) {
+  SortedSet<InputRange> cleanUp(final SortedSet<InputRange> ranges) {
     if (ranges.isEmpty()) {
       return ranges;
     }
@@ -34,7 +34,7 @@ class InputRangeCleanup {
     return Collections.unmodifiableSortedSet(ret);
   }
 
-  public InputRange shrink(final InputRange toBeShrunk, final InputRange fixed) {
+  InputRange shrink(final InputRange toBeShrunk, final InputRange fixed) {
     if (toBeShrunk.getTo() < fixed.getFrom()) {
       return toBeShrunk;
     }
