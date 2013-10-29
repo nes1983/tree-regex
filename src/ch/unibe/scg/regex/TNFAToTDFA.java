@@ -218,7 +218,7 @@ class TNFAToTDFA {
 
         if (tau.isStartTag() || tau.isEndTag()) {
           final History newHistoryOpening = new History();
-          int openingPos = positionFor(tau.getGroup().getStartTag());
+          int openingPos = positionFor(tau.getGroup().startTag);
           instructions.add(instructionMaker.reorder(newHistoryOpening, tdash[openingPos]));
           tdash[openingPos] = newHistoryOpening;
 
@@ -226,7 +226,7 @@ class TNFAToTDFA {
             instructions.add(instructionMaker.storePosPlusOne(newHistoryOpening));
           } else {
             final History newHistoryClosing = new History();
-            int closingPos = positionFor(tau.getGroup().getEndTag());
+            int closingPos = positionFor(tau.getGroup().endTag);
             instructions.add(instructionMaker.reorder(newHistoryClosing, tdash[closingPos]));
             tdash[closingPos] = newHistoryClosing;
             instructions.add(instructionMaker.storePos(newHistoryClosing));
@@ -372,7 +372,7 @@ class TNFAToTDFA {
   private int positionFor(final Tag tau) {
     assert tau.isEndTag() || tau.isStartTag();
 
-    int r = 2 * tau.getGroup().getNumber();
+    int r = 2 * tau.getGroup().number;
     if (tau.isEndTag()) {
       r++;
     }

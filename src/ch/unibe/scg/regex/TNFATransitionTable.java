@@ -30,14 +30,14 @@ class TNFATransitionTable {
     public void addEndTagTransition(final Collection<State> froms, final State to,
         final CaptureGroup captureGroup, final Priority priority) {
       for (final State from : froms) {
-        put(from, InputRange.EPSILON, to, priority, captureGroup.getEndTag());
+        put(from, InputRange.EPSILON, to, priority, captureGroup.endTag);
       }
     }
 
     public void addStartTagTransition(final Collection<State> froms, final State to,
         final CaptureGroup cg, final Priority priority) {
       for (final State from : froms) {
-        put(from, InputRange.EPSILON, to, priority, cg.getStartTag());
+        put(from, InputRange.EPSILON, to, priority, cg.startTag);
       }
     }
 

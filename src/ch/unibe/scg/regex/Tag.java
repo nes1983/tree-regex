@@ -1,7 +1,6 @@
 package ch.unibe.scg.regex;
 
 import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker;
-import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker.RealCaptureGroup;
 
 
 /**
@@ -14,7 +13,7 @@ interface Tag {
   static class NoTag implements Tag {
     private static final CaptureGroup none;
     static {
-      final RealCaptureGroup myNone = new RealCaptureGroup(-1, null);
+      final CaptureGroup myNone = new CaptureGroup(-1, null);
       myNone.parent = myNone;
       none = myNone;
     }
@@ -61,7 +60,7 @@ interface Tag {
 
       @Override
       public String toString() {
-        return "➁" + getGroup().getNumber();
+        return "➁" + getGroup().number;
       }
     }
 
@@ -83,15 +82,15 @@ interface Tag {
 
       @Override
       public String toString() {
-        return "➀" + getGroup().getNumber();
+        return "➀" + getGroup().number;
       }
     }
 
-    public static Tag makeEndTag(final RealCaptureGroup cg) {
+    public static Tag makeEndTag(final CaptureGroup cg) {
       return new EndTag(cg);
     }
 
-    public static Tag makeStartTag(final RealCaptureGroup cg) {
+    public static Tag makeStartTag(final CaptureGroup cg) {
       return new StartTag(cg);
     }
 

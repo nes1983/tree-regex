@@ -98,9 +98,9 @@ interface TNFA {
       }
 
       public void registerCaptureGroup(CaptureGroup cg) {
-        assert tags.size() / 2 == cg.getNumber();
-        tags.add(cg.getStartTag());
-        tags.add(cg.getEndTag());
+        assert tags.size() / 2 == cg.number;
+        tags.add(cg.startTag);
+        tags.add(cg.endTag);
       }
     }
 
