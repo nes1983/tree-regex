@@ -75,70 +75,22 @@ Efficient regexp implementation for finding the longest matching groups
 \end_layout
 
 \begin_layout Abstract
-The 
-\shape smallcaps
-posix
-\shape default
- standard seems inconsistent in that it prescribes on one hand to prefer
- the longest and left-most overall match but the rightmost possible subgroup
- within that match.
- While this seems reasonable if one is familiar with typical implementations,
- it can lead to unintuitive matches.
- For regexp
-\family typewriter
- ((a*)b)+
-\family default
- and string 
-\family typewriter
-aaabb
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-
-\family typewriter
-"aaabb" =~ "((a*)b)+" :: [[String]]
-\end_layout
-
-\end_inset
-
-,
-\family default
- one might expect to the subgroup to match 
-\family typewriter
-aaa
-\family default
-, i.e.
- the longest match, but by 
-\shape smallcaps
-posix
-\shape default
- standard 1003.1, the empty string is the result instead, i.e.
- the right-most matching group.
+Regular expressions naturally and intuitively define ASTs that describe
+ the text that they're parsing.
+ We describe a technique for building up the complete parse tree resulting
+ from matching a text against a regular expression.
 \end_layout
 
 \begin_layout Abstract
-The more intuitive match does not lead to any asymptotic slowdown, as we
- will show.
- The TDFA by Laurikari
-\begin_inset CommandInset citation
-LatexCommand cite
-key "laurikari2000nfas"
-
-\end_inset
-
- can be modified using our proposed 
-\shape smallcaps
-hierarchical commits
-\shape default
- to lead to intuitive matches without slower asymptotic performance.
-\end_layout
-
-\begin_layout Abstract
-Additionally, we present a prototypical implementation with benchmarks,
- which outperforms the Java regex implementation both asymptotically and
- in practice.
- In practice, we perceive an average speedup of XXX.
+In standard TDFA matching, all paths through the NFA are walked simultaneously,
+ as if in different threads, where inside each thread, it is fully known
+ when which capture group was entered or left.
+ We extend this model to keep track of not just the last opening and closing
+ of capture groups, but all of them.
+ We do this by storing, in every thread, using the fly-weight pattern, a
+ history of the all groups.
+ Thus, we log enough information during parsing to build up the complete
+ AST at the end of parsing.
 \end_layout
 
 \begin_layout Section
