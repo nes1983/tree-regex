@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
-import java.util.regex.MatchResult;
 
 import ch.unibe.scg.regex.TDFATransitionTable.NextDFAState;
 import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructions;
@@ -41,7 +40,7 @@ class TDFAInterpreter {
     return null; // Found nothing
   }
 
-  public MatchResult interpret(CharSequence input) {
+  public MatchResultTree interpret(CharSequence input) {
     final List<InputRange> inputRanges = tnfa2tdfa.allInputRanges();
 
     StateAndInstructions startState = tnfa2tdfa.makeStartState();
@@ -123,6 +122,7 @@ class TDFAInterpreter {
       return RealMatchResult.NoMatchResult.SINGLETON;
     }
 
-    return new RealMatchResult(fin, input);
+    int[] parentOf = tnfa2tdfa.makeParentOf();
+    return new RealMatchResult(fin, input, parentOf);
   }
 }

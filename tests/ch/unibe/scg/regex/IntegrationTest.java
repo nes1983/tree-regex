@@ -4,11 +4,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.regex.MatchResult;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import ch.unibe.scg.regex.MatchResultTree.TreeNode;
 import ch.unibe.scg.regex.ParserProvider.Node.Regex;
 
 @SuppressWarnings("javadoc")
@@ -46,10 +49,6 @@ public final class IntegrationTest {
   public void shouldNotMatch() {
     final MatchResult res = tdfaInterpreter.interpret("aabbccaaaa");
     assertThat(res.toString(), is("NO_MATCH"));
-    assertThat(tdfaInterpreter.tdfaBuilder.build().toString(), is("q0-a-a -> q1 [11->12, 7->13, 13<- pos, c↑(12), c↓(13)]\n"
-        + "q1-a-a -> q1 [11->14, 7->15, 15<- pos, c↑(14), c↓(15), 14->12, 15->13]\n"
-        + "q1-b-b -> q2 [10->16, 5->17, 17<- pos, c↑(16), c↓(17), 16->18, 18<- pos+1, 12->19, 19<- pos+1]\n"
-));
   }
 
   @Test
@@ -59,17 +58,21 @@ public final class IntegrationTest {
   }
 
   @Test
-  public void testMatch2() {
-    final MatchResult res = tdfaInterpreter.interpret("aaabcaaabcaabc");
-    assertThat(res.toString(), is("0-13"));
-    assertThat(tdfaInterpreter.tdfaBuilder.build().toString(),
-      is("q0-a-a -> q1 [11->12, 7->13, 13<- pos, c↑(12), c↓(13)]\n"
-          + "q1-a-a -> q1 [11->14, 7->15, 15<- pos, c↑(14), c↓(15), 14->12, 15->13]\n"
-          + "q1-b-b -> q2 [10->16, 5->17, 17<- pos, c↑(16), c↓(17), 16->18, 18<- pos+1, 12->19, 19<- pos+1]\n"
-          + "q2-c-c -> q3 [9->20, 3->21, 21<- pos, c↑(20), c↓(21), 20->22, 22<- pos+1, 16->23, 23<- pos+1, 12->24, 24<- pos+1, 8->25, 1->26, 26<- pos, c↑(25), c↓(26)]\n"
-          + "q3-a-a -> q1 [24->27, 13->28, 28<- pos, c↑(27), c↓(28), 22->9, 21->3, 23->10, 17->5, 24->11, 13->7, 27->12]\n"
+  public void testMemoryAfterExecution() {
+    RealMatchResult res = (RealMatchResult) tdfaInterpreter.interpret("abcaabaaabc");
+    assertThat(Arrays.toString(res.captureGroupPositions),
+      is("[23(0 0 ), 24(10 10 ), 18(3 3 0 ), 19(10 10 2 ), "
+          + "14(6 6 3 0 ), 15(9 9 5 1 ), 12(6 6 3 0 ), 13(8 8 4 0 )]"));
+    assertThat(res.getRoot().getChildren().toString(), is("[abc, aabaaabc]"));
+    Iterator<TreeNode> iter = res.getRoot().getChildren().iterator();
+    List<TreeNode> children = (List<TreeNode>) iter.next().getChildren();
+    assertThat(children.toString(), is("[ab]"));
+    assertThat(children.get(0).getChildren().toString(), is("[a]"));
 
-      ));
+    children = (List<TreeNode>) iter.next().getChildren();
+    assertThat(children.toString(), is("[aab, aaab]"));
+    assertThat(children.get(0).getChildren().toString(), is("[aa]"));
+    assertThat(children.get(1).getChildren().toString(), is("[aaa]"));
   }
 
 
@@ -94,16 +97,27 @@ public final class IntegrationTest {
   }
 
   @Test
-  public void testMemoryAfterExecution() {
-    RealMatchResult res = (RealMatchResult) tdfaInterpreter.interpret("aaabcaaabcaabc");
-    assertThat(Arrays.toString(res.captureGroupPositions), is("[25(0 0 ), "
-        + "26(13 13 ), "
-        + "20(10 10 5 0 ), "
-        + "21(13 13 9 4 ), "
-        + "16(10 10 5 0 ), "
-        + "17(12 12 8 3 ), "
-        + "12(10 10 5 0 ), "
-        + "13(11 11 7 2 )]"));
+  public void testMemoryAfterExecutionSimple() {
+    State.resetCount();
+    History.resetCount();
+    final Regex parsed = new ParserProvider().regexp().parse("((a+)b)+");
+    final TNFA tnfa = new RegexToNFA().convert(parsed);
+    TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
+    RealMatchResult res = (RealMatchResult) interpreter.interpret("abab");
+    assertThat(Arrays.toString(res.captureGroupPositions),
+      is("[15(0 0 ), 16(3 3 ), 11(2 2 0 ), 12(3 3 1 ), 9(2 2 0 ), 10(2 2 0 )]"));
+  }
+
+  @Test
+  public void integrationTestWithUnion() {
+    State.resetCount();
+    History.resetCount();
+    final Regex parsed = new ParserProvider().regexp().parse("((a+)(b|c|d))+");
+    final TNFA tnfa = new RegexToNFA().convert(parsed);
+    TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
+    RealMatchResult res = (RealMatchResult) interpreter.interpret("abac");
+    assertThat(Arrays.toString(res.captureGroupPositions),
+      is("[31(0 0 ), 32(3 3 ), 27(2 2 0 ), 28(3 3 1 ), 11(2 2 0 ), 12(2 2 0 ), 25(3 3 1 ), 26(3 3 1 )]"));
   }
 
   @Test

@@ -378,4 +378,18 @@ class TNFAToTDFA {
     }
     return r;
   }
+
+  /**
+   * @return an array {@code parentOf} such that for capture group `t`,
+   * its parent is {@code parentOf[t]}.
+   */
+  int[] makeParentOf() {
+    Collection<Tag> allTags = tnfa.allTags();
+    int[] ret = new int[allTags.size() / 2];
+    for (Tag t : allTags) {
+      ret[t.getGroup().number] = t.getGroup().parent.number;
+    }
+
+    return ret;
+  }
 }

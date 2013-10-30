@@ -52,7 +52,7 @@ public final class MatchingTest {
     final MatchResult result = interpreter.interpret("aba");
 
     assertThat(interpreter.tdfaBuilder.build().toString(),
-        is("q0-a-a -> q1 []\nq1-b-b -> q2 [c↑(0), 1<- pos, c↓(1)]\n"));
+        is("q0-a-a -> q1 []\nq1-b-b -> q2 [2->3, 1->4, 4<- pos, c↑(3), c↓(4)]\n"));
     assertThat(result.toString(), is("NO_MATCH"));
   }
 }
