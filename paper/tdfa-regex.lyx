@@ -71,7 +71,7 @@ figs-within-sections
 \begin_body
 
 \begin_layout Title
-Efficient regexp implementation for finding the longest matching groups
+Efficient regexp implementation for finding parse trees
 \end_layout
 
 \begin_layout Abstract
@@ -98,80 +98,85 @@ Introduction
 \end_layout
 
 \begin_layout Standard
-The 
-\shape smallcaps
-posix
-\shape default
- standard seems inconsistent in that it prescribes on the one hand to prefer
- the longest and left-most overall match but the rightmost possible subgroup
- within that match.
- While this seems reasonable from an implementational point of view, it
- can lead to unintuitive matches from a user's point of view.
- 
-\end_layout
+\begin_inset FormulaMacro
+\renewcommand{\regex}{\text{\text{regular expression}}}
+\end_inset
 
-\begin_layout Standard
-In the following example, 
+A regular expression can easily describe that a text matches a comma separated
+ values file, but it is unable to extract all the values.
+ Instead it will only give a single instance of values: 
+\family typewriter
+(([a-zA-Z ]+),(
+\backslash
+d+);)+
+\family default
+ might describe a dataset of ASCII names with their numeric label.
+ Matching the regular expression on 
+\family typewriter
+
 \begin_inset Quotes eld
 \end_inset
 
-?:
+Tom Lehrer,1;Alan Turing,2;
 \begin_inset Quotes erd
 \end_inset
 
- is used to denote a non-capturing group.
- In POSIX syntax, the bracket characters serve double duty: they both determine
- the binding of operators, and they introduce a new capture group.
- A capture group is a sub-part of the regex.
- After matching the regex on some input, part of the input may match.
- However, just a part of the match is captured by the capture group.
- Modern regex libraries are able to return such submatches.
- A non-capturing group means that we use the brackets only for binding,
- not for defining a new capture group.
+
+\family default
+ will confirm that the list is well formed, but the match will only contain
  
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+Tom Lehrer
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ for the second capture group and 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+1
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ for the third.
+ We would hope instead that the regular expression would allow us to extract
+ both entries.
 \end_layout
 
 \begin_layout Standard
-Consider the example of regexp
-\family typewriter
- (?:(a*)b)+
-\family default
- and input string 
-\family typewriter
-aaabb.
- Here,
-\family default
- one might expect the capture group to match 
-\family typewriter
-aaa
-\family default
-, i.e.
- the longest match, but by 
-\shape smallcaps
-posix
-\shape default
- standard 1003.1, the empty string is the result instead, i.e.
- the right-most matching set of characters.
-\end_layout
+The amortized run time of our approach is 
+\begin_inset Formula $O(m\: n)$
+\end_inset
 
-\begin_layout Standard
-Performance-wise, trying to get the longest match in a back-tracking implementat
-ion means that all paths through the NFA must be tried exhaustively.
- Fortunately, as we will demonstrate, the more intuitive matching characteristic
-s can be implemented as a slight modification to TDFAs at no asymptotic
- cost.
- 
-\end_layout
+, where 
+\begin_inset Formula $m$
+\end_inset
 
-\begin_layout Standard
-The algorithm in 
+ is the length of the regular expression and 
+\begin_inset Formula $n$
+\end_inset
+
+ is the length of the parsed string.
+ This is asymptotically as fast as the best matchers that don't extract
+ parse trees.
+ Our approach builds on the work of 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "laurikari2000nfas"
 
 \end_inset
 
- uses 
+ and uses 
 \begin_inset Quotes eld
 \end_inset
 
@@ -203,52 +208,9 @@ A tagged state
 \end_inset
 
 .
- To ensure that there are only finitely different tagged states--and thus
- to ensure that the conversion to a DFA terminates--, 
-\begin_inset Formula $s_{0}m_{0}^{0}$
-\end_inset
-
- and 
-\begin_inset Formula $s_{0}m_{0}^{1}$
-\end_inset
-
- (but not 
-\begin_inset Formula $s_{0}$
-\end_inset
-
-) are understood to be in conflict.
- Conflicts are resolved with priorities being attached to the transitions,
- e.g.
- the greedy consumption in 
-\family typewriter
-a*
-\family default
- will have priority over other transitions and thus a tag that is produced
- right after such a transition is prefered to another, that resulted from
- a forward 
-\begin_inset Formula $\varepsilon$
-\end_inset
-
-\SpecialChar \nobreakdash-
-transition.
-\end_layout
-
-\begin_layout Standard
-In section 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sec:The-TNFA-algorithm"
-
-\end_inset
-
-, the TNFA algorithm is presented so that the modifications in section 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sec:TNFA-with-hierarchical"
-
-\end_inset
-
- can be understood more easily.
+ Our modifications allow us to to never reach a situation where the tagged
+ state later in the algorithm needs to be prefered to the state that is
+ found earlier.
 \end_layout
 
 \begin_layout Subsection
@@ -337,60 +299,9 @@ Parsing example!
 \end_layout
 
 \begin_layout Standard
-The posix default is for matches to be as long as possible.
- This makes sense in the context of lightweight parsing: in case there are
- many ways to match subgroups, the shortest ones are often degenerate.
- As an example, parsing a list of names with several telephone numbers for
- each name might contain a 
-\begin_inset Quotes eld
-\end_inset
-
--
-\begin_inset Quotes erd
-\end_inset
-
- to indicate a missing phone number.
- Now, if we parse the telephone numbers of Tom Lehrer using regular expressions,
- "Tom Lehrer Tel 007 -" =~ "^([a-zA-Z ]+) ((Tel [0-9
-\backslash
-
-\backslash
--]+|
-\backslash
-
-\backslash
--) ?)*", we find that his telephone number is 
-\begin_inset Quotes eld
-\end_inset
-
--
-\begin_inset Quotes erd
-\end_inset
-
-, whereas 
-\begin_inset Quotes eld
-\end_inset
-
-007
-\begin_inset Quotes erd
-\end_inset
-
- would clearly be the better match.
- 
-\end_layout
-
-\begin_layout Standard
-Hierarchical commits help the developer avoid degenerate matches by prefering
- longer matches, and lead to more intuitive subgroup matches.
- At the top level, posix prescribes to match the leftmost longest match.
- At the capture group level, posix prescribes the last match, regardless
- of size.
- Hierarchical commits, instead, choose the longest.
- As an extension, they can even be used to extract 
-\emph on
-all
-\emph default
- matches.
+Parsers that can return abstract syntax trees are more useful than ones
+ that only give a flat list of matches.
+ Of course only regular grammars can be matched by our approach.
 \end_layout
 
 \begin_layout Section
@@ -495,7 +406,7 @@ key "Pike1987"
 , which is Thompson's NFA with submatch tracking.
  This seems unfair in that Laurikari's allows for far more aggressive reusing
  of old states than what Thompson allows.
- This should lead to Laurikari's TDFA havingfewer states, and therefore
+ This should lead to Laurikari's TDFA having fewer states, and therefore
  better performance, than even Google's RE2, which uses Pike's algorithm.
  This is not confirmed by the benchmarks by Sulzmann and Lu 
 \begin_inset CommandInset citation
@@ -598,17 +509,17 @@ name "sec:The-TNFA-algorithm"
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\newcommand{\naturals}{\mathbb{N}}
+\renewcommand{\naturals}{\mathbb{N}}
 \end_inset
 
 
 \begin_inset FormulaMacro
-\newcommand{\integers}{\mathbb{Z}}
+\renewcommand{\integers}{\mathbb{Z}}
 \end_inset
 
 
 \begin_inset FormulaMacro
-\newcommand{\pos}{\mathbf{\mathbf{p}}}
+\renewcommand{\pos}{\mathbf{\mathbf{p}}}
 \end_inset
 
 Our algorithm is a modification of Laurikari's algorithm 
