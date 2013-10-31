@@ -99,7 +99,7 @@ Introduction
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\regex}{\text{\text{regular expression}}}
+\newcommand{\regex}{\text{\text{regular expression}}}
 \end_inset
 
 A regular expression can easily describe that a text matches a comma separated
@@ -509,17 +509,17 @@ name "sec:The-TNFA-algorithm"
 
 \begin_layout Standard
 \begin_inset FormulaMacro
-\renewcommand{\naturals}{\mathbb{N}}
+\newcommand{\naturals}{\mathbb{N}}
 \end_inset
 
 
 \begin_inset FormulaMacro
-\renewcommand{\integers}{\mathbb{Z}}
+\newcommand{\integers}{\mathbb{Z}}
 \end_inset
 
 
 \begin_inset FormulaMacro
-\renewcommand{\pos}{\mathbf{\mathbf{p}}}
+\newcommand{\pos}{\mathbf{\mathbf{p}}}
 \end_inset
 
 Our algorithm is a modification of Laurikari's algorithm 
@@ -538,6 +538,8 @@ key "Sipser2005"
 \end_inset
 
 .
+ However instead of compiling the TNFA to a TDFA before matching, we create
+ the TDFA lazily as we match the string.
  For clarity, and because the original description contains a few errors,
  we outline his algorithm here, omitting his proof for correctness and terminati
 on.
@@ -554,32 +556,63 @@ status collapsed
 
 \end_inset
 
- Our representation closely follows the one by Sipser 
+ Our description adapts the thread metaphor of 
 \begin_inset CommandInset citation
 LatexCommand cite
-after "p. 55"
-key "Sipser2005"
+key "Cox2007"
 
 \end_inset
 
-.
+, where each (T)NFA state describes the state of a single thread in a virtual
+ machine and the (T)DFA state is a collection of such threads.
 \end_layout
 
 \begin_layout Standard
-Our algorithm creates instructions that are executed at runtime, i.e.
- during the interpretation of the TDFA.
- There are two possible instructions for 
-\begin_inset Formula $n,m\in\naturals$
+Our algorithm runs two phases for each character read.
+ First it creates a new TDFA state from the current state and tries to map
+ this state to a known one (as in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "laurikari2000nfas"
+
 \end_inset
 
-:
+), then it executes the instructions found.
+\end_layout
+
+\begin_layout Standard
+The memory model differs from other regular expression engines in that locations
+ are not stored in a fixed number of cells.
+ Instead each cell is the head of a signly linked list that describes the
+ history of the value.
+ This allows us to extract all capture groups matching a subpattern after
+ the matching phase ended.
+ Whenever threads are forked, the histories of the matches sofar are shared,
+ but we ensure that further modifications will be thread-bound.
+\end_layout
+
+\begin_layout Standard
+We need the following instructions:
 \end_layout
 
 \begin_layout Description
 \begin_inset Formula $n\leftarrow\mathbf{p}$
 \end_inset
 
- Stores the current position in the input string into memory location 
+ Stores the current position in the input string into the head of memory
+ location 
+\begin_inset Formula $n$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Description
+\begin_inset Formula $n\leftarrow\pos+1$
+\end_inset
+
+ Stores the position after the current one in the input string into the
+ head of memory location 
 \begin_inset Formula $n$
 \end_inset
 
@@ -590,15 +623,32 @@ Our algorithm creates instructions that are executed at runtime, i.e.
 \begin_inset Formula $n\leftarrow m$
 \end_inset
 
- Stores the contents of memory location 
+ Replaces memory location 
 \begin_inset Formula $m$
 \end_inset
 
- into memory location 
+ with a copy of head and history of memory location 
 \begin_inset Formula $n$
 \end_inset
 
 .
+\end_layout
+
+\begin_layout Description
+\begin_inset Formula $c\uparrow(n)$
+\end_inset
+
+, 
+\begin_inset Formula $c\downarrow(n)$
+\end_inset
+
+ Puts the current state of memory location 
+\begin_inset Formula $n$
+\end_inset
+
+ into the tail of the same memory location.
+ The two instructions don't differ in their effect, but in the order in
+ which they are executed.
 \end_layout
 
 \begin_layout Standard
