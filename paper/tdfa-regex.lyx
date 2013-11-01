@@ -658,21 +658,127 @@ wide false
 sideways false
 status open
 
-\begin_layout Plain Layout
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-	Name: 
-\end_layout
-
+\begin_layout LyX-Code
+Name: 
+\begin_inset Formula $interpret(input)$
 \end_inset
 
 
 \end_layout
 
+\begin_layout LyX-Code
+Input:  
+\begin_inset Formula $input$
+\end_inset
+
+ is a sequence of characters
+\end_layout
+
+\begin_layout LyX-Code
+Output: a tree of matching capture groups for the regex
+\end_layout
+
+\begin_layout LyX-Code
+1.
+ Compute all states after start
+\end_layout
+
+\begin_layout LyX-Code
+\begin_inset Formula $start\leftarrow epsilonClosure(startState,\varepsilon)$
+\end_inset
+
+ and execute its instructions
+\end_layout
+
+\begin_layout LyX-Code
+Initialize TDFA with 
+\begin_inset Formula $start$
+\end_inset
+
+ as start state.
+\end_layout
+
+\begin_layout LyX-Code
+\begin_inset Formula $Q\leftarrow start$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+2.
+ Consume string
+\end_layout
+
+\begin_layout LyX-Code
+for all indices 
+\begin_inset Formula $pos$
+\end_inset
+
+ and values 
+\begin_inset Formula $a$
+\end_inset
+
+ of 
+\begin_inset Formula $input$
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+Try to find a mappable state 
+\begin_inset Formula $Q'$
+\end_inset
+
+ with 
+\begin_inset Formula $instructions$
+\end_inset
+
+ on the transition in TDFA
+\end_layout
+
+\begin_layout LyX-Code
+if 
+\begin_inset Formula $Q'$
+\end_inset
+
+ was found
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+execute 
+\begin_inset Formula $instructions$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+jump back to start of for loop.
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+else
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+\begin_inset Formula $Q',instructions\leftarrow epsilonClosure(Q,a)$
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+
+\end_layout
+
+\end_deeper
 \begin_layout Plain Layout
 \begin_inset Caption
 
@@ -841,7 +947,11 @@ Name:
 \end_layout
 
 \begin_layout LyX-Code
-Input:  DFA state Q, character to consume 
+Input:  DFA state 
+\begin_inset Formula $Q$
+\end_inset
+
+, character to consume 
 \begin_inset Formula $chr$
 \end_inset
 
@@ -1014,7 +1124,7 @@ for all transitions
 \begin_layout LyX-Code
 2.1.
  continue if 
-\begin_inset Formula $q'$
+\begin_inset Formula $q''$
 \end_inset
 
  has been seen:
@@ -1029,27 +1139,22 @@ if
 \end_layout
 
 \begin_layout LyX-Code
+2.2 Create new NFA state and instructions.
+\end_layout
+
+\begin_layout LyX-Code
 if 
 \begin_inset Formula $t$
 \end_inset
 
- is tagged with 
+ has the opening tag 
 \begin_inset Formula $\tau_{i}\uparrow$
-\end_inset
-
- or 
-\begin_inset Formula $\tau_{i}\downarrow$
 \end_inset
 
 
 \end_layout
 
 \begin_deeper
-\begin_layout LyX-Code
-2.2.
- Compute new memory locations
-\end_layout
-
 \begin_layout LyX-Code
 Copy 
 \begin_inset Formula $l$
@@ -1079,41 +1184,15 @@ Create new history cell
 \end_layout
 
 \begin_layout LyX-Code
-2.3.
- new instructions:
-\end_layout
-
-\begin_layout LyX-Code
 put 
-\begin_inset Formula $h\leftarrow l[position_{open}(i)]$
+\begin_inset Formula $h\leftarrow\pos+1$
 \end_inset
 
  into 
 \begin_inset Formula $instructions$
 \end_inset
 
-
-\end_layout
-
-\begin_layout LyX-Code
-if 
-\begin_inset Formula $t$
-\end_inset
-
- has the opening tag 
-\begin_inset Formula $\tau_{i}\uparrow$
-\end_inset
-
-
-\end_layout
-
-\begin_deeper
-\begin_layout LyX-Code
-put 
-\begin_inset Formula $h\leftarrow\pos+1$
-\end_inset
-
- into instructions to store new start of the group.
+ to store new start of the group.
 \end_layout
 
 \end_deeper
@@ -1130,6 +1209,34 @@ else if
 \end_layout
 
 \begin_deeper
+\begin_layout LyX-Code
+Copy 
+\begin_inset Formula $l$
+\end_inset
+
+ as 
+\begin_inset Formula $newHistories$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+Create new history cell 
+\begin_inset Formula $h$
+\end_inset
+
+ and put it into 
+\begin_inset Formula $position_{open}(i)$
+\end_inset
+
+ of 
+\begin_inset Formula $newHistories$
+\end_inset
+
+
+\end_layout
+
 \begin_layout LyX-Code
 Create new history cell 
 \begin_inset Formula $h'$
@@ -1163,7 +1270,11 @@ put
 \begin_inset Formula $h'\leftarrow\pos$
 \end_inset
 
- into instructions
+ into 
+\begin_inset Formula $instructions$
+\end_inset
+
+
 \end_layout
 
 \begin_layout LyX-Code
@@ -1175,10 +1286,13 @@ put
 \begin_inset Formula $c\downarrow(h')$
 \end_inset
 
- into instructions to commit them into the immutable history of this thread.
+ into 
+\begin_inset Formula $instructions$
+\end_inset
+
+ to commit them into the immutable history of this thread.
 \end_layout
 
-\end_deeper
 \begin_layout LyX-Code
 end if
 \end_layout
@@ -1190,7 +1304,12 @@ else
 
 \begin_deeper
 \begin_layout LyX-Code
-\begin_inset Formula $newHistories\leftarrow[l_{1},\dots,l_{n}]$
+Copy 
+\begin_inset Formula $l$
+\end_inset
+
+ as 
+\begin_inset Formula $newHistories$
 \end_inset
 
 
@@ -1249,10 +1368,10 @@ return
 \begin_inset Formula $R$
 \end_inset
 
+ and 
+\begin_inset Formula $instructions$
+\end_inset
 
-\end_layout
-
-\begin_layout LyX-Code
 
 \end_layout
 
@@ -1265,7 +1384,7 @@ return
 
 \begin_layout Plain Layout
 Compute the follow-up state for DFA state 
-\begin_inset Formula $M$
+\begin_inset Formula $Q$
 \end_inset
 
 
