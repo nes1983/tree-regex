@@ -9,11 +9,14 @@ import java.util.TreeSet;
 
 import ch.unibe.scg.regex.ParserProvider.Node.Regex;
 import ch.unibe.scg.regex.TDFATransitionTable.NextDFAState;
+import ch.unibe.scg.regex.TDFATransitionTable.NextState;
 import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructions;
 
 /** Interprets the known TDFA states. Compiles missing states on the fly. */
 // TODO: Rename to Pattern. Make public.
 public class TDFAInterpreter {
+  private static final int COMPILE_THRESHOLD = 2;
+
   final NavigableSet<DFAState> states = new TreeSet<>();
 
   final TDFATransitionTable.Builder tdfaBuilder = new TDFATransitionTable.Builder();
@@ -55,6 +58,10 @@ public class TDFAInterpreter {
     DFAState t = startState.dfaState;
     states.add(t);
 
+    int cacheHits = 0;
+    TDFATransitionTable tdfa = null;
+    int tdfaState = -1;
+
     for (final Instruction instruction : startState.instructions) {
       instruction.execute(-1);
     }
@@ -62,17 +69,40 @@ public class TDFAInterpreter {
     for (int pos = 0; pos < input.length(); pos++) {
       final char a = input.charAt(pos);
 
-      {
+      // If there is a TDFA, see if it has a transition. Execute if there and continue.
+      if (tdfa != null) {
+        NextState newState = tdfa.newStateAndInstructions(tdfaState, a);
+        if (newState != null) {
+          for (Instruction i : newState.instructions) {
+            i.execute(pos);
+          }
+          tdfaState = newState.nextState;
+          continue;
+        }
+        tdfa = null;
+        t = tdfaBuilder.mapping.deoptimized.get(tdfaState);
+        tdfaState = -1;
+        cacheHits = 0;
+      } else {// Find the transition in the builder. Execute if there and continue.
         NextDFAState nextState = tdfaBuilder.availableTransition(t, a);
         if (nextState != null) {
-          // TODO check for fail state.
-          for (final Instruction instruction : nextState.getInstructions()) {
-            instruction.execute(pos);
+          for (final Instruction i : nextState.instructions) {
+            i.execute(pos);
           }
-          t = nextState.getNextState();
+
+          t = nextState.nextState;
+
+          cacheHits++;
+          if (cacheHits > COMPILE_THRESHOLD) {
+            tdfa = tdfaBuilder.build();
+            tdfaState = tdfaBuilder.mapping.mapping.get(t);
+          }
+
           continue;
         }
       }
+
+      cacheHits = 0; // We got here because the cache hasn't seen this transition before.
 
       final InputRange inputRange = findInputRange(inputRanges, a);
       if (inputRange == null) {
@@ -107,22 +137,16 @@ public class TDFAInterpreter {
         instruction.execute(pos);
       }
 
-      // TODO: delete?
-      // Invariant: opening and closing tags must have same length histories.
-      for (final History[] s : newState.innerStates.values()) {
-        for (int i = 0; i < s.length; i += 2) {
-          if (s[i+1] != null) {
-            assert s[i] != null;
-            if (s[i].size() != s[i+1].size()) {
-              assert false;
-            }
-          }
-        }
-      }
+      assert historiesOk(newState.innerStates.values());
 
       tdfaBuilder.addTransition(t, inputRange, newState, c);
 
       t = newState;
+    }
+
+    // Restore full state before extracing information.
+    if (tdfa != null) {
+      t = tdfaBuilder.mapping.deoptimized.get(tdfaState);
     }
 
     final History[] fin = t.innerStates.get(tnfa2tdfa.tnfa.getFinalState());
@@ -132,5 +156,20 @@ public class TDFAInterpreter {
 
     int[] parentOf = tnfa2tdfa.makeParentOf();
     return new RealMatchResult(fin, input, parentOf);
+  }
+
+  /** Invariant: opening and closing tags must have same length histories. */
+  private boolean historiesOk(Iterable<History[]> cols) {
+    for (final History[] s : cols) {
+      for (int i = 0; i < s.length; i += 2) {
+        if (s[i+1] != null) {
+          assert s[i] != null;
+          if (s[i].size() != s[i+1].size()) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
   }
 }

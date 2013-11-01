@@ -1,5 +1,6 @@
 package ch.unibe.scg.regex;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -34,14 +35,6 @@ class TDFATransitionTable {
     NextDFAState(Iterable<Instruction> instructions, DFAState nextState) {
       this.instructions = instructions;
       this.nextState = nextState;
-    }
-
-    Iterable<Instruction> getInstructions() {
-      return instructions;
-    }
-
-    DFAState getNextState() {
-      return nextState;
     }
 
     @Override
@@ -84,26 +77,29 @@ class TDFATransitionTable {
     }
 
     static class Mapping {
-      int lastCreatedState = -1;
+      private int lastCreatedState = -1;
 
+      /** Map from full DFAState to optimized state (an int) */
       final Map<DFAState, Integer> mapping = new LinkedHashMap<>();
 
-      public int lookupOrMake(final DFAState state) {
+      /** Map from optimized state (an integer) to full DFAState. */
+      final List<DFAState> deoptimized = new ArrayList<>();
+
+      int lookupOrMake(final DFAState state) {
         final Integer to = mapping.get(state);
         if (to != null) {
           return to;
         }
-        final int next = next();
+
+        lastCreatedState++;
+        final int next = lastCreatedState;
+
         mapping.put(state, next);
+
+        deoptimized.add(state);
+        assert deoptimized.get(lastCreatedState).equals(state);
+
         return next;
-      }
-
-      int next() {
-        return ++lastCreatedState;
-      }
-
-      Integer lookup(DFAState t) {
-        return mapping.get(t);
       }
     }
 
@@ -120,7 +116,7 @@ class TDFATransitionTable {
     }
 
     public NextDFAState availableTransition(DFAState t, char a) {
-      final Integer fromState = mapping.lookup(t);
+      final Integer fromState = mapping.mapping.get(t);
       if (fromState == null) {
         return null;
       }
