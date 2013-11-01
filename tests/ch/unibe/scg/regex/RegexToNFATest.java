@@ -16,6 +16,7 @@ import ch.unibe.scg.regex.ParserProvider.Node.Any;
 import ch.unibe.scg.regex.ParserProvider.Node.Char;
 import ch.unibe.scg.regex.ParserProvider.Node.Eos;
 import ch.unibe.scg.regex.ParserProvider.Node.EscapedChar;
+import ch.unibe.scg.regex.ParserProvider.Node.Regex;
 import ch.unibe.scg.regex.ParserProvider.Node.Simple;
 import ch.unibe.scg.regex.ParserProvider.Node.SimpleChar;
 import ch.unibe.scg.regex.ParserProvider.Node.Star;
@@ -144,5 +145,20 @@ public final class RegexToNFATest {
         is("q0 -> [q4], {(q0, ANY)=[q0, NORMAL, NONE], (q0, ε)=[q1, NORMAL, ➀0], "
             + "(q1, ε)=[q3, NORMAL, ➁0], (q1, a-a)=[q2, NORMAL, NONE], "
             + "(q2, ε)=[q1, NORMAL, NONE, q3, NORMAL, ➁0], (q3, ε)=[q4, NORMAL, C0]}"));
+  }
+
+  @Test
+  public void testUnion() {
+    final RegexToNFA r = new RegexToNFA();
+    final Regex s = new ParserProvider().regexp().parse("a|b");
+    final TNFA tnfa = r.convert(s);
+    assertThat(tnfa.toString(),
+      is("q0 -> q5, {(q0, ANY)=[q0, NORMAL, NONE], "
+          + "(q0, ε)=[q1, NORMAL, ➀0], "
+          + "(q1, a-a)=[q2, NORMAL, NONE], "
+          + "(q1, b-b)=[q3, NORMAL, NONE], "
+          + "(q2, ε)=[q4, NORMAL, NONE], "
+          + "(q3, ε)=[q4, LOW, NONE], "
+          + "(q4, ε)=[q5, NORMAL, ➁0]}"));
   }
 }
