@@ -349,9 +349,6 @@ class TNFAToTDFA {
       if (visitedSources.contains(source)) {
         continue;
       }
-      stack.push(source);
-      // Set cur to e.
-
       // while cur has undeleted following edges, mark cur as deleted, follow the edge, repeat.
       for (History cur = source; cur != null && !visitedSources.contains(cur); cur = map.get(cur)) {
         stack.push(cur);
