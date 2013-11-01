@@ -153,11 +153,15 @@ class TNFAToTDFA {
   /**
    * Niko and Aaron's closure.
    *
+   * All states after following the epsilon edges of the NFA. Produces instructions
+   * when Tags are crossed. This is the transitive closure on the subgraph of epsilon
+   * edges.
+   *
    * @param startState if to generate the start state. If so, ignore a.
    * @param a the character that was read. Is ignored if startState == true.
    * @return The next state after state, for input a.
    */
-  StateAndInstructions e(final Map<State, History[]> innerStates, final char a, boolean startState) {
+  StateAndInstructions epsilonClosure(final Map<State, History[]> innerStates, final char a, boolean startState) {
     final Map<State, History[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
 
     final Deque<Map.Entry<State, History[]>> stack = new ArrayDeque<>(); // normal priority
@@ -327,7 +331,7 @@ class TNFAToTDFA {
   StateAndInstructions makeStartState() {
     Map<State, History[]> start = convertToDfaState(tnfa.getInitialState());
 
-    return e(start, Character.MAX_VALUE, true);
+    return epsilonClosure(start, Character.MAX_VALUE, true);
   }
 
   /** @return Ordered instructions for mapping. The ordering is such that they don't interfere with each other. */

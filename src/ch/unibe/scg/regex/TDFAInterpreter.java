@@ -80,7 +80,7 @@ public class TDFAInterpreter {
       }
 
       // TODO this is ugly. Clearly, e should return StateAndPositions.
-      final StateAndInstructions uu = tnfa2tdfa.e(t.innerStates, a, false);
+      final StateAndInstructions uu = tnfa2tdfa.epsilonClosure(t.innerStates, a, false);
       final DFAState u = uu.dfaState;
 
       if (u.innerStates.isEmpty()) { // There is no matching NFA state.
