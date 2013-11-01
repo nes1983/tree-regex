@@ -72,6 +72,27 @@ public final class IntegrationTest {
       ));
   }
 
+
+  @Test
+  public void testMatchExampleFromPaper1() {
+    final Regex parsed = new ParserProvider().regexp().parse("((b+)|a)+");
+    final TNFA tnfa = new RegexToNFA().convert(parsed);
+    assertThat(tnfa.toString(),
+        is("q15 -> q26, {(q15, ANY)=[q15, NORMAL, NONE], "
+          + "(q15, ε)=[q16, NORMAL, ➀0], "
+          + "(q16, ε)=[q17, NORMAL, ➀1], "
+          + "(q17, ε)=[q18, NORMAL, ➀2], "
+          + "(q17, a-a)=[q22, NORMAL, NONE], "
+          + "(q18, b-b)=[q19, NORMAL, NONE], "
+          + "(q19, ε)=[q20, LOW, NONE, q18, NORMAL, NONE], "
+          + "(q20, ε)=[q21, NORMAL, ➁2], "
+          + "(q21, ε)=[q23, NORMAL, NONE], "
+          + "(q22, ε)=[q23, LOW, NONE], "
+          + "(q23, ε)=[q24, NORMAL, ➁1], "
+          + "(q24, ε)=[q25, LOW, NONE, q16, NORMAL, NONE], "
+          + "(q25, ε)=[q26, NORMAL, ➁0]}"));
+  }
+
   @Test
   public void testMemoryAfterExecution() {
     RealMatchResult res = (RealMatchResult) tdfaInterpreter.interpret("aaabcaaabcaabc");
