@@ -218,21 +218,21 @@ class TNFAToTDFA {
 
         // Step 2.
         final Tag tau = triple.tag;
-        History[] tdash = Arrays.copyOf(l, l.length);
+        History[] newHistories = Arrays.copyOf(l, l.length);
 
         if (tau.isStartTag() || tau.isEndTag()) {
           final History newHistoryOpening = new History();
           int openingPos = positionFor(tau.getGroup().startTag);
-          instructions.add(instructionMaker.reorder(newHistoryOpening, tdash[openingPos]));
-          tdash[openingPos] = newHistoryOpening;
+          instructions.add(instructionMaker.reorder(newHistoryOpening, newHistories[openingPos]));
+          newHistories[openingPos] = newHistoryOpening;
 
           if (tau.isStartTag()) {
             instructions.add(instructionMaker.storePosPlusOne(newHistoryOpening));
           } else {
             final History newHistoryClosing = new History();
             int closingPos = positionFor(tau.getGroup().endTag);
-            instructions.add(instructionMaker.reorder(newHistoryClosing, tdash[closingPos]));
-            tdash[closingPos] = newHistoryClosing;
+            instructions.add(instructionMaker.reorder(newHistoryClosing, newHistories[closingPos]));
+            newHistories[closingPos] = newHistoryClosing;
             instructions.add(instructionMaker.storePos(newHistoryClosing));
             instructions.add(instructionMaker.openingCommit(newHistoryOpening));
             instructions.add(instructionMaker.closingCommit(newHistoryClosing));
@@ -242,10 +242,10 @@ class TNFAToTDFA {
         // Step 3.
         switch (triple.getPriority()) {
           case LOW:
-            lowStack.add(new StateWithMemoryLocation(triple.getState(), tdash));
+            lowStack.add(new StateWithMemoryLocation(triple.getState(), newHistories));
             break;
           case NORMAL:
-            stack.add(new StateWithMemoryLocation(triple.getState(), tdash));
+            stack.add(new StateWithMemoryLocation(triple.getState(), newHistories));
             break;
           default:
             throw new AssertionError();
