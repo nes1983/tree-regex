@@ -211,12 +211,10 @@ class TDFATransitionTable {
     for (int i = -1; i <= 1; i++) {
       final int y = x + i;
 
-      if (y < 0 || y >= size) {
-        continue;
-      }
-
-      if (Integer.compare(states[y], state) == 0 && froms[y] <= input && input <= tos[y]) {
-        return new NextState(newStates[y], instructions[y]);
+      if (0 <= y && y < size) {
+        if (states[y] == state && froms[y] <= input && input <= tos[y]) {
+          return new NextState(newStates[y], instructions[y]);
+        }
       }
     }
 
