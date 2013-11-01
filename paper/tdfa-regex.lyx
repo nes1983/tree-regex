@@ -570,7 +570,8 @@ key "Cox2007"
 \begin_layout Standard
 Our algorithm runs two phases for each character read.
  First it creates a new TDFA state from the current state and tries to map
- this state to a known one (as in 
+ this state and the instructions on the transition to a known state(as in
+ 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "laurikari2000nfas"
@@ -583,7 +584,7 @@ key "laurikari2000nfas"
 \begin_layout Standard
 The memory model differs from other regular expression engines in that locations
  are not stored in a fixed number of cells.
- Instead each cell is the head of a signly linked list that describes the
+ Instead each cell is the head of a singly linked list that describes the
  history of the value.
  This allows us to extract all capture groups matching a subpattern after
  the matching phase ended.
@@ -655,13 +656,16 @@ We need the following instructions:
 \begin_inset Float algorithm
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset listings
+inline false
+status open
 
 \begin_layout Plain Layout
-TDFA from TNFA
+
+	Name: 
 \end_layout
 
 \end_inset
@@ -670,432 +674,10 @@ TDFA from TNFA
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset ERT
-status open
+\begin_inset Caption
 
 \begin_layout Plain Layout
-
-
-\backslash
-begin{algorithmic}[1]
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-Function{SimpleStep}{$nfa$, $node$, $r$} 
-\end_layout
-
-\begin_layout Plain Layout
-
-	
-\backslash
-State 
-\backslash
-Return $
-\backslash
-left
-\backslash
-{(n, m_{t_c}, priority): (node, n, r, t, priority) 
-\backslash
-in nfa.transitions
-\backslash
-right
-\backslash
-}$
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-EndFunction
-\end_layout
-
-\begin_layout Plain Layout
-
-										
-\backslash
-Statex
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-Function{ResolveConflicts}{$map$}
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State $flat 
-\backslash
-gets 
-\backslash
-text{recusively all } keys 
-\backslash
-text{ of } map$
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-ForAll{distict $N_1 = (n, m_{t_1}, p_1), N_2 = (n, m_{t_2}, p_2) 
-\backslash
-in flat$}
-\end_layout
-
-\begin_layout Plain Layout
-
-	
-\backslash
-If{$p_2 > p_1$}
-\end_layout
-
-\begin_layout Plain Layout
-
-		
-\backslash
-State remove $N_1$ from map
-\backslash
-Comment{Also removes dependent states}
-\end_layout
-
-\begin_layout Plain Layout
-
-	
-\backslash
-Else
-\end_layout
-
-\begin_layout Plain Layout
-
-		
-\backslash
-State remove $N_2$ from map
-\end_layout
-
-\begin_layout Plain Layout
-
-	
-\backslash
-EndIf
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-EndFor
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State 
-\backslash
-Return flat
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-EndFunction
-\end_layout
-
-\begin_layout Plain Layout
-
-										
-\backslash
-Statex
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-Function{Step}{$nfa$, $node$, $read$}
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State $direct 
-\backslash
-gets 
-\backslash
-Call{SimpleStep}{nfa, node, read}$
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State $map 
-\backslash
-gets Map(n 
-\backslash
-rightarrow step(nfa, n, 
-\backslash
-varepsilon) : n 
-\backslash
-in direct)$
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State 
-\backslash
-Return 
-\backslash
-Call{ResolveConflicts}{map}
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-EndFunction
-\end_layout
-
-\begin_layout Plain Layout
-
-										
-\backslash
-Statex
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-Function{PushStates}{nfa, dfa, start}
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State $open 
-\backslash
-gets 
-\backslash
-{start
-\backslash
-}$
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State $towards 
-\backslash
-gets 
-\backslash
-text{empty }Map
-\backslash
-left[readable 
-\backslash
-rightarrow Set
-\backslash
-left[NfaState
-\backslash
-right]
-\backslash
-right]$
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-While{$open 
-\backslash
-neq 
-\backslash
-emptyset$}
-\end_layout
-
-\begin_layout Plain Layout
-
-	
-\backslash
-State $first:open 
-\backslash
-gets open$
-\end_layout
-
-\begin_layout Plain Layout
-
-	
-\backslash
-ForAll{$state_{nfa} 
-\backslash
-in first$ and valid inputs $r$ from $state_{nfa}$}
-\end_layout
-
-\begin_layout Plain Layout
-
-		
-\backslash
-State $towards[r] 
-\backslash
-gets towards 
-\backslash
-cup 
-\backslash
-Call{step}{nfa, state_{nfa}, r}$
-\end_layout
-
-\begin_layout Plain Layout
-
-	
-\backslash
-EndFor
-\end_layout
-
-\begin_layout Plain Layout
-
-	
-\backslash
-State $dfa.transitions, newnodes 
-\backslash
-gets 
-\backslash
-Call{Merge}{dfa.transitions, towards}$
-\end_layout
-
-\begin_layout Plain Layout
-
-			
-\backslash
-Statex 
-\backslash
-Comment{Merge represents the match strategy}
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-EndWhile
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State 
-\backslash
-Return dfa
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-EndFunction
-\end_layout
-
-\begin_layout Plain Layout
-
-										
-\backslash
-Statex
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-Function{CreateDfa}{nfa}
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State initialize empty dfa
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State $dfa.start 
-\backslash
-gets nfa.start 
-\backslash
-cup 
-\backslash
-Call{Step}{nfa, nfa.start, 
-\backslash
-varepsilon}$
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State $dfa 
-\backslash
-gets 
-\backslash
-Call{PushStates}{nfa, dfa, dfa.start}$
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State $dfa.ends 
-\backslash
-gets 
-\backslash
-{n
-\backslash
-in dfa.states : n
-\backslash
-cap nfa.ends 
-\backslash
-neq 
-\backslash
-emptyset
-\backslash
-}$
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-State 
-\backslash
-Return dfa
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-EndFunction
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-end{algorithmic}
+TDFA from TNFA
 \end_layout
 
 \end_inset
@@ -1252,36 +834,14 @@ status open
 
 \begin_layout LyX-Code
 Name:   
-\begin_inset Formula $e(q,x)$
+\begin_inset Formula $epsilonClosure(q,x)$
 \end_inset
 
 
 \end_layout
 
 \begin_layout LyX-Code
-Global variables: 
-\end_layout
-
-\begin_deeper
-\begin_layout LyX-Code
-integer counter 
-\begin_inset Formula $c$
-\end_inset
-
- (initially 
-\begin_inset Formula $0$
-\end_inset
-
-)
-\end_layout
-
-\end_deeper
-\begin_layout LyX-Code
-Input:  DFA state 
-\begin_inset Formula $q$
-\end_inset
-
-, character to consume 
+Input:  DFA state Q, character to consume 
 \begin_inset Formula $chr$
 \end_inset
 
@@ -1293,7 +853,11 @@ Output:
 \begin_inset Formula $R$
 \end_inset
 
- is the new DFA state
+ is the new DFA state, 
+\begin_inset Formula $instructions$
+\end_inset
+
+ are the instructions that need to be executed.
 \end_layout
 
 \begin_deeper
@@ -1332,7 +896,7 @@ For every transition
 \end_inset
 
  from any of 
-\begin_inset Formula $Q\in q$
+\begin_inset Formula $q\in Q$
 \end_inset
 
  to 
@@ -1461,12 +1025,7 @@ if
 \begin_inset Formula $q''\in R$
 \end_inset
 
- jump to start of for loop
-\end_layout
-
-\begin_layout LyX-Code
-2.2.
- Compute new memory locations
+ jump to start of for loop to avoid conflict.
 \end_layout
 
 \begin_layout LyX-Code
@@ -1475,7 +1034,11 @@ if
 \end_inset
 
  is tagged with 
-\begin_inset Formula $\tau_{i}$
+\begin_inset Formula $\tau_{i}\uparrow$
+\end_inset
+
+ or 
+\begin_inset Formula $\tau_{i}\downarrow$
 \end_inset
 
 
@@ -1483,17 +1046,141 @@ if
 
 \begin_deeper
 \begin_layout LyX-Code
-\begin_inset Formula $l_{new}\leftarrow[l_{1},\dots,l_{i-1},c,l_{i+1},\dots,l_{n}]$
+2.2.
+ Compute new memory locations
+\end_layout
+
+\begin_layout LyX-Code
+Copy 
+\begin_inset Formula $l$
+\end_inset
+
+ as 
+\begin_inset Formula $newHistories$
 \end_inset
 
 
 \end_layout
 
 \begin_layout LyX-Code
-\begin_inset Formula $c\leftarrow c+1$
+Create new history cell 
+\begin_inset Formula $h$
+\end_inset
+
+ and put it into 
+\begin_inset Formula $position_{open}(i)$
+\end_inset
+
+ of 
+\begin_inset Formula $newHistories$
 \end_inset
 
 
+\end_layout
+
+\begin_layout LyX-Code
+2.3.
+ new instructions:
+\end_layout
+
+\begin_layout LyX-Code
+put 
+\begin_inset Formula $h\leftarrow l[position_{open}(i)]$
+\end_inset
+
+ into 
+\begin_inset Formula $instructions$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+if 
+\begin_inset Formula $t$
+\end_inset
+
+ has the opening tag 
+\begin_inset Formula $\tau_{i}\uparrow$
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+put 
+\begin_inset Formula $h\leftarrow\pos+1$
+\end_inset
+
+ into instructions to store new start of the group.
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+else if 
+\begin_inset Formula $t$
+\end_inset
+
+ has the closing tag 
+\begin_inset Formula $\tau_{i}\downarrow$
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout LyX-Code
+Create new history cell 
+\begin_inset Formula $h'$
+\end_inset
+
+ and put it into 
+\begin_inset Formula $position_{close}(i)$
+\end_inset
+
+ of 
+\begin_inset Formula $newHistories$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+put 
+\begin_inset Formula $h'\leftarrow l[position_{close}(i)]$
+\end_inset
+
+ into 
+\begin_inset Formula $instructions$
+\end_inset
+
+
+\end_layout
+
+\begin_layout LyX-Code
+put 
+\begin_inset Formula $h'\leftarrow\pos$
+\end_inset
+
+ into instructions
+\end_layout
+
+\begin_layout LyX-Code
+put 
+\begin_inset Formula $c\uparrow(h)$
+\end_inset
+
+ and 
+\begin_inset Formula $c\downarrow(h')$
+\end_inset
+
+ into instructions to commit them into the immutable history of this thread.
+\end_layout
+
+\end_deeper
+\begin_layout LyX-Code
+end if
 \end_layout
 
 \end_deeper
@@ -1503,7 +1190,7 @@ else
 
 \begin_deeper
 \begin_layout LyX-Code
-\begin_inset Formula $l_{new}\leftarrow[l_{1},\dots,l_{n}]$
+\begin_inset Formula $newHistories\leftarrow[l_{1},\dots,l_{n}]$
 \end_inset
 
 
@@ -1512,11 +1199,6 @@ else
 \end_deeper
 \begin_layout LyX-Code
 end if
-\end_layout
-
-\begin_layout LyX-Code
-2.3.
- new store instructions:
 \end_layout
 
 \begin_layout LyX-Code
@@ -1538,7 +1220,7 @@ if
 \end_inset
 
  with 
-\begin_inset Formula $l_{new}$
+\begin_inset Formula $newHistories$
 \end_inset
 
  to 
@@ -1636,7 +1318,7 @@ name "fig:example-automaton"
 
 \end_inset
 
-Automaton for ((b+)|a)+
+Automaton for ((b+)|a)+ with group 0 tags omitted for clarity
 \end_layout
 
 \end_inset
@@ -2058,7 +1740,7 @@ This means that the new state is isomorphic to an existing state and the
 
 \end_deeper
 \begin_layout Section
-TDFA with hierarchica l commits
+TDFA with commits
 \begin_inset CommandInset label
 LatexCommand label
 name "sec:TNFA-with-hierarchical"
@@ -2069,115 +1751,23 @@ name "sec:TNFA-with-hierarchical"
 \end_layout
 
 \begin_layout Standard
-A run is a pair 
-\begin_inset Formula $(a,b)\in\naturals^{2}$
-\end_inset
-
-, where 
-\begin_inset Formula $a$
-\end_inset
-
- stands for the starting position of a run in a string,
-\end_layout
-
-\begin_layout Standard
 The overall idea is simple: whenever the TDFA is reading in a run of characters
- that belong to a capture group, we compare the currently read run to the
- previously best one.
- For example, when the TDFA produced by ((a+)b|a)+ reads in the string aabaaa,
- it will proceed as follows.
- Upon reading b, it keeps the run 
+ that belong to a capture group, we push the previous one into our history
+ and the work on current one.
+ To implement this, we introduce 
 \begin_inset Quotes eld
 \end_inset
 
-aa
-\begin_inset Quotes erd
-\end_inset
-
- as the currently best match for the inner capture group of the regex, since
- that capture group had no better match before that.
- Then it will try to generate a longer match for this capture group, reading
- 
-\begin_inset Quotes eld
-\end_inset
-
-aaa
-\begin_inset Quotes erd
-\end_inset
-
-, but since there is no 
-\begin_inset Quotes eld
-\end_inset
-
-b
-\begin_inset Quotes erd
-\end_inset
-
- in the end of the string, it will not commit, therefore leaving the best
- match at 
-\begin_inset Quotes eld
-\end_inset
-
-aa
-\begin_inset Quotes erd
-\end_inset
-
-.
- On the other hand, if the string was indeed 
-\begin_inset Quotes eld
-\end_inset
-
-aabaaab
-\begin_inset Quotes erd
-\end_inset
-
-, the commit would take place and since 
-\begin_inset Quotes eld
-\end_inset
-
-aaa
-\begin_inset Quotes erd
-\end_inset
-
- is longer than 
-\begin_inset Quotes eld
-\end_inset
-
-aa
-\begin_inset Quotes erd
-\end_inset
-
-, the commit would overwrite the old one.
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-Aaron: maybe better include the blackboard picture here, but improve it
- into a complete example.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-To implement these comparisons, we introduce 
-\begin_inset Quotes eld
-\end_inset
-
-hierarchical commits
+commits
 \begin_inset Quotes erd
 \end_inset
 
  into the TDFA.
+ On the level on the TNFA the commits correspond to tags at the end of capture
+ groups.
  Since capture groups are nested, they form a tree.
- Every node of this tree stands for one capture group, and we shall call
- it a 
-\emph on
-hierarchy node
-\emph default
-.
+ We will call this three the match tree and will prove that we can reconstruct
+ it.
  In it, we store all runs that this capture group matches.
  The subnodes of a hierarchy nodes correspond to the submatches of its capture
  group.We will shortly discuss how to construct a TDFA that includes instructions
@@ -2335,7 +1925,7 @@ NFA about to be transformed.
 
 In the following, the regex 
 \family typewriter
-(?:(?:(a+)b)+c)+
+(((a+)b)+c)+
 \family default
  will be converted to a 
 \shape smallcaps
