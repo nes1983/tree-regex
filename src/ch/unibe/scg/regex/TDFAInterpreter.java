@@ -7,11 +7,13 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
+import ch.unibe.scg.regex.ParserProvider.Node.Regex;
 import ch.unibe.scg.regex.TDFATransitionTable.NextDFAState;
 import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructions;
 
 /** Interprets the known TDFA states. Compiles missing states on the fly. */
-class TDFAInterpreter {
+// TODO: Rename to Pattern. Make public.
+public class TDFAInterpreter {
   final NavigableSet<DFAState> states = new TreeSet<>();
 
   final TDFATransitionTable.Builder tdfaBuilder = new TDFATransitionTable.Builder();
@@ -19,6 +21,12 @@ class TDFAInterpreter {
 
   TDFAInterpreter(TNFAToTDFA tnfa2tdfa) {
     this.tnfa2tdfa = tnfa2tdfa;
+  }
+
+  public static TDFAInterpreter compile(String regex) {
+    final Regex parsed = new ParserProvider().regexp().parse(regex);
+    final TNFA tnfa = new RegexToNFA().convert(parsed);
+    return new TDFAInterpreter(TNFAToTDFA.make(tnfa));
   }
 
   /** @return the range containing input. Null if there isn't one. */
