@@ -259,7 +259,7 @@ class TNFAToTDFA {
     byte[] toKey = DFAState.makeStateComparisonKey(u.innerStates.keySet());
     // Assume that toKey is not full of Byte.MAX_VALUE. That would be really unlucky.
     // Also a bit unlikely, given that it's an MD5 hash, and therefore pretty random.
-    for (int i = 0; true; i++) {
+    for (int i = toKey.length - 1; true; i--) {
       if (toKey[i] != Byte.MAX_VALUE) {
         toKey[i]++;
         break;
