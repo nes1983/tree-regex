@@ -92,7 +92,7 @@ interface TNFA {
       public void setAsAccepting(final State finalState) {
         if (this.finalState != null) {
           throw new IllegalStateException("Only one final state can be handled.\n"
-              + String.format("Old final state was %s\n New final state is %s", this.finalState, finalState));
+              + String.format("Old final state was %s%n New final state is %s", this.finalState, finalState));
         }
         this.finalState = finalState;
       }
