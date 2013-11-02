@@ -23,63 +23,13 @@ class TNFAToTDFA {
         DFAState.INSTRUCTIONLESS_NO_STATE,
         Collections.<Instruction> emptyList());
 
-  static class StateWithMemoryLocation implements Map.Entry<State, History[]> {
+  private static class StateWithMemoryLocation {
     final History[] memoryLocation;
     final State state;
 
     StateWithMemoryLocation(final State state, final History[] histories) {
       this.memoryLocation = histories;
       this.state = state;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
-        return false;
-      }
-      final StateWithMemoryLocation other = (StateWithMemoryLocation) obj;
-      if (state == null) {
-        if (other.state != null) {
-          return false;
-        }
-      } else if (!state.equals(other.state)) {
-        return false;
-      }
-      return true;
-    }
-
-    @Override
-    public State getKey() {
-      return state;
-    }
-
-    public History[] getMemoryLocation() {
-      return memoryLocation;
-    }
-
-    public State getState() {
-      return state;
-    }
-
-    @Override
-    public History[] getValue() {
-      return memoryLocation;
-    }
-
-    @Override
-    public int hashCode() {
-      return ((state == null) ? 0 : state.hashCode());
-    }
-
-    @Override
-    public History[] setValue(final History[] value) {
-      throw new UnsupportedOperationException();
     }
 
     @Override
@@ -136,7 +86,7 @@ class TNFAToTDFA {
       initialMemoryLocations[i] = new History();
     }
     initState.put(s, initialMemoryLocations);
-    return Collections.unmodifiableMap(initState);
+    return initState;
   }
 
   static class StateAndInstructions {
@@ -164,11 +114,13 @@ class TNFAToTDFA {
   StateAndInstructions epsilonClosure(final Map<State, History[]> innerStates, final char a, boolean startState) {
     final Map<State, History[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
 
-    final Deque<Map.Entry<State, History[]>> stack = new ArrayDeque<>(); // normal priority
-    final Deque<Map.Entry<State, History[]>> lowStack = new ArrayDeque<>(); // low priority
+    final Deque<StateWithMemoryLocation> stack = new ArrayDeque<>(); // normal priority
+    final Deque<StateWithMemoryLocation> lowStack = new ArrayDeque<>(); // low priority
 
     if (startState) { // TODO(nikoschwarz): Beautify.
-      stack.addAll(innerStates.entrySet());
+      for (Entry<State, History[]> entry : innerStates.entrySet()) {
+        stack.add(new StateWithMemoryLocation(entry.getKey(), entry.getValue()));
+      }
     } else {
       for (final Entry<State, History[]> pr : innerStates.entrySet()) {
         final History[] k = pr.getValue();
@@ -192,7 +144,7 @@ class TNFAToTDFA {
 
     List<Instruction> instructions = new ArrayList<>();
     do {
-      Entry<State, History[]> s;
+      StateWithMemoryLocation s;
       if (stack.isEmpty()) {
         s = lowStack.pop();
       } else {
@@ -200,8 +152,8 @@ class TNFAToTDFA {
       }
       assert s != null;
 
-      final State q = s.getKey();
-      final History[] l = s.getValue();
+      final State q = s.state;
+      final History[] l = s.memoryLocation;
 
       if (R.containsKey(q)) {
         continue;
@@ -343,35 +295,33 @@ class TNFAToTDFA {
     // Because of the instructions, we can identify every edge by its *source* node.
     List<Instruction> ret = new ArrayList<>(map.size());
     Deque<History> stack = new ArrayDeque<>();
-    //
     Set<History> visitedSources = new HashSet<>();
-    // Go through the edges of the graph:
 
+    // Go through the edges of the graph. Identify edge e by source node source:
     for (History source : map.keySet()) {
 
       // Push e on stack, unless e deleted
       if (visitedSources.contains(source)) {
         continue;
       }
-      stack.push(source);
-      // Set cur to e.
 
+      stack.push(source);
       // while cur has undeleted following edges, mark cur as deleted, follow the edge, repeat.
-      for (History cur = source; cur != null && !visitedSources.contains(cur); cur = map.get(cur)) {
-        stack.push(cur);
-        visitedSources.add(cur);
+      while (source != null && !visitedSources.contains(source)) {
+        source = map.get(source);
+        stack.push(source);
+        visitedSources.add(source);
       }
+
       // walk stack backward, add to ret.
-      stack.pop();  // top element is no source node.
+      stack.pop(); // top element is no source node.
       while (!stack.isEmpty()) {
         History cur = stack.pop();
         History target = map.get(cur);
         if (!cur.equals(target)) {
-          ret.add(instructionMaker.reorder(map.get(cur), cur));
+          ret.add(instructionMaker.reorder(target, cur));
         }
       }
-      // mark e as deleted
-      visitedSources.add(source);
     }
     return ret;
   }
