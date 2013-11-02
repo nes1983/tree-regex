@@ -176,12 +176,12 @@ class TDFATransitionTable {
     this.instructions = instructions;
   }
 
-  private int cmp(final int state, final char input, final int x) {
-    final int scmp = Integer.compare(states[x], state); // XXX order?
+  private int cmp(final int state1, final int state2, final char ch1, final char ch2) {
+    final int scmp = Integer.compare(state1, state2);
     if (scmp != 0) {
       return scmp;
     }
-    return Character.compare(input, froms[x]);
+    return Character.compare(ch1, ch2);
   }
 
   public NextState newStateAndInstructions(final int state, final char input) {
@@ -190,15 +190,13 @@ class TDFATransitionTable {
     int x = -1;
     while (r >= l) {
       x = (l + r) >>> 1;  // average and stays correct if addition overflows.
-      final int cmp = cmp(state, input, x);
-      if (cmp == 0) {
-        return new NextState(newStates[x], instructions[x]);
-      } else if (cmp < 0) {
+      final int cmp = cmp(state, states[x], input, froms[x]);
+      if (cmp < 0) {
         r = x - 1;
       } else if (cmp > 0) {
         l = x + 1;
       } else {
-        throw new AssertionError();
+        return new NextState(newStates[x], instructions[x]);
       }
     }
 
