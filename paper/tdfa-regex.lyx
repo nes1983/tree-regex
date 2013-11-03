@@ -305,14 +305,181 @@ Parsers that can return abstract syntax trees are more useful than ones
 \end_layout
 
 \begin_layout Section
-Related work
+Algorithm
 \end_layout
 
 \begin_layout Standard
-While there is no shortage of books discussing the usage of regular expressions,
- the implementation side of regular expression has not been so lucky.
- Cox is spot-on when he argues that innovations have repeatedly been ignored
- and later reinvented 
+The first step of our algorithm is to transform the regular expression into
+ the graph of an NFA.
+ Let us recall what NFAs and DFAs are.
+ A DFA is a state machine that will walk over the transition graph, one
+ step for every input character.
+ The choice of transition is limited by the transition's character range.
+ A transition can only be followed if the current input character is inside
+ transition's character range.
+ 
+\end_layout
+
+\begin_layout Standard
+NFAs differ from DFAs in that, when several transitions are allowed from
+ one state to another, an NFA will magically guess the correct one.
+ 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:example-automaton-1"
+
+\end_inset
+
+ shows an example of an NFA's transition graph.
+ For the moment, let us discuss regular expression matching on NFAs.
+ Assuming that the NFA just magicly knows the right transition lets us focus
+ on the important things, greediness and capture groups.
+\end_layout
+
+\begin_layout Standard
+To control greediness, or discern capture groups, our approach adds 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+ transitions to the transition graph.
+ An 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+-transition has no input range assigned, and can thus always be used.
+ It does not consume an input character.
+ Let us look at greediness control, and then capture groups, in turn.
+ 
+\end_layout
+
+\begin_layout Standard
+When the regular expression ((b+)b?|a)+ is matched against input bb, capture
+ group 2 is expected to match both bs, because the matching is greedy.
+ In the NFA, we model this by connecting the repeating expression (b+) to
+ the following b? via an 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+-transitions of 
+\shape italic
+low priority
+\shape default
+.
+ If the NFA has two valid guesses that will lead to matches, it will prefer
+ to avoid a transition of low priority.
+ The details will become clear when we show how this is implemented as a
+ DFA.
+\end_layout
+
+\begin_layout Standard
+Finally, to model capture groups in the NFA, we add 
+\shape italic
+commit tags
+\shape default
+ to the transition graph.
+ The transition into a capture group is tagged by a commit, the transition
+ to leave a capture group is tagged by a another commit.
+ To keep the transition graphs readable, we will visually distinguish opening
+ and closing commits.
+ However, they work exactly the same way.
+ The NFA keeps a history for every transition with a commit.
+ Each time the transition is walked, the current position is added to its
+ history.
+ It is easy to see that the entire match tree can be reconstructed from
+ the list of histories.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Reference to code.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The details of how the NFA is constructed can easily be determined from
+ REFERENCE TO CODE.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename /Users/nes/repos/papers-regex-fast/paper/graphs/automaton.pdf
+	width 69text%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:example-automaton-1"
+
+\end_inset
+
+Automaton for ((b+)|a)+.
+ The 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+-transition labeled 
+\begin_inset Formula $\sigma\text{↑}$
+\end_inset
+
+ is tagged with an an opening commit of capture group 
+\begin_inset Formula $\sigma$
+\end_inset
+
+.
+ Likewise, 
+\begin_inset Formula $\tau\text{↓}$
+\end_inset
+
+ is tagged with a closing commit of capture group 
+\begin_inset Formula $\tau$
+\end_inset
+
+.
+ The edge from node 4 to 5 is labeled with a minus, meaning that the edge
+ is of low priority.
+ The start state is 1.
+ The only end state is 8.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+DFAs
+\end_layout
+
+\begin_layout Standard
+Our above definition of regular expression assumes a machine that guesses
+ the correct transition through magic.
+ To implement regular expression matching on non-magic hardware, we transform
+ the NFA to a DFA.
+ A useful metaphor for regular expression matching is that of threads 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Cox2007"
@@ -320,180 +487,17 @@ key "Cox2007"
 \end_inset
 
 .
- 
-\end_layout
-
-\begin_layout Standard
-This paper is no exception.
- The authors of this paper had set out to implement Laurikari's TDFA algorithm
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "laurikari2000nfas"
-
-\end_inset
-
-, only to discover that Laurikari's description of a TDFA is so far from
- complete that it can rightfully only be called the sketch for an algorithm.
- Only late in the process did we discover that the blanks had already been
- filled by Kuklewicz in the course of his implementation of TDFAs in Haskell
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Kuklewicz2007"
-
-\end_inset
-
-.
- Kuklewicz enshrined his added insight into Haskell library, but never published
- the algorithm as a whole.
- If the history of regular expressions is evidence of one thing, it is that
- source code is a terrible medium to convey algorithms.
- 
-\end_layout
-
-\begin_layout Standard
-The situation dramatically improved with Cox's simple and concise explanation
- of regular expression matching 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Cox2007"
-
-\end_inset
-
-.
- It seems ironic that this well-versed author published his influential
- work on his website.
- Although the joke may be on Academia's side.
-\end_layout
-
-\begin_layout Standard
-When the taciturn practioners acknowledge each other's work, we can't help
- but disagree almost universally with the characterizations they produce.
- Sulzmann and Lu 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "sulzmann2012regular"
-
-\end_inset
-
- call Kuklewicz's work an 
+ Whenever we aren't sure which transition to take, we 
 \begin_inset Quotes eld
 \end_inset
 
-implementation
+fork
 \begin_inset Quotes erd
 \end_inset
 
- of Laurikari's algorithm, although Laurikari's algorithm is far too incomplete
- for that statement to be fair.
- Laurikari's algorithm is referred to as a POSIX-style automaton.
- In truth, Laurikari leaves the matching strategy entirely open.
- It was Kuklewicz that found out how to get POSIX-style matching out of
- Laurikari's TDFA.
- 
-\end_layout
-
-\begin_layout Standard
-Cox says that Laurikari's TDFA is a reinvention Pike's published only in
- code algorithm 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Pike1987"
-
-\end_inset
-
-, which is Thompson's NFA with submatch tracking.
- This seems unfair in that Laurikari's allows for far more aggressive reusing
- of old states than what Thompson allows.
- This should lead to Laurikari's TDFA having fewer states, and therefore
- better performance, than even Google's RE2, which uses Pike's algorithm.
- This is not confirmed by the benchmarks by Sulzmann and Lu 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "sulzmann2012regular"
-
-\end_inset
-
-, but they offer an explanation: in their profiling, they see that all Haskell
- implementations spend considerable time decoding the input strings.
- In other words, the measured performance is more of an artifact of the
- programming environment used.
- 
-\end_layout
-
-\begin_layout Standard
-Another mistake that permeates the scarce literature is to call regular
- expression matching linear.
- As Sedgewick points out correctly 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Sedgewick1990"
-
-\end_inset
-
-, Thompson's NFA matching is of complexity 
-\begin_inset Formula $O(mn)$
-\end_inset
-
-, where 
-\begin_inset Formula $m$
-\end_inset
-
- is the size of the input NFA, and 
-\begin_inset Formula $n$
-\end_inset
-
- is the size of the input string.
- To call this linear requires to assume 
-\begin_inset Formula $m$
-\end_inset
-
- to be fix, which we cannot bring ourselves to justify.
- It may well be true that, at present, 
-\begin_inset Formula $m$
-\end_inset
-
- tends to be small.
- But that is a natural consequence of the algorithms not scaling very well
- with 
-\begin_inset Formula $m$
-\end_inset
-
-.
- If they did, that would allow for fast feature extracting from text.
- Therefore, in this paper, we consider the state of the art algorithms to
- be quadratic, since both 
-\begin_inset Formula $m$
-\end_inset
-
- and 
-\begin_inset Formula $n$
-\end_inset
-
- are part of the input to a regular expression matcher.
- We cannot rule out that a linear algorithm exists, in fact, we hope for
- it.
- To insist that regular expression matching is done in linear time is to
- insist that the optimal algorithm has already been found; that is probably
- not true.
-\end_layout
-
-\begin_layout Standard
-Sulzmann and Lu add to the table a new matching strategy that yields good
- practical performance, although the theoretical bounds are considerably
- worse than the state of the art, at 
-\begin_inset Formula $O(n^{2}m)$
-\end_inset
-
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "sulzmann2012regular"
-
-\end_inset
-
-.
+ a thread for every option that we have.
+ (This is really only metaphorical.
+ Our approach is entirely single-threaded)
 \end_layout
 
 \begin_layout Section
@@ -1405,49 +1409,6 @@ Compute the follow-up state for DFA state
 \[
 \delta^{\star}(R,a)=\{q\in Q:q\in E(\delta(r,a))\text{ for some }r\in R\}
 \]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Definition
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename graphs/automaton.pdf
-	width 69text%
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:example-automaton"
-
-\end_inset
-
-Automaton for ((b+)|a)+ with group 0 tags omitted for clarity
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
 
 \end_inset
 
@@ -2608,15 +2569,199 @@ posix
 \end_layout
 
 \begin_layout Section
-Benchmarks
+Benchmark
 \end_layout
 
 \begin_layout Section
-Conclusions
+Related work
 \end_layout
 
-\begin_layout Section
-Open questions
+\begin_layout Standard
+While there is no shortage of books discussing the usage of regular expressions,
+ the implementation side of regular expression has not been so lucky.
+ Cox is spot-on when he argues that innovations have repeatedly been ignored
+ and later reinvented 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Cox2007"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+This paper is no exception.
+ The authors of this paper had set out to implement Laurikari's TDFA algorithm
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "laurikari2000nfas"
+
+\end_inset
+
+, only to discover that Laurikari's description of a TDFA is so far from
+ complete that it can rightfully only be called the sketch for an algorithm.
+ Only late in the process did we discover that the blanks had already been
+ filled by Kuklewicz in the course of his implementation of TDFAs in Haskell
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Kuklewicz2007"
+
+\end_inset
+
+.
+ Kuklewicz enshrined his added insight into Haskell library, but never published
+ the algorithm as a whole.
+ If the history of regular expressions is evidence of one thing, it is that
+ source code is a terrible medium to convey algorithms.
+ 
+\end_layout
+
+\begin_layout Standard
+The situation dramatically improved with Cox's simple and concise explanation
+ of regular expression matching 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Cox2007"
+
+\end_inset
+
+.
+ It seems ironic that this well-versed author published his influential
+ work on his website.
+ Although the joke may be on Academia's side.
+\end_layout
+
+\begin_layout Standard
+When the taciturn practioners acknowledge each other's work, we can't help
+ but disagree almost universally with the characterizations they produce.
+ Sulzmann and Lu 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "sulzmann2012regular"
+
+\end_inset
+
+ call Kuklewicz's work an 
+\begin_inset Quotes eld
+\end_inset
+
+implementation
+\begin_inset Quotes erd
+\end_inset
+
+ of Laurikari's algorithm, although Laurikari's algorithm is far too incomplete
+ for that statement to be fair.
+ Laurikari's algorithm is referred to as a POSIX-style automaton.
+ In truth, Laurikari leaves the matching strategy entirely open.
+ It was Kuklewicz that found out how to get POSIX-style matching out of
+ Laurikari's TDFA.
+ 
+\end_layout
+
+\begin_layout Standard
+Cox says that Laurikari's TDFA is a reinvention Pike's published only in
+ code algorithm 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Pike1987"
+
+\end_inset
+
+, which is Thompson's NFA with submatch tracking.
+ This seems unfair in that Laurikari's allows for far more aggressive reusing
+ of old states than what Thompson allows.
+ This should lead to Laurikari's TDFA having fewer states, and therefore
+ better performance, than even Google's RE2, which uses Pike's algorithm.
+ This is not confirmed by the benchmarks by Sulzmann and Lu 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "sulzmann2012regular"
+
+\end_inset
+
+, but they offer an explanation: in their profiling, they see that all Haskell
+ implementations spend considerable time decoding the input strings.
+ In other words, the measured performance is more of an artifact of the
+ programming environment used.
+ 
+\end_layout
+
+\begin_layout Standard
+Another mistake that permeates the scarce literature is to call regular
+ expression matching linear.
+ As Sedgewick points out correctly 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Sedgewick1990"
+
+\end_inset
+
+, Thompson's NFA matching is of complexity 
+\begin_inset Formula $O(mn)$
+\end_inset
+
+, where 
+\begin_inset Formula $m$
+\end_inset
+
+ is the size of the input NFA, and 
+\begin_inset Formula $n$
+\end_inset
+
+ is the size of the input string.
+ To call this linear requires to assume 
+\begin_inset Formula $m$
+\end_inset
+
+ to be fix, which we cannot bring ourselves to justify.
+ It may well be true that, at present, 
+\begin_inset Formula $m$
+\end_inset
+
+ tends to be small.
+ But that is a natural consequence of the algorithms not scaling very well
+ with 
+\begin_inset Formula $m$
+\end_inset
+
+.
+ If they did, that would allow for fast feature extracting from text.
+ Therefore, in this paper, we consider the state of the art algorithms to
+ be quadratic, since both 
+\begin_inset Formula $m$
+\end_inset
+
+ and 
+\begin_inset Formula $n$
+\end_inset
+
+ are part of the input to a regular expression matcher.
+ We cannot rule out that a linear algorithm exists, in fact, we hope for
+ it.
+ To insist that regular expression matching is done in linear time is to
+ insist that the optimal algorithm has already been found; that is probably
+ not true.
+\end_layout
+
+\begin_layout Standard
+Sulzmann and Lu add to the table a new matching strategy that yields good
+ practical performance, although the theoretical bounds are considerably
+ worse than the state of the art, at 
+\begin_inset Formula $O(n^{2}m)$
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "sulzmann2012regular"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
