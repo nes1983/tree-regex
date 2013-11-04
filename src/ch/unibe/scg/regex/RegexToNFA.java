@@ -261,13 +261,13 @@ class RegexToNFA {
       CaptureGroup captureGroup) {
     final MiniAutomaton inner = make(last, builder, star.getElementary(), captureGroup);
 
-    final List<State> f = new ArrayList<>(last.getFinishing());
-    f.addAll(inner.getFinishing());
+    Collection<State> out = singleton(builder.makeState());
+    builder.makeUntaggedEpsilonTransitionFromTo(inner.getInitial(), out, Priority.LOW);
 
-    final MiniAutomaton ret = new MiniAutomaton(last.getFinishing(), f);
+    final MiniAutomaton ret = new MiniAutomaton(last.getFinishing(), out);
 
-    builder.makeUntaggedEpsilonTransitionFromTo(inner.getFinishing(), inner.getInitial(),
-        Priority.NORMAL);
+    builder.makeUntaggedEpsilonTransitionFromTo(inner.getFinishing(),
+        inner.getInitial(), Priority.NORMAL);
     return ret;
   }
 }
