@@ -23,12 +23,12 @@ class InputRangeCleanup {
     final Iterator<InputRange> next = ranges.iterator();
     next.next();
 
-    do {
+    while (next.hasNext()) {
       final InputRange c = current.next();
       final InputRange n = next.next();
       final InputRange shrunk = shrink(c, n);
       ret.add(shrunk);
-    } while (next.hasNext());
+    }
     ret.add(current.next());
 
     return Collections.unmodifiableSortedSet(ret);

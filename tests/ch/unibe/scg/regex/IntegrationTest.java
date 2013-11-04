@@ -97,6 +97,37 @@ public final class IntegrationTest {
   }
 
   @Test
+  public void testMatchExampleFromPaperTomLehrer() {
+    final Regex parsed = new ParserProvider().regexp().parse("(([a-zA-Z ]*),([0-9]+);)+");
+    final TNFA tnfa = new RegexToNFA().convert(parsed);
+    assertThat(tnfa.toString(),
+        is("q15 -> q29, {(q15, ANY)=[q15, NORMAL, NONE], "
+            + "(q15, ε)=[q16, NORMAL, ➀0], "
+            + "(q16, ε)=[q17, NORMAL, ➀1], "
+            + "(q17, ε)=[q18, NORMAL, ➀2], "
+            + "(q18, ε)=[q20, NORMAL, ➁2], "
+            + "(q18,  - )=[q19, NORMAL, NONE], "
+            + "(q18, A-Z)=[q19, NORMAL, NONE], "
+            + "(q18, a-z)=[q19, NORMAL, NONE], "
+            + "(q19, ε)=[q18, NORMAL, NONE, q20, NORMAL, ➁2], "
+            + "(q20, ,-,)=[q21, NORMAL, NONE], "
+            + "(q21, ε)=[q22, NORMAL, ➀3], "
+            + "(q22, 0-9)=[q23, NORMAL, NONE], "
+            + "(q23, ε)=[q24, LOW, NONE, q22, NORMAL, NONE], "
+            + "(q24, ε)=[q25, NORMAL, ➁3], "
+            + "(q25, ;-;)=[q26, NORMAL, NONE], "
+            + "(q26, ε)=[q27, NORMAL, ➁1], "
+            + "(q27, ε)=[q28, LOW, NONE, q16, NORMAL, NONE], "
+            + "(q28, ε)=[q29, NORMAL, ➁0]}"));
+
+
+    TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
+    RealMatchResult res = (RealMatchResult) interpreter.interpret("Tom Lehrer,01;Alan Turing,23;");
+    assertThat(Arrays.toString(res.captureGroupPositions),
+        is("[40(0 0 ), 41(28 28 ), 34(14 14 0 ), 35(28 28 13 ), 13(14 14 0 ), 14(24 24 9 ), 30(26 26 11 ), 31(27 27 12 )]"));
+  }
+
+  @Test
   public void testMemoryAfterExecutionSimple() {
     State.resetCount();
     History.resetCount();

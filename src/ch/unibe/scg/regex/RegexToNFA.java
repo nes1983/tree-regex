@@ -30,6 +30,8 @@ import ch.unibe.scg.regex.TransitionTriple.Priority;
  * @author nes
  */
 class RegexToNFA {
+  final InputRangeCleanup inputRangeCleanup = new InputRangeCleanup();
+
   public TNFA convert(final Node node) {
     requireNonNull(node);
     final Builder builder = new Builder();
@@ -235,7 +237,12 @@ class RegexToNFA {
       final InputRange ir = inputRangeFor(i);
       ranges.add(ir);
     }
-    throw null;
+    final SortedSet<InputRange> cleanedRanges = inputRangeCleanup.cleanUp(ranges);
+    final State a = builder.makeState();
+    for (InputRange range : cleanedRanges) {
+      builder.addUntaggedTransition(range, last.getFinishing(), a, Priority.NORMAL);
+    }
+    return new MiniAutomaton(last.getFinishing(), a);
   }
 
   MiniAutomaton makeSimple(final MiniAutomaton last, final Builder b, final Simple simple,
