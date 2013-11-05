@@ -1,5 +1,6 @@
 package ch.unibe.scg.regex;
 
+import java.util.NoSuchElementException;
 import java.util.regex.MatchResult;
 
 /**
@@ -12,7 +13,10 @@ import java.util.regex.MatchResult;
  * @see MatchResultTree#getRoot {@code getRoot} to get access to the hierarchy.
  */
 public interface MatchResultTree extends MatchResult {
-	/** @return the {@link TreeNode} of the match of the whole string or {@code null} if no match was found. */
+	/**
+	 * @return the {@link TreeNode} of the match of the whole string or throws
+	 *         {@link NoSuchElementException} if no match was found.
+	 */
 	public TreeNode getRoot();
 
 	/**

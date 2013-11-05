@@ -66,8 +66,7 @@ class RealMatchResult implements MatchResultTree {
 
     @Override
     public TreeNode getRoot() {
-      // TODO: implement
-      throw null;
+      throw new NoSuchElementException("There was no match!");
     }
   }
 
