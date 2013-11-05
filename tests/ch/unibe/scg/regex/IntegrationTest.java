@@ -144,10 +144,8 @@ public final class IntegrationTest {
   public void integrationTestWithUnion() {
     State.resetCount();
     History.resetCount();
-    final Regex parsed = new ParserProvider().regexp().parse("((a+)(b|c|d))+");
-    final TNFA tnfa = new RegexToNFA().convert(parsed);
-    TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
-    RealMatchResult res = (RealMatchResult) interpreter.interpret("abac");
+    TDFAInterpreter interpreter = TDFAInterpreter.compile("((a+)(b|c|d))+");
+    RealMatchResult res = (RealMatchResult) interpreter.interpret("abacad");
     assertThat(Arrays.toString(res.captureGroupPositions),
       is("[31(0 0 ), 32(3 3 ), 27(2 2 0 ), 28(3 3 1 ), 11(2 2 0 ), 12(2 2 0 ), 25(3 3 1 ), 26(3 3 1 )]"));
   }
