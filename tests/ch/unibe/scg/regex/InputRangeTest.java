@@ -47,4 +47,13 @@ public final class InputRangeTest {
 				InputRange.make('b', 'd'));
 		assertThat(TNFAToTDFA.allInputRanges(start).toString(), is("[a-a, b-d, e-g]"));
 	}
+	
+
+	@Test
+	public void testAny() {
+		List<InputRange> start = Arrays.asList(
+				InputRange.ANY,
+				InputRange.make('b', 'd'));
+		assertThat(TNFAToTDFA.allInputRanges(start).toString(), is("[0x0-a, b-d, e-0xffff]"));
+	}
 }

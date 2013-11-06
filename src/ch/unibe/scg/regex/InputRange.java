@@ -92,7 +92,15 @@ abstract class InputRange implements Comparable<InputRange> {
 
     @Override
     public String toString() {
-      return "" + from + "-" + to;
+      String printedFrom = Character.toString(from);
+      if (!Character.isLetterOrDigit(from)) {
+    	  printedFrom = String.format("0x%x", (int) from);
+      }
+      String printedTo = Character.toString(to);
+      if (!Character.isLetterOrDigit(to)) {
+    	  printedTo = String.format("0x%x", (int) to);
+      }
+      return String.format("%s-%s", printedFrom, printedTo);
     }
 
     @Override
