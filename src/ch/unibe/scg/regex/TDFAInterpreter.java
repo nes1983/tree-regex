@@ -52,7 +52,7 @@ public class TDFAInterpreter {
   }
 
   public MatchResultTree interpret(CharSequence input) {
-    final List<InputRange> inputRanges = tnfa2tdfa.allInputRanges();
+    final List<InputRange> inputRanges = TNFAToTDFA.allInputRanges(tnfa2tdfa.tnfa.allInputRanges());
 
     StateAndInstructions startState = tnfa2tdfa.makeStartState();
     DFAState t = startState.dfaState;

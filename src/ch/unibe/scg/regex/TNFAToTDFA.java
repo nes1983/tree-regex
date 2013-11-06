@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +37,8 @@ class TNFAToTDFA {
     }
   }
 
+  private static final InputRangeCleanup inputRangeCleanup = new InputRangeCleanup();
+
   public static TNFAToTDFA make(final TNFA tnfa) {
     return new TNFAToTDFA(tnfa);
   }
@@ -52,30 +53,10 @@ class TNFAToTDFA {
     this.tnfa = tnfa;
   }
 
-  /** @return All input ranges, sorted */
-  List<InputRange> allInputRanges() {
-    final List<InputRange> ranges = new ArrayList<>(tnfa.allInputRanges());
-    if (ranges.size() < 2) {
-      return Collections.unmodifiableList(ranges);
-    }
-
-    final List<InputRange> ret = new ArrayList<>();
-    Collections.sort(ranges);
-    final Iterator<InputRange> iter = ranges.iterator();
-    InputRange last = iter.next();
-    InputRange cur = null;
-    while (iter.hasNext()) {
-      cur = iter.next();
-      if (last.getTo() < cur.getFrom()) {
-        ret.add(last);
-      } else {
-        last = InputRange.make((char) (last.getTo() + 1), cur.getTo());
-      }
-      last = cur;
-    }
-    assert cur != null;
-    ret.add(cur);
-    return new ArrayList<>(ret);
+  /** @return All input ranges, non-intersecting, sorted */
+  static final List<InputRange> allInputRanges(final Collection<InputRange> collection) {
+	final List<InputRange> ranges = new ArrayList<>(collection);
+    return new ArrayList<>(inputRangeCleanup.cleanUp(ranges));
   }
 
   /** Used to create the initial state of the DFA. */

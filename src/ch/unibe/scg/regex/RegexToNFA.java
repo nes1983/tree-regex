@@ -237,7 +237,8 @@ class RegexToNFA {
       final InputRange ir = inputRangeFor(i);
       ranges.add(ir);
     }
-    final SortedSet<InputRange> cleanedRanges = inputRangeCleanup.cleanUp(ranges);
+    final List<InputRange> rangesList = new ArrayList<>(ranges);
+    final List<InputRange> cleanedRanges = inputRangeCleanup.cleanUp(rangesList);
     final State a = builder.makeState();
     for (InputRange range : cleanedRanges) {
       builder.addUntaggedTransition(range, last.getFinishing(), a, Priority.NORMAL);

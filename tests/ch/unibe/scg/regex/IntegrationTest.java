@@ -1,6 +1,7 @@
 package ch.unibe.scg.regex;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
@@ -126,6 +127,15 @@ public final class IntegrationTest {
     RealMatchResult res = (RealMatchResult) interpreter.interpret("Tom Lehrer,01;Alan Turing,23;");
     assertThat(Arrays.toString(res.captureGroupPositions),
         is("[30(0 0 ), 31(28 28 ), 26(14 14 0 ), 27(28 28 13 ), 13(14 14 0 ), 14(24 24 9 ), 22(26 26 11 ), 23(27 27 12 )]"));
+  }
+  
+  @Test
+  public void testMatchRanges() {
+    State.resetCount();
+    History.resetCount();
+    TDFAInterpreter interpreter = TDFAInterpreter.compile("[a-b][b-c]");
+    MatchResultTree interpreted = interpreter.interpret("ab");
+	assertThat(interpreted, is(instanceOf(RealMatchResult.class)));
   }
 
   @Test
