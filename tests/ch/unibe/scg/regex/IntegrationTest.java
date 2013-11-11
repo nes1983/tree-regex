@@ -155,7 +155,7 @@ public final class IntegrationTest {
     State.resetCount();
     History.resetCount();
     TDFAInterpreter interpreter = TDFAInterpreter.compile("((a+)(b|c|d))+");
-    RealMatchResult res = (RealMatchResult) interpreter.interpret("abacad");
+    RealMatchResult res = (RealMatchResult) interpreter.interpret("abac");
     assertThat(Arrays.toString(res.captureGroupPositions),
       is("[31(0 0 ), 32(3 3 ), 27(2 2 0 ), 28(3 3 1 ), 11(2 2 0 ), 12(2 2 0 ), 25(3 3 1 ), 26(3 3 1 )]"));
   }
