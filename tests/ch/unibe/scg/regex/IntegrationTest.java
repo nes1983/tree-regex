@@ -1,7 +1,7 @@
 package ch.unibe.scg.regex;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
@@ -102,33 +102,33 @@ public final class IntegrationTest {
     final Regex parsed = new ParserProvider().regexp().parse("(([a-zA-Z ]*),([0-9]+);)+");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
     assertThat(tnfa.toString(),
-        is("q15 -> q30, {(q15, ANY)=[q15, NORMAL, NONE], "
+        is("q15 -> q30, "
+            + "{(q15, ANY)=[q15, NORMAL, NONE], "
             + "(q15, ε)=[q16, NORMAL, ➀0], "
             + "(q16, ε)=[q17, NORMAL, ➀1], "
             + "(q17, ε)=[q18, NORMAL, ➀2], "
             + "(q18, ε)=[q20, LOW, NONE], "
-            + "(q18,  - )=[q19, NORMAL, NONE], "
+            + "(q18, 0x20-0x20)=[q19, NORMAL, NONE], "
             + "(q18, A-Z)=[q19, NORMAL, NONE], "
             + "(q18, a-z)=[q19, NORMAL, NONE], "
             + "(q19, ε)=[q18, NORMAL, NONE], "
             + "(q20, ε)=[q21, NORMAL, ➁2], "
-            + "(q21, ,-,)=[q22, NORMAL, NONE], "
+            + "(q21, 0x2c-0x2c)=[q22, NORMAL, NONE], "
             + "(q22, ε)=[q23, NORMAL, ➀3], "
             + "(q23, 0-9)=[q24, NORMAL, NONE], "
             + "(q24, ε)=[q25, LOW, NONE, q23, NORMAL, NONE], "
             + "(q25, ε)=[q26, NORMAL, ➁3], "
-            + "(q26, ;-;)=[q27, NORMAL, NONE], "
+            + "(q26, 0x3b-0x3b)=[q27, NORMAL, NONE], "
             + "(q27, ε)=[q28, NORMAL, ➁1], "
             + "(q28, ε)=[q29, LOW, NONE, q16, NORMAL, NONE], "
             + "(q29, ε)=[q30, NORMAL, ➁0]}"));
 
-
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
     RealMatchResult res = (RealMatchResult) interpreter.interpret("Tom Lehrer,01;Alan Turing,23;");
     assertThat(Arrays.toString(res.captureGroupPositions),
-        is("[30(0 0 ), 31(28 28 ), 26(14 14 0 ), 27(28 28 13 ), 13(14 14 0 ), 14(24 24 9 ), 22(26 26 11 ), 23(27 27 12 )]"));
+        is("[28(0 0 ), 29(28 28 ), 24(14 14 0 ), 25(28 28 13 ), 13(14 14 0 ), 14(24 24 9 ), 20(26 26 11 ), 21(27 27 12 )]"));
   }
-  
+
   @Test
   public void testMatchRanges() {
     State.resetCount();

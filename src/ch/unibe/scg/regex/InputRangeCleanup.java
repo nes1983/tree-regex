@@ -6,11 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 
 
-/**
- * Gets a sorted list of possibly intersecting input ranges, and makes them non-intersecting.
- *
- * @author nes
- */
+/** Gets a sorted list of possibly intersecting input ranges, and makes them non-intersecting. */
 class InputRangeCleanup {
   List<InputRange> cleanUp(final List<InputRange> ranges) {
     if (ranges.isEmpty()) {
@@ -36,7 +32,7 @@ class InputRangeCleanup {
       if (c2 < n1) {
     	  ret.add(c);
     	  c = current.next();
-      } 
+      }
       //  2. [c1, c2] and [n1, n2] intersect, but n2 >= c2: [c1-------c2]
       //     add [c1, n1-1]                                       [n1---------n2]
       else if (c2 <= n2) {
@@ -56,6 +52,8 @@ class InputRangeCleanup {
     }
     ret.add(c);
 
-    return Collections.unmodifiableList(ret);
+    Collections.sort(ret);
+
+    return ret;
   }
 }
