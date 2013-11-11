@@ -33,8 +33,6 @@ public final class NewTest {
     t0 = mock(Tag.class);
     final CaptureGroup cg = mock(CaptureGroup.class);
 
-    when(cg.getNumber()).thenReturn(0);
-
     when(t0.toString()).thenReturn("t0");
     when(t0.getGroup()).thenReturn(cg);
     when(t0.isStartTag()).thenReturn(true);

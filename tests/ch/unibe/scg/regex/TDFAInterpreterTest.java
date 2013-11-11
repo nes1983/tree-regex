@@ -40,18 +40,12 @@ public class TDFAInterpreterTest {
     final Tag t0Close = mock(Tag.class);
     final CaptureGroup cg = mock(CaptureGroup.class);
 
-    when(cg.getNumber()).thenReturn(0);
-
-
     when(t0Open.toString()).thenReturn("t0↑");
     when(t0Open.getGroup()).thenReturn(cg);
     when(t0Open.isStartTag()).thenReturn(true);
     when(t0Close.toString()).thenReturn("t0↓");
     when(t0Close.getGroup()).thenReturn(cg);
     when(t0Close.isEndTag()).thenReturn(true);
-
-    when(cg.getStartTag()).thenReturn(t0Open);
-    when(cg.getEndTag()).thenReturn(t0Close);
 
     when(tnfa.allInputRanges()).thenReturn(Arrays.asList(InputRange.make('a')));
     when(tnfa.getInitialState()).thenReturn(s0);

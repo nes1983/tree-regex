@@ -66,13 +66,15 @@ public class TDFAInterpreter {
       instruction.execute(-1);
     }
 
-    for (int pos = 0; pos < input.length(); pos++) {
+    NextState newState = new NextState(); // Output parameter to save allocations
+    int inputLen = input.length(); // Prevent re-executing on every loop step.
+    for (int pos = 0; pos < inputLen; pos++) {
       final char a = input.charAt(pos);
 
       // If there is a TDFA, see if it has a transition. Execute if there and continue.
       if (tdfa != null) {
-        NextState newState = tdfa.newStateAndInstructions(tdfaState, a);
-        if (newState != null) {
+        tdfa.newStateAndInstructions(tdfaState, a, newState);
+        if (newState.found) {
           for (Instruction i : newState.instructions) {
             i.execute(pos);
           }
@@ -122,12 +124,12 @@ public class TDFAInterpreter {
       // If there is a valid mapping, findMappableStates will modify mapping into it.
       final DFAState mappedState = tnfa2tdfa.findMappableState(states, u, mapping);
 
-      DFAState newState = mappedState;
+      DFAState nextState = mappedState;
       List<Instruction> c = new ArrayList<>(uu.instructions);
       if (mappedState == null) {
         mapping = null; // Won't be needed then.
-        newState = u;
-        states.add(newState);
+        nextState = u;
+        states.add(nextState);
       } else {
         final List<Instruction> mappingInstructions = tnfa2tdfa.mappingInstructions(mapping);
         c.addAll(mappingInstructions);
@@ -137,11 +139,11 @@ public class TDFAInterpreter {
         instruction.execute(pos);
       }
 
-      assert historiesOk(newState.innerStates.values());
+      assert historiesOk(nextState.innerStates.values());
 
-      tdfaBuilder.addTransition(t, inputRange, newState, c);
+      tdfaBuilder.addTransition(t, inputRange, nextState, c);
 
-      t = newState;
+      t = nextState;
     }
 
     // Restore full state before extracing information.

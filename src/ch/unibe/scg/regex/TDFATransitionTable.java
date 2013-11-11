@@ -1,7 +1,6 @@
 package ch.unibe.scg.regex;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,29 +9,41 @@ import java.util.NavigableSet;
 import java.util.TreeSet;
 
 class TDFATransitionTable {
+  final private int size;
+
+  // The following vars are, together a struct of arrays.
+  final private char[] froms;
+  final private Instruction[][] instructions;
+  final private int[] newStates;
+  final private int[] states;
+  final private char[] tos;
+
+  /** Position of the last hit in the transition table. */
+  private int last;
+
+  TDFATransitionTable(final char[] froms, final char[] tos, final int[] states,
+      final int[] newStates, final Instruction[][] instructions) {
+    this.size = froms.length;
+    assert tos.length == size && states.length == size && froms.length == size
+        && newStates.length == size && instructions.length == size;
+    this.froms = froms;
+    this.tos = tos;
+    this.states = states;
+    this.newStates = newStates;
+    this.instructions = instructions;
+  }
+
   static class NextState {
-    final Iterable<Instruction> instructions;
-    final int nextState;
-
-    NextState(final int nextState, final Iterable<Instruction> instructions) {
-      this.nextState = nextState;
-      this.instructions = instructions;
-    }
-
-    Iterable<Instruction> getInstructions() {
-      return instructions;
-    }
-
-    int getNextState() {
-      return nextState;
-    }
+    Instruction[] instructions;
+    int nextState;
+    boolean found;
   }
 
   static class NextDFAState {
-    final Iterable<Instruction> instructions;
+    final Instruction[] instructions;
     final DFAState nextState;
 
-    NextDFAState(Iterable<Instruction> instructions, DFAState nextState) {
+    NextDFAState(Instruction[] instructions, DFAState nextState) {
       this.instructions = instructions;
       this.nextState = nextState;
     }
@@ -46,11 +57,11 @@ class TDFATransitionTable {
   static class Builder {
     static class Entry implements Comparable<Builder.Entry> {
       final char from, to;
-      final Iterable<Instruction> instructions;
+      final Instruction[] instructions;
       final int state, newState;
       final DFAState toDFA;
 
-      public Entry(final char from, final char to, final Iterable<Instruction> c,
+      public Entry(final char from, final char to, final Instruction[] c,
           final int state, final int newState, DFAState toDFA) {
         this.from = from;
         this.to = to;
@@ -107,10 +118,10 @@ class TDFATransitionTable {
     final NavigableSet<Builder.Entry> transitions = new TreeSet<>();
 
     public void addTransition(final DFAState t, final InputRange inputRange,
-        final DFAState newState, final Iterable<Instruction> c) {
+        final DFAState newState, final List<Instruction> c) {
 
       final Builder.Entry e =
-          new Entry(inputRange.getFrom(), inputRange.getTo(), c,
+          new Entry(inputRange.getFrom(), inputRange.getTo(), c.toArray(new Instruction[c.size()]),
               mapping.lookupOrMake(t), mapping.lookupOrMake(newState), newState);
       transitions.add(e);
     }
@@ -120,8 +131,7 @@ class TDFATransitionTable {
       if (fromState == null) {
         return null;
       }
-      final List<Instruction> emptyList = Collections.emptyList();
-      final Builder.Entry probe = new Entry(a, a, emptyList, fromState, -1, null);
+      final Builder.Entry probe = new Entry(a, a, null, fromState, -1, null);
       final NavigableSet<Builder.Entry> headSet = transitions.headSet(probe, true);
       if (headSet.isEmpty()) {
         return null;
@@ -137,9 +147,7 @@ class TDFATransitionTable {
       final Iterator<Builder.Entry> transitionsIter = transitions.iterator();
       final int size = transitions.size();
       final char[] froms = new char[size];
-      @SuppressWarnings("unchecked")
-      // Suppress seems unavoidable. Checked on Stackoverflow.
-      final Iterable<Instruction>[] instructions = new Iterable[size];
+      final Instruction[][] instructions = new Instruction[size][];
       final int[] newStates = new int[size];
       final int[] states = new int[size];
       final char[] tos = new char[size];
@@ -157,25 +165,6 @@ class TDFATransitionTable {
     }
   }
 
-  final char[] froms;
-  final Iterable<Instruction>[] instructions;
-  final int[] newStates;
-  final int size;
-  final int[] states;
-  final char[] tos;
-
-  TDFATransitionTable(final char[] froms, final char[] tos, final int[] states,
-      final int[] newStates, final Iterable<Instruction>[] instructions) {
-    this.size = froms.length;
-    assert tos.length == size && states.length == size && froms.length == size
-        && newStates.length == size && instructions.length == size;
-    this.froms = froms;
-    this.tos = tos;
-    this.states = states;
-    this.newStates = newStates;
-    this.instructions = instructions;
-  }
-
   private int cmp(final int state1, final int state2, final char ch1, final char ch2) {
     final int scmp = Integer.compare(state1, state2);
     if (scmp != 0) {
@@ -184,7 +173,29 @@ class TDFATransitionTable {
     return Character.compare(ch1, ch2);
   }
 
-  public NextState newStateAndInstructions(final int state, final char input) {
+  void newStateAndInstructions(final int state, final char input, NextState out) {
+    if (states[last] == state && froms[last] <= input && input <= tos[last]) {
+      out.nextState = newStates[last];
+      out.instructions = instructions[last];
+      out.found = true;
+      return;
+    }
+
+    if (size < 20) { // linear scan for small automata
+      for (int y = 0; y < size; y++) {
+        if (states[y] == state && froms[y] <= input && input <= tos[y]) {
+          out.nextState = newStates[y];
+          out.instructions = instructions[y];
+          last = y;
+          out.found = true;
+          return;
+        }
+      }
+
+      out.found = false;
+      return;
+    }
+
     int l = 0;
     int r = size - 1;
     int x = -1;
@@ -196,7 +207,11 @@ class TDFATransitionTable {
       } else if (cmp > 0) {
         l = x + 1;
       } else {
-        return new NextState(newStates[x], instructions[x]);
+        out.nextState = newStates[x];
+        out.instructions = instructions[x];
+        last = x;
+        out.found = true;
+        return;
       }
     }
 
@@ -207,12 +222,17 @@ class TDFATransitionTable {
 
       if (0 <= y && y < size) {
         if (states[y] == state && froms[y] <= input && input <= tos[y]) {
-          return new NextState(newStates[y], instructions[y]);
+          out.nextState = newStates[y];
+          out.instructions = instructions[y];
+          last = y;
+          out.found = true;
+          return;
         }
       }
     }
 
-    return null;
+    out.found = false;
+    return;
   }
 
   @Override
