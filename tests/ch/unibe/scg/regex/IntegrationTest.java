@@ -64,8 +64,8 @@ public final class IntegrationTest {
     RealMatchResult res = (RealMatchResult) interpreter.interpret("abcaabaaabc");
 
     assertThat(Arrays.toString(res.captureGroupPositions),
-      is("[54(0 0 ), 55(10 10 ), 49(3 3 0 ), 50(10 10 2 ), 39(6 6 3 0 ), "
-          + "40(9 9 5 1 ), 32(6 6 3 0 ), 33(8 8 4 0 )]"));
+      is("[61(0 0 ), 62(10 10 ), 56(3 3 0 ), 57(10 10 2 ), "
+          + "44(6 6 3 0 ), 45(9 9 5 1 ), 32(6 6 3 0 ), 33(8 8 4 0 )]"));
     assertThat(res.getRoot().getChildren().toString(), is("[abc, aabaaabc]"));
     Iterator<TreeNode> iter = res.getRoot().getChildren().iterator();
     List<TreeNode> children = (List<TreeNode>) iter.next().getChildren();
@@ -86,8 +86,8 @@ public final class IntegrationTest {
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
     RealMatchResult res = (RealMatchResult) interpreter.interpret("Tom Lehrer,01;Alan Turing,23;");
     assertThat(Arrays.toString(res.captureGroupPositions),
-        is("[110(0 0 ), 111(28 28 ), 106(14 14 0 ), 107(28 28 13 ), "
-            + "69(14 14 0 ), 70(24 24 9 ), 95(26 26 11 ), 96(27 27 12 )]"));
+        is("[106(0 0 ), 107(28 28 ), 102(14 14 0 ), 103(28 28 13 ), "
+            + "62(14 14 0 ), 63(24 24 9 ), 88(26 26 11 ), 89(27 27 12 )]"));
   }
 
   @Test
@@ -112,51 +112,19 @@ public final class IntegrationTest {
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
     RealMatchResult res = (RealMatchResult) interpreter.interpret("abab");
     assertThat(Arrays.toString(res.captureGroupPositions),
-      is("[27(0 0 ), 28(3 3 ), 23(2 2 0 ), 24(3 3 1 ), 21(2 2 0 ), 22(2 2 0 )]"));
+      is("[30(0 0 ), 31(3 3 ), 26(2 2 0 ), 27(3 3 1 ), 21(2 2 0 ), 22(2 2 0 )]"));
   }
 
   @Test
   public void testOtherLehrer() {
     final Regex parsed = new ParserProvider().regexp().parse("((.*?),([0-9]+);)+");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
-//      assertThat(tnfa.toString(), is(
-//        "q0 -> q15, {"
-//        + "(q0, 0x0-0x2b)=[q0, LOW, NONE], "
-//        + "(q0, 0x2c-0x2c)=[q0, LOW, NONE], "
-//        + "(q0, 0x2d-0x2f)=[q0, LOW, NONE], "
-//        + "(q0, 0-9)=[q0, LOW, NONE], "
-//        + "(q0, 0x3a-0x3a)=[q0, LOW, NONE], "
-//        + "(q0, 0x3b-0x3b)=[q0, LOW, NONE], "
-//        + "(q0, 0x3c-0xffff)=[q0, LOW, NONE], "
-//        + "(q3, 0x0-0x2b)=[q4, NORMAL, NONE], "
-//        + "(q3, 0x2c-0x2c)=[q4, NORMAL, NONE], "
-//        + "(q3, 0x2d-0x2f)=[q4, NORMAL, NONE], "
-//        + "(q3, 0-9)=[q4, NORMAL, NONE], "
-//        + "(q3, 0x3a-0x3a)=[q4, NORMAL, NONE], "
-//        + "(q3, 0x3b-0x3b)=[q4, NORMAL, NONE], "
-//        + "(q3, 0x3c-0xffff)=[q4, NORMAL, NONE], "
-//        + "(q6, 0x2c-0x2c)=[q7, NORMAL, NONE], "
-//        + "(q8, 0-9)=[q9, NORMAL, NONE], "
-//        + "(q11, 0x3b-0x3b)=[q12, NORMAL, NONE]}, "
-//        + "{q0=[q1, NORMAL, ➀0], "
-//        + "q1=[q2, NORMAL, ➀1], "
-//        + "q2=[q3, NORMAL, ➀2], "
-//        + "q3=[q4, NORMAL, NONE], "
-//        + "q4=[q3, LOW, NONE, q5, NORMAL, NONE], "
-//        + "q5=[q6, NORMAL, ➁2], "
-//        + "q7=[q8, NORMAL, ➀3], "
-//        + "q9=[q10, LOW, NONE, q8, NORMAL, NONE], "
-//        + "q10=[q11, NORMAL, ➁3], "
-//        + "q12=[q13, NORMAL, ➁1], "
-//        + "q13=[q14, LOW, NONE, q1, NORMAL, NONE], "
-//        + "q14=[q15, NORMAL, ➁0]}"));
-
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
     RealMatchResult res = (RealMatchResult) interpreter.interpret("Tom Lehrer,01;Alan Turing,23;");
 
     assertThat(Arrays.toString(res.captureGroupPositions),
-      is("[15(0 0 ), 16(3 3 ), 11(2 2 0 ), 12(3 3 1 ), 9(2 2 0 ), 10(2 2 0 )]"));
-    assertThat(res.toString(), is(""));
+      is("[98(0 0 ), 99(28 28 ), 92(14 14 0 ), 93(28 28 13 ), 57(14 14 0 ), "
+          + "58(24 24 9 ), 78(26 26 11 ), 79(27 27 12 )]"));
   }
 
   @Test
@@ -164,7 +132,7 @@ public final class IntegrationTest {
     TDFAInterpreter interpreter = TDFAInterpreter.compile("((a+)(b|c|d))+");
     RealMatchResult res = (RealMatchResult) interpreter.interpret("abac");
     assertThat(Arrays.toString(res.captureGroupPositions),
-      is("[36(0 0 ), 37(3 3 ), 34(2 2 0 ), 35(3 3 1 ), 26(2 2 0 ), 27(2 2 0 ), 32(3 3 1 ), 33(3 3 1 )]"));
+      is("[39(0 0 ), 40(3 3 ), 34(2 2 0 ), 35(3 3 1 ), 26(2 2 0 ), 27(2 2 0 ), 32(3 3 1 ), 33(3 3 1 )]"));
   }
 
   @Test
