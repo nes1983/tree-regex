@@ -70,9 +70,9 @@ class TNFA {
       }
     }
 
-    /** Add untagged transitions for all input that are overlapped by {@code overlappedBy}. */
+    /** Add untagged transitions for all input that are overlapped by {@code overlappedBy}. Priority: normal. */
     void addUntaggedTransition(final InputRange overlappedBy, final Collection<State> froms,
-        final State to, final Priority priority) {
+        final State to) {
       for (final State from : froms) {
         NavigableSet<InputRange> overlappedRanges =
             allInputRanges.subSet(
@@ -83,7 +83,7 @@ class TNFA {
           if (!transitions.containsKey(key)) {
             transitions.put(key, new ArrayList<TransitionTriple>());
           }
-          transitions.get(key).add(new TransitionTriple(to, priority, Tag.NONE));
+          transitions.get(key).add(new TransitionTriple(to, Priority.NORMAL, Tag.NONE));
         }
       }
     }

@@ -122,7 +122,7 @@ class RegexToNFA {
   MiniAutomaton makeAny(final MiniAutomaton last, final Builder builder) {
     final State a = builder.makeState();
 
-    builder.addUntaggedTransition(InputRange.ANY, last.finishing, a, Priority.NORMAL);
+    builder.addUntaggedTransition(InputRange.ANY, last.finishing, a);
 
     return new MiniAutomaton(last.finishing, a);
   }
@@ -131,14 +131,14 @@ class RegexToNFA {
     final State a = b.makeState();
     final MiniAutomaton ret = new MiniAutomaton(last.finishing, a);
 
-    b.addUntaggedTransition(character.inputRange, ret.initial, a, Priority.NORMAL);
+    b.addUntaggedTransition(character.inputRange, ret.initial, a);
 
     return ret;
   }
 
   MiniAutomaton makeEos(final MiniAutomaton last, final Builder builder) {
     final State a = builder.makeState();
-    builder.addUntaggedTransition(InputRange.EOS, last.finishing, a, Priority.NORMAL);
+    builder.addUntaggedTransition(InputRange.EOS, last.finishing, a);
     return new MiniAutomaton(last.finishing, a);
   }
 
@@ -160,7 +160,9 @@ class RegexToNFA {
   MiniAutomaton makeInitialMiniAutomaton(final Builder builder, CaptureGroup entireMatch) {
     final State init = builder.makeInitialState();
     // Eat prefix.
-    builder.addUntaggedTransition(InputRange.ANY, singleton(init), init, Priority.LOW);
+    State endAny = builder.makeState();
+    builder.addUntaggedTransition(InputRange.ANY, singleton(init), endAny);
+    builder.makeUntaggedEpsilonTransitionFromTo(singleton(endAny), singleton(init), Priority.LOW);
 
     final State startTagger = builder.makeState();
     builder.addStartTagTransition(singleton(init), startTagger, entireMatch, Priority.NORMAL);
@@ -214,7 +216,7 @@ class RegexToNFA {
     final List<InputRange> cleanedRanges = inputRangeCleanup.cleanUp(rangesList);
     final State a = builder.makeState();
     for (InputRange range : cleanedRanges) {
-      builder.addUntaggedTransition(range, last.finishing, a, Priority.NORMAL);
+      builder.addUntaggedTransition(range, last.finishing, a);
     }
     return new MiniAutomaton(last.finishing, a);
   }
@@ -233,26 +235,40 @@ class RegexToNFA {
 
   MiniAutomaton makeNonGreedyStar(MiniAutomaton last, Builder builder, NonGreedyStar nonGreedyStar,
       CaptureGroup captureGroup) {
-    final MiniAutomaton inner = make(last, builder, nonGreedyStar.elementary, captureGroup);
+    // Make start state and connect.
+    State start = builder.makeState();
+    builder.makeUntaggedEpsilonTransitionFromTo(last.finishing, singleton(start), Priority.NORMAL);
 
-    builder.makeUntaggedEpsilonTransitionFromTo(inner.initial, inner.finishing, Priority.NORMAL);
-    builder.makeUntaggedEpsilonTransitionFromTo(inner.finishing, inner.initial, Priority.LOW);
+    // Make inner machine.
+    MiniAutomaton innerLast = new MiniAutomaton(last.finishing, start);
+    final MiniAutomaton inner = make(innerLast, builder, nonGreedyStar.elementary, captureGroup);
 
-    Collection<State> out = singleton(builder.makeState());
-    builder.makeUntaggedEpsilonTransitionFromTo(inner.finishing, out, Priority.NORMAL);
+    // Connect inner machine back to start.
+    builder.makeUntaggedEpsilonTransitionFromTo(inner.finishing, singleton(start), Priority.LOW);
 
-    return new MiniAutomaton(inner.finishing, out);
+    // Make and connect `out` state.
+    State out = builder.makeState();
+    builder.makeUntaggedEpsilonTransitionFromTo(singleton(start), singleton(out), Priority.NORMAL);
+
+    return new MiniAutomaton(last.finishing, out);
   }
 
   MiniAutomaton makeStar(final MiniAutomaton last, final Builder builder, final Star star,
       CaptureGroup captureGroup) {
-    final MiniAutomaton inner = make(last, builder, star.elementary, captureGroup);
+    // Make start state and connect.
+    State start = builder.makeState();
+    builder.makeUntaggedEpsilonTransitionFromTo(last.finishing, singleton(start), Priority.NORMAL);
 
-    Collection<State> out = singleton(builder.makeState());
-    builder.makeUntaggedEpsilonTransitionFromTo(inner.initial, out, Priority.LOW);
+    // Make inner machine.
+    MiniAutomaton innerLast = new MiniAutomaton(singleton(start), start);
+    final MiniAutomaton inner = make(innerLast, builder, star.elementary, captureGroup);
 
-    builder.makeUntaggedEpsilonTransitionFromTo(inner.finishing,
-        inner.initial, Priority.NORMAL);
+    // Connect inner machine back to start.
+    builder.makeUntaggedEpsilonTransitionFromTo(inner.finishing, singleton(start), Priority.NORMAL);
+
+    // Make and connect `out` state.
+    State out = builder.makeState();
+    builder.makeUntaggedEpsilonTransitionFromTo(singleton(start), singleton(out), Priority.LOW);
 
     return new MiniAutomaton(last.finishing, out);
   }

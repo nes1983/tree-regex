@@ -78,7 +78,7 @@ class TNFAToTDFA {
    * @param a the character that was read. Is ignored if startState == true.
    * @return The next state after state, for input a. Null if there isn't a follow-up state.
    */
-  StateAndInstructions epsilonClosure(final LinkedHashMap<State, History[]> innerStates, InputRange ir, boolean startState) {
+  StateAndInstructions oneStep(final LinkedHashMap<State, History[]> innerStates, InputRange ir, boolean startState) {
     final LinkedHashMap<State, History[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
 
     final Deque<StateWithMemoryLocation> stack = new ArrayDeque<>(); // normal priority
@@ -255,7 +255,7 @@ class TNFAToTDFA {
   StateAndInstructions makeStartState() {
     LinkedHashMap<State, History[]> start = convertToDfaState(tnfa.initialState);
 
-    return epsilonClosure(start, InputRange.EOS, true);
+    return oneStep(start, InputRange.EOS, true);
   }
 
   /** @return Ordered instructions for mapping. The ordering is such that they don't interfere with each other. */
