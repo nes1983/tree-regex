@@ -37,8 +37,6 @@ class TNFAToTDFA {
     }
   }
 
-  private static final InputRangeCleanup inputRangeCleanup = new InputRangeCleanup();
-
   public static TNFAToTDFA make(final TNFA tnfa) {
     return new TNFAToTDFA(tnfa);
   }
@@ -49,14 +47,8 @@ class TNFAToTDFA {
 
   final TNFA tnfa;
 
-  public TNFAToTDFA(final TNFA tnfa) {
+  TNFAToTDFA(final TNFA tnfa) {
     this.tnfa = tnfa;
-  }
-
-  /** @return All input ranges, non-intersecting, sorted */
-  static final List<InputRange> allInputRanges(final Collection<InputRange> collection) {
-	final List<InputRange> ranges = new ArrayList<>(collection);
-    return new ArrayList<>(inputRangeCleanup.cleanUp(ranges));
   }
 
   /** Used to create the initial state of the DFA. */
@@ -92,7 +84,7 @@ class TNFAToTDFA {
    * @param a the character that was read. Is ignored if startState == true.
    * @return The next state after state, for input a.
    */
-  StateAndInstructions epsilonClosure(final Map<State, History[]> innerStates, final char a, boolean startState) {
+  StateAndInstructions epsilonClosure(final Map<State, History[]> innerStates, InputRange ir, boolean startState) {
     final Map<State, History[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
 
     final Deque<StateWithMemoryLocation> stack = new ArrayDeque<>(); // normal priority
@@ -105,15 +97,15 @@ class TNFAToTDFA {
     } else {
       for (final Entry<State, History[]> pr : innerStates.entrySet()) {
         final History[] k = pr.getValue();
-        final Collection<TransitionTriple> ts = tnfa.availableTransitionsFor(pr.getKey(), a);
+        final Collection<TransitionTriple> ts = tnfa.availableTransitionsFor(pr.getKey(), ir);
         for (final TransitionTriple t : ts) {
           switch (t.getPriority()) {
             case LOW:
-              lowStack.add(new StateWithMemoryLocation(t.getState(), Arrays.copyOf(k, k.length)));
+              lowStack.addLast(new StateWithMemoryLocation(t.getState(), Arrays.copyOf(k, k.length)));
               break;
             case NORMAL: // Fall thru
             default:
-              stack.add(new StateWithMemoryLocation(t.getState(), Arrays.copyOf(k, k.length)));
+              stack.addFirst(new StateWithMemoryLocation(t.getState(), Arrays.copyOf(k, k.length)));
           }
         }
       }
@@ -127,9 +119,9 @@ class TNFAToTDFA {
     do {
       StateWithMemoryLocation s;
       if (stack.isEmpty()) {
-        s = lowStack.pop();
+        s = lowStack.removeFirst();
       } else {
-        s = stack.pop();
+        s = stack.removeFirst();
       }
       assert s != null;
 
@@ -141,15 +133,13 @@ class TNFAToTDFA {
       }
       R.put(q, l);
 
-      nextTriple: for (final TransitionTriple triple : tnfa.availableTransitionsFor(q, null)) {
+      nextTriple: for (final TransitionTriple triple : tnfa.availableEpsilonTransitionsFor(q)) {
         final State qDash = triple.state;
 
-        // Step 1.
         if (R.containsKey(qDash)) {
           continue nextTriple;
         }
 
-        // Step 2.
         final Tag tau = triple.tag;
         History[] newHistories = Arrays.copyOf(l, l.length);
 
@@ -160,7 +150,7 @@ class TNFAToTDFA {
           newHistories[openingPos] = newHistoryOpening;
 
           if (tau.isStartTag()) {
-            instructions.add(instructionMaker.storePosPlusOne(newHistoryOpening));
+            instructions.add(instructionMaker.storePosPlusOne(newHistoryOpening)); // plus one?
           } else {
             final History newHistoryClosing = new History();
             int closingPos = positionFor(tau.getGroup().endTag);
@@ -172,7 +162,6 @@ class TNFAToTDFA {
           }
         }
 
-        // Step 3.
         switch (triple.getPriority()) {
           case LOW:
             lowStack.add(new StateWithMemoryLocation(triple.getState(), newHistories));
@@ -221,12 +210,13 @@ class TNFAToTDFA {
       throw new AssertionError("The candidate range must contain the right states!");
     }
     mapping.clear();
+    Map<History, History> reverse = new HashMap<>();
 
     // A state is only mappable if its histories are mappable too.
     for (final Map.Entry<State, History[]> entry : first.innerStates.entrySet()) {
       final History[] mine = entry.getValue();
       final History[] theirs = second.innerStates.get(entry.getKey());
-      final boolean success = updateMap(mapping, mine, theirs);
+      final boolean success = updateMap(mapping, reverse, mine, theirs);
       if (!success) {
         return false;
       }
@@ -245,15 +235,22 @@ class TNFAToTDFA {
    * @param to same length as from.
    * @return True if the mapping was successful; false otherwise.
    */
-  private boolean updateMap(final Map<History, History> map, final History[] from, final History[] to) {
+  private boolean updateMap(final Map<History, History> map, Map<History, History> reverse,
+        final History[] from, final History[] to) {
     assert from.length == to.length;
 
     // Go over the tag list and iteratively try to find counterexample.
     for (int i = 0; i < from.length; i++) {
       if (!map.containsKey(from[i])) {
         // If we don't know any mapping for from[i], we set it to the only mapping that can work.
+
+        if (reverse.containsKey(to[i])) { // But the target is taken already
+          return false;
+        }
+
         map.put(from[i], to[i]);
-      } else if (!map.get(from[i]).equals(to[i])) {
+        reverse.put(to[i], from[i]);
+      } else if (!map.get(from[i]).equals(to[i]) || !from[i].equals(reverse.get(to[i]))) {
         // Only mapping that could be chosen for from[i] and to[i] contradicts existing mapping.
         return false;
       } // That means the existing mapping matches.
@@ -262,9 +259,9 @@ class TNFAToTDFA {
   }
 
   StateAndInstructions makeStartState() {
-    Map<State, History[]> start = convertToDfaState(tnfa.getInitialState());
+    Map<State, History[]> start = convertToDfaState(tnfa.initialState);
 
-    return epsilonClosure(start, Character.MAX_VALUE, true);
+    return epsilonClosure(start, InputRange.EOS, true);
   }
 
   /** @return Ordered instructions for mapping. The ordering is such that they don't interfere with each other. */

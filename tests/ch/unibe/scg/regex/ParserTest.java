@@ -51,7 +51,7 @@ public final class ParserTest {
   @Test
   public void testEscaped() {
     final Node.EscapedChar s = pp.escapedCharacter().parse("\\(");
-    assertThat(s.character, is('('));
+    assertThat(s.inputRange.getFrom(), is('('));
     assertThat(s.toString(), is("\\("));
   }
 
@@ -181,7 +181,7 @@ public final class ParserTest {
     final Node.Regex right = u.right;
     assertThat(right, instanceOf(Node.Simple.class));
     final Node.Simple simple = (Node.Simple) right;
-    final Node.Basic optional = simple.getBasics().get(0);
+    final Node.Basic optional = simple.basics.get(0);
     assertThat(optional, instanceOf(Node.Optional.class));
     assertThat(rr.toString(), is("aaa|(bbb)?"));
   }

@@ -1,10 +1,11 @@
 package ch.unibe.scg.regex;
 
-import static java.util.Objects.requireNonNull;
+import static java.util.Collections.singleton;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,21 +39,25 @@ class ParserProvider {
       public String toString() {
         return ".";
       }
+
+      @Override
+      public Collection<Node> getChildren() {
+        return Collections.emptyList();
+      }
     }
 
     static interface Basic extends Node {
       // <star> | <plus> | <elementary-RE>
     }
 
-     static abstract class Char extends SetItem implements Elementary {
-      final char character;
-
-      Char(final char character) {
-        this.character = character;
+    static abstract class Char extends SetItem implements Elementary {
+      public Char(InputRange ir) {
+        super(ir);
       }
 
-      char getCharacter() {
-        return character;
+      @Override
+      public String toString() {
+        return String.valueOf(inputRange.getFrom());
       }
     }
 
@@ -60,16 +65,21 @@ class ParserProvider {
       // <group> | <any> | <eos> | <char> | <set>
     }
 
-    static class Eos implements Elementary {}
+    static class Eos implements Elementary {
+      @Override
+      public Collection<Node> getChildren() {
+        return Collections.emptyList();
+      }
+    }
 
     static class EscapedChar extends Char {
       public EscapedChar(final char character) {
-        super(character);
+        super(InputRange.make(character));
       }
 
       @Override
       public String toString() {
-        return "\\" + String.valueOf(character);
+        return "\\" + String.valueOf(inputRange.getFrom());
       }
     }
 
@@ -80,13 +90,14 @@ class ParserProvider {
         this.body = body;
       }
 
-      Node getBody() {
-        return body;
-      }
-
       @Override
       public String toString() {
         return "(" + body.toString() + ")";
+      }
+
+      @Override
+      public Collection<Node> getChildren() {
+        return singleton(body);
       }
     }
 
@@ -105,6 +116,11 @@ class ParserProvider {
         s.append("]");
         return s.toString();
       }
+
+      @Override
+      public Collection<Node> getChildren() {
+        throw new RuntimeException("Not implemented");
+      }
     }
 
     static class Optional implements Basic {
@@ -114,13 +130,14 @@ class ParserProvider {
         this.elementary = elementary;
       }
 
-      Node getElementary() {
-        return elementary;
-      }
-
       @Override
       public String toString() {
         return elementary.toString() + "?";
+      }
+
+      @Override
+      public Collection<? extends Node> getChildren() {
+        return singleton(elementary);
       }
     }
 
@@ -131,13 +148,14 @@ class ParserProvider {
         this.elementary = elementary;
       }
 
-      Node getElementary() {
-        return elementary;
-      }
-
       @Override
       public String toString() {
         return elementary.toString() + "+";
+      }
+
+      @Override
+      public Collection<? extends Node> getChildren() {
+        return singleton(elementary);
       }
     }
 
@@ -159,24 +177,14 @@ class ParserProvider {
     }
 
     static final class Range extends SetItem {
-      final char from, to;
 
       public Range(final char from, final char to) {
-        this.from = from;
-        this.to = to;
-      }
-
-      char getFrom() {
-        return from;
-      }
-
-      char getTo() {
-        return to;
+        super(InputRange.make(from, to));
       }
 
       @Override
       public String toString() {
-        return String.valueOf(from) + "-" + to;
+        return String.valueOf(inputRange.getFrom()) + "-" + inputRange.getTo();
       }
     }
 
@@ -188,21 +196,37 @@ class ParserProvider {
       final List<SetItem> items;
 
       public Set(final List<SetItem> items) {
-        super();
-        this.items = Collections.unmodifiableList(items);
-      }
-
-      List<SetItem> getItems() {
-        return items;
+        this.items = items;
       }
 
       @Override
       public String toString() {
         throw new RuntimeException("Overwrite me");
       }
+
+      @Override
+      public Collection<? extends Node> getChildren() {
+        return items;
+      }
     }
 
-    static class SetItem implements Node {
+    // Char || Range
+    static abstract class SetItem implements Node {
+      final InputRange inputRange;
+
+      public SetItem(InputRange inputRange) {
+        this.inputRange = inputRange;
+      }
+
+      @Override
+      public String toString() {
+        throw new RuntimeException("Overwrite me");
+      }
+
+      @Override
+      public Collection<Node> getChildren() {
+        return Collections.emptyList();
+      }
     }
 
     class Simple implements Regex {
@@ -210,10 +234,6 @@ class ParserProvider {
 
       public Simple(final List<? extends Basic> basics) {
         this.basics = Collections.unmodifiableList(basics);
-      }
-
-      List<? extends Basic> getBasics() {
-        return basics;
       }
 
       @Override
@@ -224,16 +244,39 @@ class ParserProvider {
         }
         return s.toString();
       }
+
+      @Override
+      public Collection<? extends Node> getChildren() {
+        return basics;
+      }
     }
 
     static class SimpleChar extends Char {
       public SimpleChar(final char character) {
-        super(character);
+        super(InputRange.make(character));
       }
 
       @Override
       public String toString() {
-        return String.valueOf(character);
+        return String.valueOf(inputRange.getFrom());
+      }
+    }
+
+    static class NonGreedyStar implements Basic {
+      final Elementary elementary;
+
+      public NonGreedyStar(final Elementary elementary) {
+        this.elementary = elementary;
+      }
+
+      @Override
+      public String toString() {
+        return elementary.toString() + "*?";
+      }
+
+      @Override
+      public Collection<? extends Node> getChildren() {
+        return singleton(elementary);
       }
     }
 
@@ -244,13 +287,14 @@ class ParserProvider {
         this.elementary = elementary;
       }
 
-      Node getElementary() {
-        return elementary;
-      }
-
       @Override
       public String toString() {
         return elementary.toString() + "*";
+      }
+
+      @Override
+      public Collection<? extends Node> getChildren() {
+        return singleton(elementary);
       }
     }
 
@@ -267,7 +311,14 @@ class ParserProvider {
       public String toString() {
         return left.toString() + "|" + right;
       }
+
+      @Override
+      public Collection<? extends Node> getChildren() {
+        return Arrays.asList(left, right);
+      }
     }
+
+    Collection<? extends Node> getChildren();
   }
 
   /** Find only one constructor. */
@@ -316,7 +367,7 @@ class ParserProvider {
   }
 
   Parser<Basic> basic() {
-    return Parsers.or(plus(), star(), optional(), elementary());
+    return Parsers.or(plus(), nonGreedyStar(), star(), optional(), elementary());
   }
 
   Parser<Char> character() {
@@ -382,7 +433,7 @@ class ParserProvider {
     return p.map(new Map<Tuple3<Char, Void, Char>, Node.Range>() {
       @Override public Range map(final Tuple3<Char, Void, Char> arg0) {
         assert arg0 != null;
-        return new Node.Range(arg0.a.character, arg0.c.character);
+        return new Node.Range(arg0.a.inputRange.getFrom(), arg0.c.inputRange.getFrom());
       }
     });
   }
@@ -430,6 +481,11 @@ class ParserProvider {
     return p.map(fromConstructor(Node.Star.class));
   }
 
+  Parser<Node.NonGreedyStar> nonGreedyStar() {
+    final Parser<? extends Elementary> p = elementary().followedBy(Scanners.string("*?"));
+    return p.map(fromConstructor(Node.NonGreedyStar.class));
+  }
+
   /** @return the alternation in posix. */
   Parser<Union> union() {
     final Parser<Tuple3<Simple, Void, Regex>> p =
@@ -438,7 +494,7 @@ class ParserProvider {
     return p.map(new Map<Tuple3<Simple, Void, Regex>, Union>() {
       @Override public Union map(final Tuple3<Simple, Void, Regex> a) {
         assert a != null;
-        return new Union(requireNonNull(a.a), requireNonNull(a.c));
+        return new Union(a.a, a.c);
       }
     });
   }

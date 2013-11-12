@@ -7,7 +7,7 @@ package ch.unibe.scg.regex;
  * @author Fabien Dubosson
  */
 abstract class InputRange implements Comparable<InputRange> {
-  private static class Any extends SpecialInputRange {
+  private static class Any extends RealInputRange {
     Any() {
       // Everything.
       super(Character.MIN_VALUE, Character.MAX_VALUE);
@@ -31,18 +31,6 @@ abstract class InputRange implements Comparable<InputRange> {
     }
   }
 
-  private static class Epsilon extends SpecialInputRange {
-    Epsilon() {
-      // Nothing.
-      super((char) (Character.MIN_VALUE + 2), Character.MIN_VALUE);
-    }
-
-    @Override
-    public String toString() {
-      return "ε";
-    }
-  }
-
   static class SpecialInputRange extends RealInputRange {
     private SpecialInputRange(char from, char to) {
       super(from, to);
@@ -52,8 +40,6 @@ abstract class InputRange implements Comparable<InputRange> {
   public static final InputRange ANY = new Any();
 
   public static final InputRange EOS = new Eos();
-
-  public static final InputRange EPSILON = new Epsilon();
 
   public static InputRange make(final char character) {
     return make(character, character);
@@ -116,7 +102,26 @@ abstract class InputRange implements Comparable<InputRange> {
 
   @Override
   public int compareTo(InputRange o) {
-    return Character.compare(getFrom(), o.getFrom());
+    int cmp = Character.compare(getFrom(), o.getFrom());
+    if (cmp != 0) {
+      return cmp;
+    }
+
+    return Character.compare(getTo(), o.getTo());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof InputRange)) {
+      return false;
+    }
+
+    InputRange that = (InputRange) o;
+
+    return this.getFrom() == that.getFrom() && this.getTo() == that.getTo();
   }
 
   /**
@@ -140,4 +145,9 @@ abstract class InputRange implements Comparable<InputRange> {
    * @return the last {@link Character} of the range
    */
   public abstract char getTo();
+
+  @Override
+  public int hashCode() {
+    return (getFrom() * 31) ^ getTo();
+  }
 }

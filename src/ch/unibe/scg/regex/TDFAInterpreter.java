@@ -20,6 +20,7 @@ public class TDFAInterpreter {
   final NavigableSet<DFAState> states = new TreeSet<>();
 
   final TDFATransitionTable.Builder tdfaBuilder = new TDFATransitionTable.Builder();
+  final InputRangeCleanup inputRangeCleanup = new InputRangeCleanup();
   final TNFAToTDFA tnfa2tdfa;
 
   TDFAInterpreter(TNFAToTDFA tnfa2tdfa) {
@@ -52,7 +53,7 @@ public class TDFAInterpreter {
   }
 
   public MatchResultTree interpret(CharSequence input) {
-    final List<InputRange> inputRanges = TNFAToTDFA.allInputRanges(tnfa2tdfa.tnfa.allInputRanges());
+    final List<InputRange> inputRanges = inputRangeCleanup.cleanUp(tnfa2tdfa.tnfa.allInputRanges());
 
     StateAndInstructions startState = tnfa2tdfa.makeStartState();
     DFAState t = startState.dfaState;
@@ -85,7 +86,7 @@ public class TDFAInterpreter {
         t = tdfaBuilder.mapping.deoptimized.get(tdfaState);
         tdfaState = -1;
         cacheHits = 0;
-      } else {// Find the transition in the builder. Execute if there and continue.
+      } else { // Find the transition in the builder. Execute if there and continue.
         NextDFAState nextState = tdfaBuilder.availableTransition(t, a);
         if (nextState != null) {
           for (final Instruction i : nextState.instructions) {
@@ -112,7 +113,7 @@ public class TDFAInterpreter {
       }
 
       // TODO this is ugly. Clearly, e should return StateAndPositions.
-      final StateAndInstructions uu = tnfa2tdfa.epsilonClosure(t.innerStates, a, false);
+      final StateAndInstructions uu = tnfa2tdfa.epsilonClosure(t.innerStates, inputRange, false);
       final DFAState u = uu.dfaState;
 
       if (u.innerStates.isEmpty()) { // There is no matching NFA state.
@@ -151,7 +152,7 @@ public class TDFAInterpreter {
       t = tdfaBuilder.mapping.deoptimized.get(tdfaState);
     }
 
-    final History[] fin = t.innerStates.get(tnfa2tdfa.tnfa.getFinalState());
+    final History[] fin = t.innerStates.get(tnfa2tdfa.tnfa.finalState);
     if (fin == null) {
       return RealMatchResult.NoMatchResult.SINGLETON;
     }

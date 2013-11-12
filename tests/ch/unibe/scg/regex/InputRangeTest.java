@@ -5,6 +5,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
@@ -13,15 +14,15 @@ import org.junit.Test;
 public final class InputRangeTest {
 	@Test
 	public void testSingle() {
-		List<InputRange> start = Arrays.asList(
+		Collection<InputRange> start = Arrays.asList(
 				InputRange.make('a', 'b'));
-		assertThat(TNFAToTDFA.allInputRanges(start), is(start));
+		assertThat(new InputRangeCleanup().cleanUp(start), is(start));
 	}
-	
+
 	@Test
 	public void testEmpty() {
 		List<InputRange> start = Arrays.asList();
-		assertThat(TNFAToTDFA.allInputRanges(start), is(start));
+		assertThat(new InputRangeCleanup().cleanUp(start), is(start));
 	}
 
 	@Test
@@ -29,7 +30,7 @@ public final class InputRangeTest {
 		List<InputRange> start = Arrays.asList(
 				InputRange.make('a', 'b'),
 				InputRange.make('c', 'd'));
-		assertThat(TNFAToTDFA.allInputRanges(start), is(start));
+		assertThat(new InputRangeCleanup().cleanUp(start), is(start));
 	}
 
 	@Test
@@ -37,23 +38,23 @@ public final class InputRangeTest {
 		List<InputRange> start = Arrays.asList(
 				InputRange.make('a', 'c'),
 				InputRange.make('c', 'd'));
-		assertThat(TNFAToTDFA.allInputRanges(start).toString(), is("[a-b, c-d]"));
+		assertThat(new InputRangeCleanup().cleanUp(start).toString(), is("[a-b, c-c, d-d]"));
 	}
-	
+
 	@Test
 	public void testEnclosing() {
 		List<InputRange> start = Arrays.asList(
 				InputRange.make('a', 'g'),
 				InputRange.make('b', 'd'));
-		assertThat(TNFAToTDFA.allInputRanges(start).toString(), is("[a-a, b-d, e-g]"));
+		assertThat(new InputRangeCleanup().cleanUp(start).toString(), is("[a-a, b-d, e-g]"));
 	}
-	
+
 
 	@Test
 	public void testAny() {
 		List<InputRange> start = Arrays.asList(
 				InputRange.ANY,
 				InputRange.make('b', 'd'));
-		assertThat(TNFAToTDFA.allInputRanges(start).toString(), is("[0x0-a, b-d, e-0xffff]"));
+		assertThat(new InputRangeCleanup().cleanUp(start).toString(), is("[0x0-a, b-d, e-0xffff]"));
 	}
 }

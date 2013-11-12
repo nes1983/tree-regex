@@ -122,11 +122,9 @@ class DFAState implements Comparable<DFAState> {
       if (other.innerStates != null) {
         return false;
       }
-    } else if (!innerStates.keySet().equals(other.innerStates.keySet())) {
-      return false;
     }
 
-    return true;
+    return Arrays.equals(comparisonKey, other.comparisonKey);
   }
 
   @Override

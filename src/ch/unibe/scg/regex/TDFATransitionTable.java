@@ -1,6 +1,7 @@
 package ch.unibe.scg.regex;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -55,13 +56,16 @@ class TDFATransitionTable {
   }
 
   static class Builder {
+    final Builder.Mapping mapping = new Mapping();
+    final NavigableSet<Builder.Entry> transitions = new TreeSet<>();
+
     static class Entry implements Comparable<Builder.Entry> {
       final char from, to;
       final Instruction[] instructions;
       final int state, newState;
       final DFAState toDFA;
 
-      public Entry(final char from, final char to, final Instruction[] c,
+      Entry(final char from, final char to, final Instruction[] c,
           final int state, final int newState, DFAState toDFA) {
         this.from = from;
         this.to = to;
@@ -82,9 +86,8 @@ class TDFATransitionTable {
 
       @Override
       public String toString() {
-        return "q" + state + "-" + from + "-" + to + " -> q" + newState + " " + instructions;
+        return "q" + state + "-" + from + "-" + to + " -> q" + newState + " " + Arrays.toString(instructions);
       }
-
     }
 
     static class Mapping {
@@ -114,10 +117,7 @@ class TDFATransitionTable {
       }
     }
 
-    final Builder.Mapping mapping = new Mapping();
-    final NavigableSet<Builder.Entry> transitions = new TreeSet<>();
-
-    public void addTransition(final DFAState t, final InputRange inputRange,
+    void addTransition(final DFAState t, final InputRange inputRange,
         final DFAState newState, final List<Instruction> c) {
 
       final Builder.Entry e =
@@ -126,7 +126,7 @@ class TDFATransitionTable {
       transitions.add(e);
     }
 
-    public NextDFAState availableTransition(DFAState t, char a) {
+    NextDFAState availableTransition(DFAState t, char a) {
       final Integer fromState = mapping.mapping.get(t);
       if (fromState == null) {
         return null;
@@ -140,6 +140,7 @@ class TDFATransitionTable {
       if (found.state != probe.state || !(found.from <= a && a <= found.to)) {
         return null;
       }
+
       return new NextDFAState(found.instructions, found.toDFA);
     }
 
@@ -239,9 +240,8 @@ class TDFATransitionTable {
   public String toString() {
     final StringBuilder sb = new StringBuilder();
     for (int i = 0; i < size; i++) {
-      final Builder.Entry e =
-          new Builder.Entry(froms[i], tos[i], instructions[i], states[i], newStates[i], null);
-      sb.append(e.toString());
+      sb.append(new Builder.Entry(froms[i], tos[i], instructions[i], states[i], newStates[i], null)
+          .toString());
       sb.append('\n');
     }
     return sb.toString();

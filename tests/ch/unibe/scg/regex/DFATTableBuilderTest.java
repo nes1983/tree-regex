@@ -30,8 +30,9 @@ public final class DFATTableBuilderTest {
 
     final TDFATransitionTable dfa = builder.build();
     assertThat(dfa.toString(), is("q0-a-c -> q1 []\n"));
-    final NextState pr = dfa.newStateAndInstructions(0, 'b');
-    assertThat(pr.nextState, is(1));
-    assertThat(pr.instructions.length, is(0));
+    NextState n = new NextState();
+    dfa.newStateAndInstructions(0, 'b', n);
+    assertThat(n.nextState, is(1));
+    assertThat(n.instructions.length, is(0));
   }
 }
