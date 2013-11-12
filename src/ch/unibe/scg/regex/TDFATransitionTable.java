@@ -51,7 +51,7 @@ class TDFATransitionTable {
 
     @Override
     public String toString() {
-      return nextState.toString() + " " + instructions;
+      return nextState.toString() + " " + Arrays.toString(instructions);
     }
   }
 

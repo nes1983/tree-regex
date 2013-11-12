@@ -277,7 +277,6 @@ class TNFAToTDFA {
 
     // Go through the edges of the graph. Identify edge e by source node source:
     for (History source : map.keySet()) {
-
       // Push e on stack, unless e deleted
       if (visitedSources.contains(source)) {
         continue;
