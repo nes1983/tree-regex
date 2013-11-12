@@ -1,5 +1,8 @@
 package ch.unibe.scg.regex;
 
+import static ch.unibe.scg.regex.TNFAToTDFA.Hunger.FED;
+import static ch.unibe.scg.regex.TNFAToTDFA.Hunger.HUNGRY;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,22 +19,7 @@ import java.util.Set;
 
 
 class TNFAToTDFA {
-  private static class StateWithMemoryLocation {
-    final History[] memoryLocation;
-    final State state;
-
-    StateWithMemoryLocation(final State state, final History[] histories) {
-      this.memoryLocation = histories;
-      this.state = state;
-    }
-
-    @Override
-    public String toString() {
-      return "" + state + "" + Arrays.toString(memoryLocation);
-    }
-  }
-
-  public static TNFAToTDFA make(final TNFA tnfa) {
+  static TNFAToTDFA make(final TNFA tnfa) {
     return new TNFAToTDFA(tnfa);
   }
 
@@ -67,6 +55,22 @@ class TNFAToTDFA {
     }
   }
 
+  private static class StateThread {
+    final State state;
+    final History[] histories;
+    final Hunger hunger;
+
+    StateThread(State state, History[] histories, Hunger consumed) {
+      this.state = state;
+      this.histories = histories;
+      this.hunger = consumed;
+    }
+  }
+
+  static enum Hunger {
+    HUNGRY, FED;
+  }
+
   /**
    * Niko and Aaron's closure.
    *
@@ -79,63 +83,55 @@ class TNFAToTDFA {
    * @return The next state after state, for input a. Null if there isn't a follow-up state.
    */
   StateAndInstructions oneStep(final LinkedHashMap<State, History[]> innerStates, InputRange ir, boolean startState) {
-    final LinkedHashMap<State, History[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
+    final LinkedHashMap<State, History[]> newInner = new LinkedHashMap<>();
+    final List<Instruction> instructions = new ArrayList<>();
+    final Set<State> seen = new HashSet<>();
 
-    final Deque<StateWithMemoryLocation> stack = new ArrayDeque<>(); // normal priority
-    final Deque<StateWithMemoryLocation> lowQueue = new ArrayDeque<>(); // low priority
+    final Deque<StateThread> stack = new ArrayDeque<>(); // normal priority
+    final Deque<StateThread> lowStack = new ArrayDeque<>(); // low priority
+    final Deque<StateThread> workStack = new ArrayDeque<>();
 
-    if (startState) { // TODO(nikoschwarz): Beautify.
-      for (Entry<State, History[]> entry : innerStates.entrySet()) {
-        stack.add(new StateWithMemoryLocation(entry.getKey(), entry.getValue()));
+    // Enqueue all states we're in as consuming thread to lowStack, or non-consuming if startState.
+    for (Entry<State, History[]> e : innerStates.entrySet()) {
+      Hunger h = HUNGRY;
+      if (startState) {
+        h = FED;
       }
-    } else {
-      for (final Entry<State, History[]> pr : innerStates.entrySet()) {
-        final History[] k = pr.getValue();
-        final Collection<TransitionTriple> ts = tnfa.availableTransitionsFor(pr.getKey(), ir);
-        for (final TransitionTriple t : ts) {
-          switch (t.getPriority()) {
-            case LOW:
-              lowQueue.addLast(new StateWithMemoryLocation(t.getState(), Arrays.copyOf(k, k.length)));
-              break;
-            case NORMAL: // Fall thru
-            default:
-              stack.addFirst(new StateWithMemoryLocation(t.getState(), Arrays.copyOf(k, k.length)));
-          }
+      lowStack.addLast(new StateThread(e.getKey(), e.getValue(), h));
+    }
+
+    while (!stack.isEmpty() || !lowStack.isEmpty()) {
+      // take topmost as t from high if possible or else from low.
+      StateThread thread;
+      if (!stack.isEmpty()) {
+        thread = stack.removeFirst();
+      } else {
+        thread = lowStack.removeFirst();
+        while (!workStack.isEmpty()) {
+          StateThread tt = workStack.removeFirst();
+          newInner.put(tt.state, tt.histories);
         }
       }
-    }
 
-    if (lowQueue.isEmpty() && stack.isEmpty()) {
-      return null;
-    }
-
-    List<Instruction> instructions = new ArrayList<>();
-    do {
-      StateWithMemoryLocation s;
-      if (stack.isEmpty()) {
-        s = lowQueue.removeFirst();
-      } else {
-        s = stack.removeFirst();
-      }
-      assert s != null;
-
-      final State q = s.state;
-      final History[] l = s.memoryLocation;
-
-      if (R.containsKey(q)) {
+      if (thread.hunger == HUNGRY) {
+        final Collection<TransitionTriple> ts = tnfa.availableTransitionsFor(thread.state, ir);
+        for (TransitionTriple transition : ts) {
+          // push new thread with the new state that isn't consuming to high.
+          stack.addFirst(new StateThread(transition.state, thread.histories, FED));
+        }
         continue;
       }
-      R.put(q, l);
 
-      nextTriple: for (final TransitionTriple triple : tnfa.availableEpsilonTransitionsFor(q)) {
-        final State qDash = triple.state;
+      if (seen.contains(thread.state)) {
+        continue;
+      }
 
-        if (R.containsKey(qDash)) {
-          continue nextTriple;
-        }
+      workStack.addFirst(thread);
+      seen.add(thread.state);
 
+      for (final TransitionTriple triple : tnfa.availableEpsilonTransitionsFor(thread.state)) {
         final Tag tau = triple.tag;
-        History[] newHistories = Arrays.copyOf(l, l.length);
+        History[] newHistories = Arrays.copyOf(thread.histories, thread.histories.length);
 
         if (tau.isStartTag() || tau.isEndTag()) {
           final History newHistoryOpening = new History();
@@ -144,7 +140,7 @@ class TNFAToTDFA {
           newHistories[openingPos] = newHistoryOpening;
 
           if (tau.isStartTag()) {
-            instructions.add(instructionMaker.storePosPlusOne(newHistoryOpening)); // plus one?
+            instructions.add(instructionMaker.storePosPlusOne(newHistoryOpening));
           } else {
             final History newHistoryClosing = new History();
             int closingPos = positionFor(tau.getGroup().endTag);
@@ -155,28 +151,35 @@ class TNFAToTDFA {
             instructions.add(instructionMaker.closingCommit(newHistoryClosing));
           }
         }
-
+        // push new thread with the new state to the corresponding stack.
+        StateThread newThread = new StateThread(triple.getState(), newHistories, FED);
         switch (triple.getPriority()) {
           case LOW:
-            lowQueue.add(new StateWithMemoryLocation(triple.getState(), newHistories));
+            lowStack.add(newThread);
             break;
           case NORMAL:
-            stack.add(new StateWithMemoryLocation(triple.getState(), newHistories));
+            stack.add(newThread);
             break;
           default:
             throw new AssertionError();
         }
       }
-    } while (!(stack.isEmpty() && lowQueue.isEmpty()));
+    }
+
+    while (!workStack.isEmpty()) {
+      StateThread tt = workStack.removeFirst();
+      newInner.put(tt.state, tt.histories);
+    }
+
     return new StateAndInstructions(
-      new DFAState(R, DFAState.makeComparisonKey(R)),
+      new DFAState(newInner, DFAState.makeComparisonKey(newInner)),
       instructions);
   }
 
   DFAState findMappableState(NavigableSet<DFAState> states, DFAState u, Map<History, History> mapping) {
     // `from` is a key that is smaller than all possible full keys. Likewise, `to` is bigger than all.
-    DFAState from = new DFAState(null, DFAState.makeStateComparisonKey(u.innerStates.keySet()));
-    byte[] toKey = DFAState.makeStateComparisonKey(u.innerStates.keySet());
+    DFAState from = new DFAState(null, DFAState.makeStateComparisonKey(u.innerStates));
+    byte[] toKey = DFAState.makeStateComparisonKey(u.innerStates);
     // Assume that toKey is not full of Byte.MAX_VALUE. That would be really unlucky.
     // Also a bit unlikely, given that it's an MD5 hash, and therefore pretty random.
     for (int i = toKey.length - 1; true; i--) {
