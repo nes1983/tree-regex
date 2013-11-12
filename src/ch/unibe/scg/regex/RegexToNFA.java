@@ -159,11 +159,6 @@ class RegexToNFA {
 
   MiniAutomaton makeInitialMiniAutomaton(final Builder builder, CaptureGroup entireMatch) {
     final State init = builder.makeInitialState();
-    // Eat prefix.
-    State endAny = builder.makeState();
-    builder.addUntaggedTransition(InputRange.ANY, singleton(init), endAny);
-    builder.makeUntaggedEpsilonTransitionFromTo(singleton(endAny), singleton(init), Priority.LOW);
-
     final State startTagger = builder.makeState();
     builder.addStartTagTransition(singleton(init), startTagger, entireMatch, Priority.NORMAL);
     return new MiniAutomaton(singleton(init), singleton(startTagger));
