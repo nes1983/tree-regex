@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,13 +17,10 @@ class DFAState implements Comparable<DFAState> {
   private static final int BYTES_PER_LONG = 8;
   private static final int BYTES_PER_INT = 4;
 
-  final static DFAState INSTRUCTIONLESS_NO_STATE
-      = new DFAState(Collections.<State, History[]> emptyMap(), new byte[] {});
-
-  final Map<State, History[]> innerStates;
+  final LinkedHashMap<State, History[]> innerStates;
   final private byte[] comparisonKey;
 
-  DFAState(final Map<State, History[]> map, byte[] comparisonKey) {
+  DFAState(final LinkedHashMap<State, History[]> map, byte[] comparisonKey) {
     this.comparisonKey = comparisonKey;
     this.innerStates = map;
   }

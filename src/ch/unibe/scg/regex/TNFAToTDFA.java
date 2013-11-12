@@ -4,7 +4,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,11 +16,6 @@ import java.util.Set;
 
 
 class TNFAToTDFA {
-  static final StateAndInstructions NO_STATE =
-      new StateAndInstructions(
-        DFAState.INSTRUCTIONLESS_NO_STATE,
-        Collections.<Instruction> emptyList());
-
   private static class StateWithMemoryLocation {
     final History[] memoryLocation;
     final State state;
@@ -52,8 +46,8 @@ class TNFAToTDFA {
   }
 
   /** Used to create the initial state of the DFA. */
-  private Map<State, History[]> convertToDfaState(final State s) {
-    final Map<State, History[]> initState = new HashMap<>();
+  private LinkedHashMap<State, History[]> convertToDfaState(final State s) {
+    final LinkedHashMap<State, History[]> initState = new LinkedHashMap<>();
     final History[] initialMemoryLocations = new History[tnfa.allTags().size()];
     for (int i = 0; i < initialMemoryLocations.length; i++) {
       initialMemoryLocations[i] = new History();
@@ -82,13 +76,13 @@ class TNFAToTDFA {
    *
    * @param startState if to generate the start state. If so, ignore a.
    * @param a the character that was read. Is ignored if startState == true.
-   * @return The next state after state, for input a.
+   * @return The next state after state, for input a. Null if there isn't a follow-up state.
    */
-  StateAndInstructions epsilonClosure(final Map<State, History[]> innerStates, InputRange ir, boolean startState) {
-    final Map<State, History[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
+  StateAndInstructions epsilonClosure(final LinkedHashMap<State, History[]> innerStates, InputRange ir, boolean startState) {
+    final LinkedHashMap<State, History[]> R = new LinkedHashMap<>(); // Linked to simplify unit testing.
 
     final Deque<StateWithMemoryLocation> stack = new ArrayDeque<>(); // normal priority
-    final Deque<StateWithMemoryLocation> lowStack = new ArrayDeque<>(); // low priority
+    final Deque<StateWithMemoryLocation> lowQueue = new ArrayDeque<>(); // low priority
 
     if (startState) { // TODO(nikoschwarz): Beautify.
       for (Entry<State, History[]> entry : innerStates.entrySet()) {
@@ -101,7 +95,7 @@ class TNFAToTDFA {
         for (final TransitionTriple t : ts) {
           switch (t.getPriority()) {
             case LOW:
-              lowStack.addLast(new StateWithMemoryLocation(t.getState(), Arrays.copyOf(k, k.length)));
+              lowQueue.addLast(new StateWithMemoryLocation(t.getState(), Arrays.copyOf(k, k.length)));
               break;
             case NORMAL: // Fall thru
             default:
@@ -111,15 +105,15 @@ class TNFAToTDFA {
       }
     }
 
-    if (lowStack.isEmpty() && stack.isEmpty()) {
-      return NO_STATE;
+    if (lowQueue.isEmpty() && stack.isEmpty()) {
+      return null;
     }
 
     List<Instruction> instructions = new ArrayList<>();
     do {
       StateWithMemoryLocation s;
       if (stack.isEmpty()) {
-        s = lowStack.removeFirst();
+        s = lowQueue.removeFirst();
       } else {
         s = stack.removeFirst();
       }
@@ -164,7 +158,7 @@ class TNFAToTDFA {
 
         switch (triple.getPriority()) {
           case LOW:
-            lowStack.add(new StateWithMemoryLocation(triple.getState(), newHistories));
+            lowQueue.add(new StateWithMemoryLocation(triple.getState(), newHistories));
             break;
           case NORMAL:
             stack.add(new StateWithMemoryLocation(triple.getState(), newHistories));
@@ -173,7 +167,7 @@ class TNFAToTDFA {
             throw new AssertionError();
         }
       }
-    } while (!(stack.isEmpty() && lowStack.isEmpty()));
+    } while (!(stack.isEmpty() && lowQueue.isEmpty()));
     return new StateAndInstructions(
       new DFAState(R, DFAState.makeComparisonKey(R)),
       instructions);
@@ -259,7 +253,7 @@ class TNFAToTDFA {
   }
 
   StateAndInstructions makeStartState() {
-    Map<State, History[]> start = convertToDfaState(tnfa.initialState);
+    LinkedHashMap<State, History[]> start = convertToDfaState(tnfa.initialState);
 
     return epsilonClosure(start, InputRange.EOS, true);
   }

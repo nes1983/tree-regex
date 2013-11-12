@@ -133,39 +133,37 @@ public final class IntegrationTest {
   public void testOtherLehrer() {
     final Regex parsed = new ParserProvider().regexp().parse("((.*?),([0-9]+);)+");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
-    if (false) {
       assertThat(tnfa.toString(), is(
-          "q15 -> q30, "
-         + "{(q15, 0x0-0x2b)=[q15, LOW, NONE], "
-          + "(q15, 0x2c-0x2c)=[q15, LOW, NONE], " // ,
-          + "(q15, 0x2d-0x2f)=[q15, LOW, NONE], "
-          + "(q15, 0-9)=[q15, LOW, NONE], "
-          + "(q15, 0x3a-0x3a)=[q15, LOW, NONE], "
-          + "(q15, 0x3b-0x3b)=[q15, LOW, NONE], " // ;
-          + "(q15, 0x3c-0xffff)=[q15, LOW, NONE], "
-          + "(q18, 0x0-0x2b)=[q19, NORMAL, NONE], "
-          + "(q18, 0x2c-0x2c)=[q19, NORMAL, NONE], " // ,
-          + "(q18, 0x2d-0x2f)=[q19, NORMAL, NONE], "
-          + "(q18, 0-9)=[q19, NORMAL, NONE], "
-          + "(q18, 0x3a-0x3a)=[q19, NORMAL, NONE], "
-          + "(q18, 0x3b-0x3b)=[q19, NORMAL, NONE], "
-          + "(q18, 0x3c-0xffff)=[q19, NORMAL, NONE], "
-          + "(q21, 0x2c-0x2c)=[q22, NORMAL, NONE], " // ,
-          + "(q23, 0-9)=[q24, NORMAL, NONE], "
-          + "(q26, 0x3b-0x3b)=[q27, NORMAL, NONE]}, "
-          + "{q15=[q16, NORMAL, ➀0], "
-          + "q16=[q17, NORMAL, ➀1], "
-          + "q17=[q18, NORMAL, ➀2], "
-          + "q18=[q19, NORMAL, NONE], "
-          + "q19=[q18, LOW, NONE, q20, NORMAL, NONE], "
-          + "q20=[q21, NORMAL, ➁2], "
-          + "q22=[q23, NORMAL, ➀3], "
-          + "q24=[q25, LOW, NONE, q23, NORMAL, NONE], "
-          + "q25=[q26, NORMAL, ➁3], "
-          + "q27=[q28, NORMAL, ➁1], "
-          + "q28=[q29, LOW, NONE, q16, NORMAL, NONE], "
-          + "q29=[q30, NORMAL, ➁0]}"));
-    }
+        "q0 -> q15, {"
+        + "(q0, 0x0-0x2b)=[q0, LOW, NONE], "
+        + "(q0, 0x2c-0x2c)=[q0, LOW, NONE], "
+        + "(q0, 0x2d-0x2f)=[q0, LOW, NONE], "
+        + "(q0, 0-9)=[q0, LOW, NONE], "
+        + "(q0, 0x3a-0x3a)=[q0, LOW, NONE], "
+        + "(q0, 0x3b-0x3b)=[q0, LOW, NONE], "
+        + "(q0, 0x3c-0xffff)=[q0, LOW, NONE], "
+        + "(q3, 0x0-0x2b)=[q4, NORMAL, NONE], "
+        + "(q3, 0x2c-0x2c)=[q4, NORMAL, NONE], "
+        + "(q3, 0x2d-0x2f)=[q4, NORMAL, NONE], "
+        + "(q3, 0-9)=[q4, NORMAL, NONE], "
+        + "(q3, 0x3a-0x3a)=[q4, NORMAL, NONE], "
+        + "(q3, 0x3b-0x3b)=[q4, NORMAL, NONE], "
+        + "(q3, 0x3c-0xffff)=[q4, NORMAL, NONE], "
+        + "(q6, 0x2c-0x2c)=[q7, NORMAL, NONE], "
+        + "(q8, 0-9)=[q9, NORMAL, NONE], "
+        + "(q11, 0x3b-0x3b)=[q12, NORMAL, NONE]}, "
+        + "{q0=[q1, NORMAL, ➀0], "
+        + "q1=[q2, NORMAL, ➀1], "
+        + "q2=[q3, NORMAL, ➀2], "
+        + "q3=[q4, NORMAL, NONE], "
+        + "q4=[q3, LOW, NONE, q5, NORMAL, NONE], "
+        + "q5=[q6, NORMAL, ➁2], "
+        + "q7=[q8, NORMAL, ➀3], "
+        + "q9=[q10, LOW, NONE, q8, NORMAL, NONE], "
+        + "q10=[q11, NORMAL, ➁3], "
+        + "q12=[q13, NORMAL, ➁1], "
+        + "q13=[q14, LOW, NONE, q1, NORMAL, NONE], "
+        + "q14=[q15, NORMAL, ➁0]}"));
 
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
     RealMatchResult res = (RealMatchResult) interpreter.interpret("Tom Lehrer,01;Alan Turing,23;");
