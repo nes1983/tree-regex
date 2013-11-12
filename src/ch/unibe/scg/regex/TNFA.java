@@ -139,7 +139,7 @@ class TNFA {
     final List<InputRange> ret = new ArrayList<>();
 
     for (final Pair<State, InputRange> range : transitions.keySet()) {
-      final InputRange inputRange = range.getSecond();
+      final InputRange inputRange = range.second;
       ret.add(inputRange);
     }
 

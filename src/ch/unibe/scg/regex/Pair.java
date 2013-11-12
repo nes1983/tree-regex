@@ -7,18 +7,9 @@ package ch.unibe.scg.regex;
  * @param <A> The first {@link Object} {@link Class} type
  * @param <B> The second {@link Object} {@link Class} type
  */
-class Pair<A extends Comparable<A>, B extends Comparable<B>> extends XAbstractPair<A, B>
-    implements
-      Comparable<Pair<A, B>> {
-
-  /**
-   * Uncomparable pairs. Local use only.
-   */
-  static class Pr<A, B> extends XAbstractPair<A, B> {
-    public Pr(final A a, final B b) {
-      super(a, b);
-    }
-  }
+class Pair<A extends Comparable<A>, B extends Comparable<B>> implements Comparable<Pair<A, B>> {
+  final A first;
+  final B second;
 
   /**
    * Constructor taking the two {@link Object} as parameters
@@ -26,40 +17,18 @@ class Pair<A extends Comparable<A>, B extends Comparable<B>> extends XAbstractPa
    * @param first The first {@link Object} of the {@link Pair}
    * @param second The second {@link Object} of the {@link Pair}
    */
-  public Pair(final A first, final B second) {
-    super(first, second);
+  Pair(final A first, final B second) {
+    this.first = first;
+    this.second = second;
   }
 
   @Override
   public int compareTo(final Pair<A, B> o) {
-    final int result = (this.getFirst()).compareTo(o.getFirst());
+    final int result = (this.first).compareTo(o.first);
     if (result != 0) {
       return result;
     }
-    return this.getSecond().compareTo(o.getSecond());
-  }
-}
-
-
-abstract class XAbstractPair<A, B> {
-  /**
-   * The first {@link Object} of the {@link Pair}
-   */
-  final private A first;
-  /**
-   * The second {@link Object} of the {@link Pair}
-   */
-  final private B second;
-
-  /**
-   * Constructor taking the two {@link Object} as parameters
-   *
-   * @param first The first {@link Object} of the {@link Pair}
-   * @param second The second {@link Object} of the {@link Pair}
-   */
-  public XAbstractPair(final A first, final B second) {
-    this.first = first;
-    this.second = second;
+    return this.second.compareTo(o.second);
   }
 
   @Override
@@ -73,7 +42,7 @@ abstract class XAbstractPair<A, B> {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    final XAbstractPair<?, ?> other = (XAbstractPair<?, ?>) obj;
+    final Pair<?, ?> other = (Pair<?, ?>) obj;
     if (first == null) {
       if (other.first != null) {
         return false;
@@ -89,24 +58,6 @@ abstract class XAbstractPair<A, B> {
       return false;
     }
     return true;
-  }
-
-  /**
-   * Get the first {@link Object} of the {@link Pair}
-   *
-   * @return the first {@link Object} of the {@link Pair}
-   */
-  public A getFirst() {
-    return first;
-  }
-
-  /**
-   * Get the second {@link Object} of the {@link Pair}
-   *
-   * @return the second {@link Object} of the {@link Pair}
-   */
-  public B getSecond() {
-    return second;
   }
 
   @Override
