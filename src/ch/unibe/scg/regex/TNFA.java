@@ -12,17 +12,17 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import ch.unibe.scg.regex.CaptureGroup.CaptureGroupMaker;
-import ch.unibe.scg.regex.TransitionTriple.Priority;
+import ch.unibe.scg.regex.Transition.Priority;
 
 class TNFA {
-  private final Map<Pair<State, InputRange>, Collection<TransitionTriple>> transitions;
-  private final Map<State, Collection<TransitionTriple>> epsilonTransitions;
+  private final Map<Pair<State, InputRange>, Collection<Transition>> transitions;
+  private final Map<State, Collection<Transition>> epsilonTransitions;
   final State initialState;
   final State finalState;
   final List<Tag> tags;
 
-  TNFA(Map<Pair<State, InputRange>, Collection<TransitionTriple>> transitions,
-      Map<State, Collection<TransitionTriple>> epsilonTransitions, State initialState,
+  TNFA(Map<Pair<State, InputRange>, Collection<Transition>> transitions,
+      Map<State, Collection<Transition>> epsilonTransitions, State initialState,
       State finalState, List<Tag> tags) {
     this.transitions = transitions;
     this.epsilonTransitions = epsilonTransitions;
@@ -37,8 +37,8 @@ class TNFA {
     State initialState;
     final List<Tag> tags = new ArrayList<>();
     final NavigableSet<InputRange> allInputRanges;
-    final Map<Pair<State, InputRange>, Collection<TransitionTriple>> transitions = new LinkedHashMap<>();
-    final Map<State, Collection<TransitionTriple>> epsilonTransitions = new LinkedHashMap<>();
+    final Map<Pair<State, InputRange>, Collection<Transition>> transitions = new LinkedHashMap<>();
+    final Map<State, Collection<Transition>> epsilonTransitions = new LinkedHashMap<>();
 
     private Builder(NavigableSet<InputRange> allInputRanges) {
       this.allInputRanges = allInputRanges;
@@ -51,9 +51,9 @@ class TNFA {
     private void putEpsilon(final State state, final State endingState, final Priority priority,
         final Tag tag) {
       if (!epsilonTransitions.containsKey(state)) {
-        epsilonTransitions.put(state, new ArrayList<TransitionTriple>());
+        epsilonTransitions.put(state, new ArrayList<Transition>());
       }
-      epsilonTransitions.get(state).add(new TransitionTriple(endingState, priority, tag));
+      epsilonTransitions.get(state).add(new Transition(endingState, priority, tag));
     }
 
     void addEndTagTransition(final Collection<State> froms, final State to,
@@ -81,9 +81,9 @@ class TNFA {
         for (InputRange ir : overlappedRanges) {
           final Pair<State, InputRange> key = new Pair<>(from, ir);
           if (!transitions.containsKey(key)) {
-            transitions.put(key, new ArrayList<TransitionTriple>());
+            transitions.put(key, new ArrayList<Transition>());
           }
-          transitions.get(key).add(new TransitionTriple(to, Priority.NORMAL, Tag.NONE));
+          transitions.get(key).add(new Transition(to, Priority.NORMAL, Tag.NONE));
         }
       }
     }
@@ -150,14 +150,14 @@ class TNFA {
   Collection<Tag> allTags() {
     final Set<Tag> ret = new HashSet<>();
 
-    Collection<Collection<TransitionTriple>> all =
+    Collection<Collection<Transition>> all =
         new ArrayList<>(transitions.size() + epsilonTransitions.size());
     all.addAll(transitions.values());
     all.addAll(epsilonTransitions.values());
 
-    for (final Collection<TransitionTriple> triples : all) {
-      for (final TransitionTriple triple : triples) {
-        final Tag tag = triple.getTag();
+    for (final Collection<Transition> triples : all) {
+      for (final Transition triple : triples) {
+        final Tag tag = triple.tag;
         if (tag.isEndTag() || tag.isStartTag()) {
           ret.add(tag);
         }
@@ -167,16 +167,16 @@ class TNFA {
     return ret;
   }
 
-  Collection<TransitionTriple> availableTransitionsFor(State key, InputRange ir) {
-    Collection<TransitionTriple> ret = transitions.get(new Pair<>(key, ir));
+  Collection<Transition> availableTransitionsFor(State key, InputRange ir) {
+    Collection<Transition> ret = transitions.get(new Pair<>(key, ir));
     if (ret == null) {
       return Collections.emptyList();
     }
     return ret;
   }
 
-  Collection<TransitionTriple> availableEpsilonTransitionsFor(State q) {
-    Collection<TransitionTriple> ret = epsilonTransitions.get(q);
+  Collection<Transition> availableEpsilonTransitionsFor(State q) {
+    Collection<Transition> ret = epsilonTransitions.get(q);
     if (ret == null) {
       return Collections.emptyList();
     }

@@ -7,13 +7,13 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.NavigableSet;
 import java.util.Set;
 
@@ -34,14 +34,12 @@ class TNFAToTDFA {
   }
 
   /** Used to create the initial state of the DFA. */
-  private LinkedHashMap<State, History[]> convertToDfaState(final State s) {
-    final LinkedHashMap<State, History[]> initState = new LinkedHashMap<>();
+  List<RThread> convertToDfaState(final State state) {
     final History[] initialMemoryLocations = new History[tnfa.allTags().size()];
     for (int i = 0; i < initialMemoryLocations.length; i++) {
       initialMemoryLocations[i] = new History();
     }
-    initState.put(s, initialMemoryLocations);
-    return initState;
+    return Collections.singletonList(new RThread(state, initialMemoryLocations));
   }
 
   static class StateAndInstructions {
@@ -55,15 +53,20 @@ class TNFAToTDFA {
     }
   }
 
-  private static class StateThread {
-    final State state;
-    final History[] histories;
+  private static class TransitioningThread {
+    final RThread thread;
     final Hunger hunger;
+    final List<Instruction> instructions;
 
-    StateThread(State state, History[] histories, Hunger consumed) {
-      this.state = state;
-      this.histories = histories;
-      this.hunger = consumed;
+    TransitioningThread(RThread thread, Hunger hunger, List<Instruction> instructions) {
+      this.thread = thread;
+      this.hunger = hunger;
+      this.instructions = instructions;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("(%s, %s, %s)", thread, hunger, instructions);
     }
   }
 
@@ -78,87 +81,87 @@ class TNFAToTDFA {
    * when Tags are crossed. This is the transitive closure on the subgraph of epsilon
    * edges.
    *
-   * @param startState if to generate the start state. If so, ignore a.
-   * @param a the character that was read. Is ignored if startState == true.
+   * @param ir the input range that was read. For start states, this is null.
    * @return The next state after state, for input a. Null if there isn't a follow-up state.
    */
-  StateAndInstructions oneStep(final LinkedHashMap<State, History[]> innerStates, InputRange ir, boolean startState) {
-    final LinkedHashMap<State, History[]> newInner = new LinkedHashMap<>();
-    final List<Instruction> instructions = new ArrayList<>();
+  StateAndInstructions oneStep(final List<RThread> threads, InputRange ir) {
+    final List<RThread> newInner = new ArrayList<>();
     final Set<State> seen = new HashSet<>();
+    List<Instruction> instructions = new ArrayList<>();
 
-    final Deque<StateThread> stack = new ArrayDeque<>(); // normal priority
-    final Deque<StateThread> lowStack = new ArrayDeque<>(); // low priority
-    final Deque<StateThread> workStack = new ArrayDeque<>();
+    final Deque<TransitioningThread> stack = new ArrayDeque<>(); // normal priority
+    final Deque<TransitioningThread> lowStack = new ArrayDeque<>(); // low priority
+    final Deque<TransitioningThread> workStack = new ArrayDeque<>();
+
+    History[] finalHistories = null;
 
     // Enqueue all states we're in as consuming thread to lowStack, or non-consuming if startState.
-    for (Entry<State, History[]> e : innerStates.entrySet()) {
+    for (RThread e : threads) {
       Hunger h = HUNGRY;
-      if (startState) {
+      if (ir == null) {
         h = FED;
       }
-      lowStack.addLast(new StateThread(e.getKey(), e.getValue(), h));
+      lowStack.addLast(new TransitioningThread(e, h, Collections.<Instruction> emptyList()));
     }
 
     while (!stack.isEmpty() || !lowStack.isEmpty()) {
       // take topmost as t from high if possible or else from low.
-      StateThread thread;
+      TransitioningThread tt;
       if (!stack.isEmpty()) {
-        thread = stack.removeFirst();
+        tt = stack.removeFirst();
       } else {
-        thread = lowStack.removeFirst();
-        while (!workStack.isEmpty()) {
-          StateThread tt = workStack.removeFirst();
-          newInner.put(tt.state, tt.histories);
-        }
+        tt = lowStack.removeFirst();
+        finalHistories = fillRet(newInner, instructions, workStack, finalHistories);
       }
 
-      if (thread.hunger == HUNGRY) {
-        final Collection<TransitionTriple> ts = tnfa.availableTransitionsFor(thread.state, ir);
-        for (TransitionTriple transition : ts) {
+      if (tt.hunger == HUNGRY) {
+        final Collection<Transition> ts = tnfa.availableTransitionsFor(tt.thread.state, ir);
+        for (Transition transition : ts) {
           // push new thread with the new state that isn't consuming to high.
-          stack.addFirst(new StateThread(transition.state, thread.histories, FED));
+          stack.addFirst(new TransitioningThread(new RThread(transition.state, tt.thread.histories),
+            FED, Collections.<Instruction> emptyList()));
         }
         continue;
       }
 
-      if (seen.contains(thread.state)) {
+      if (seen.contains(tt.thread.state)) {
         continue;
       }
+      seen.add(tt.thread.state);
+      workStack.addFirst(tt);
 
-      workStack.addFirst(thread);
-      seen.add(thread.state);
-
-      for (final TransitionTriple triple : tnfa.availableEpsilonTransitionsFor(thread.state)) {
-        final Tag tau = triple.tag;
-        History[] newHistories = Arrays.copyOf(thread.histories, thread.histories.length);
+      for (final Transition trans : tnfa.availableEpsilonTransitionsFor(tt.thread.state)) {
+        final Tag tau = trans.tag;
+        final List<Instruction> transInstr = new ArrayList<>();
+        History[] newHistories = Arrays.copyOf(tt.thread.histories, tt.thread.histories.length);
 
         if (tau.isStartTag() || tau.isEndTag()) {
           final History newHistoryOpening = new History();
           int openingPos = positionFor(tau.getGroup().startTag);
-          instructions.add(instructionMaker.reorder(newHistoryOpening, newHistories[openingPos]));
+          transInstr.add(instructionMaker.reorder(newHistoryOpening, newHistories[openingPos]));
           newHistories[openingPos] = newHistoryOpening;
 
           if (tau.isStartTag()) {
-            instructions.add(instructionMaker.storePosPlusOne(newHistoryOpening));
+            transInstr.add(instructionMaker.storePosPlusOne(newHistoryOpening));
           } else {
             final History newHistoryClosing = new History();
             int closingPos = positionFor(tau.getGroup().endTag);
-            instructions.add(instructionMaker.reorder(newHistoryClosing, newHistories[closingPos]));
+            transInstr.add(instructionMaker.reorder(newHistoryClosing, newHistories[closingPos]));
             newHistories[closingPos] = newHistoryClosing;
-            instructions.add(instructionMaker.storePos(newHistoryClosing));
-            instructions.add(instructionMaker.openingCommit(newHistoryOpening));
-            instructions.add(instructionMaker.closingCommit(newHistoryClosing));
+            transInstr.add(instructionMaker.storePos(newHistoryClosing));
+            transInstr.add(instructionMaker.openingCommit(newHistoryOpening));
+            transInstr.add(instructionMaker.closingCommit(newHistoryClosing));
           }
         }
         // push new thread with the new state to the corresponding stack.
-        StateThread newThread = new StateThread(triple.getState(), newHistories, FED);
-        switch (triple.getPriority()) {
+        TransitioningThread newThread = new TransitioningThread(new RThread(trans.state, newHistories),
+          FED, transInstr);
+        switch (trans.priority) {
           case LOW:
-            lowStack.add(newThread);
+            lowStack.addFirst(newThread);
             break;
           case NORMAL:
-            stack.add(newThread);
+            stack.addFirst(newThread);
             break;
           default:
             throw new AssertionError();
@@ -166,29 +169,54 @@ class TNFAToTDFA {
       }
     }
 
-    while (!workStack.isEmpty()) {
-      StateThread tt = workStack.removeFirst();
-      newInner.put(tt.state, tt.histories);
+    finalHistories = fillRet(newInner, instructions, workStack, finalHistories);
+
+    if (newInner.isEmpty()) {
+      return null;
     }
 
     return new StateAndInstructions(
-      new DFAState(newInner, DFAState.makeComparisonKey(newInner)),
+      new DFAState(newInner, DFAState.makeComparisonKey(newInner), finalHistories),
       instructions);
+  }
+
+  /**
+   * Empties the {@code workStack} and fills it into {@code newInner} and its instructions into {@code instructions}.
+   *
+   * @return The new final history, if we found one. Otherwise, param {@code finalHistories}.
+   */
+  private History[] fillRet(final List<RThread> newInner, List<Instruction> instructions,
+      final Deque<TransitioningThread> workStack, History[] finalHistories) {
+    // Add instructions in the order they were created.
+    Iterator<TransitioningThread> iter = workStack.descendingIterator();
+    while (iter.hasNext()) {
+      instructions.addAll(iter.next().instructions);
+    }
+
+    while (!workStack.isEmpty()) {
+      final TransitioningThread workTransition = workStack.removeFirst();
+      newInner.add(workTransition.thread);
+      if (tnfa.finalState.equals(workTransition.thread.state)) {
+        assert finalHistories == null;
+        finalHistories = workTransition.thread.histories;
+      }
+    }
+    return finalHistories;
   }
 
   DFAState findMappableState(NavigableSet<DFAState> states, DFAState u, Map<History, History> mapping) {
     // `from` is a key that is smaller than all possible full keys. Likewise, `to` is bigger than all.
-    DFAState from = new DFAState(null, DFAState.makeStateComparisonKey(u.innerStates));
-    byte[] toKey = DFAState.makeStateComparisonKey(u.innerStates);
+    DFAState from = new DFAState(null, DFAState.makeStateComparisonKey(u.threads), null);
+    byte[] toKey = DFAState.makeStateComparisonKey(u.threads);
     // Assume that toKey is not full of Byte.MAX_VALUE. That would be really unlucky.
-    // Also a bit unlikely, given that it's an MD5 hash, and therefore pretty random.
+    // Also a bit unlikely, given that it'state an MD5 hash, and therefore pretty random.
     for (int i = toKey.length - 1; true; i--) {
       if (toKey[i] != Byte.MAX_VALUE) {
         toKey[i]++;
         break;
       }
     }
-    DFAState to = new DFAState(null, toKey);
+    DFAState to = new DFAState(null, toKey, null);
 
     final NavigableSet<DFAState> range = states.subSet(from, true, to, false);
     for (final DFAState candidate : range) {
@@ -202,17 +230,14 @@ class TNFAToTDFA {
 
   /** @return a mapping into {@code mapping} if one exists and returns false otherwise. */
   private boolean isMappable(final DFAState first, final DFAState second, final Map<History, History> mapping) {
-    // We checked that the same NFA states exist in findMappableState
-    if (!first.innerStates.keySet().equals(second.innerStates.keySet())) {
-      throw new AssertionError("The candidate range must contain the right states!");
-    }
     mapping.clear();
     Map<History, History> reverse = new HashMap<>();
+    assert first.threads.size() == second.threads.size();
 
     // A state is only mappable if its histories are mappable too.
-    for (final Map.Entry<State, History[]> entry : first.innerStates.entrySet()) {
-      final History[] mine = entry.getValue();
-      final History[] theirs = second.innerStates.get(entry.getKey());
+    for (int i = 0; i < first.threads.size(); i++) {
+      final History[] mine = first.threads.get(i).histories;
+      final History[] theirs = second.threads.get(i).histories;
       final boolean success = updateMap(mapping, reverse, mine, theirs);
       if (!success) {
         return false;
@@ -253,12 +278,6 @@ class TNFAToTDFA {
       } // That means the existing mapping matches.
     }
     return true;
-  }
-
-  StateAndInstructions makeStartState() {
-    LinkedHashMap<State, History[]> start = convertToDfaState(tnfa.initialState);
-
-    return oneStep(start, InputRange.EOS, true);
   }
 
   /** @return Ordered instructions for mapping. The ordering is such that they don't interfere with each other. */

@@ -54,10 +54,11 @@ public class TDFAInterpreter {
 
   public MatchResultTree interpret(CharSequence input) {
     final List<InputRange> inputRanges = inputRangeCleanup.cleanUp(tnfa2tdfa.tnfa.allInputRanges());
+    List<RThread> startUnexpanded = tnfa2tdfa.convertToDfaState(tnfa2tdfa.tnfa.initialState);
+    StateAndInstructions startState = tnfa2tdfa.oneStep(startUnexpanded, null);
 
-    StateAndInstructions startState = tnfa2tdfa.makeStartState();
-    DFAState t = startState.dfaState;
-    states.add(t);
+    DFAState dfaState = startState.dfaState;
+    states.add(dfaState);
 
     int cacheHits = 0;
     TDFATransitionTable tdfa = null;
@@ -83,22 +84,22 @@ public class TDFAInterpreter {
           continue;
         }
         tdfa = null;
-        t = tdfaBuilder.mapping.deoptimized.get(tdfaState);
+        dfaState = tdfaBuilder.mapping.deoptimized.get(tdfaState);
         tdfaState = -1;
         cacheHits = 0;
       } else { // Find the transition in the builder. Execute if there and continue.
-        NextDFAState nextState = tdfaBuilder.availableTransition(t, a);
+        NextDFAState nextState = tdfaBuilder.availableTransition(dfaState, a);
         if (nextState != null) {
           for (final Instruction i : nextState.instructions) {
             i.execute(pos);
           }
 
-          t = nextState.nextState;
+          dfaState = nextState.nextState;
 
           cacheHits++;
           if (cacheHits > COMPILE_THRESHOLD) {
             tdfa = tdfaBuilder.build();
-            tdfaState = tdfaBuilder.mapping.mapping.get(t);
+            tdfaState = tdfaBuilder.mapping.mapping.get(dfaState);
           }
 
           continue;
@@ -113,12 +114,11 @@ public class TDFAInterpreter {
       }
 
       // TODO this is ugly. Clearly, e should return StateAndPositions.
-      final StateAndInstructions uu = tnfa2tdfa.oneStep(t.innerStates, inputRange, false);
-      final DFAState u = uu.dfaState;
-
-      if (u.innerStates.isEmpty()) { // There is no matching NFA state.
+      final StateAndInstructions uu = tnfa2tdfa.oneStep(dfaState.threads, inputRange);
+      if (uu == null) { // There is no matching NFA state.
         return RealMatchResult.NoMatchResult.SINGLETON;
       }
+      final DFAState u = uu.dfaState;
 
       Map<History, History> mapping = new LinkedHashMap<>();
 
@@ -140,19 +140,19 @@ public class TDFAInterpreter {
         instruction.execute(pos);
       }
 
-      assert historiesOk(nextState.innerStates.values());
+      assert historiesOk(nextState.threads) : nextState.threads;
 
-      tdfaBuilder.addTransition(t, inputRange, nextState, c);
+      tdfaBuilder.addTransition(dfaState, inputRange, nextState, c);
 
-      t = nextState;
+      dfaState = nextState;
     }
 
     // Restore full state before extracing information.
     if (tdfa != null) {
-      t = tdfaBuilder.mapping.deoptimized.get(tdfaState);
+      dfaState = tdfaBuilder.mapping.deoptimized.get(tdfaState);
     }
 
-    final History[] fin = t.innerStates.get(tnfa2tdfa.tnfa.finalState);
+    final History[] fin = dfaState.finalHistories;
     if (fin == null) {
       return RealMatchResult.NoMatchResult.SINGLETON;
     }
@@ -162,12 +162,13 @@ public class TDFAInterpreter {
   }
 
   /** Invariant: opening and closing tags must have same length histories. */
-  private boolean historiesOk(Iterable<History[]> cols) {
-    for (final History[] s : cols) {
-      for (int i = 0; i < s.length; i += 2) {
-        if (s[i+1] != null) {
-          assert s[i] != null;
-          if (s[i].size() != s[i+1].size()) {
+  private boolean historiesOk(List<RThread> threads) {
+    for (final RThread thread : threads) {
+      History[] h = thread.histories;
+      for (int i = 0; i < h.length; i += 2) {
+        if (h[i+1] != null) {
+          assert h[i] != null;
+          if (h[i].size() != h[i+1].size()) {
             return false;
           }
         }

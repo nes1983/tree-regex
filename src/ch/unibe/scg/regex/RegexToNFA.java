@@ -20,7 +20,7 @@ import ch.unibe.scg.regex.ParserProvider.Node.Simple;
 import ch.unibe.scg.regex.ParserProvider.Node.Star;
 import ch.unibe.scg.regex.ParserProvider.Node.Union;
 import ch.unibe.scg.regex.TNFA.Builder;
-import ch.unibe.scg.regex.TransitionTriple.Priority;
+import ch.unibe.scg.regex.Transition.Priority;
 
 
 /**

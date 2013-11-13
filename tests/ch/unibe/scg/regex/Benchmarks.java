@@ -62,7 +62,7 @@ public final class Benchmarks extends Benchmark {
     int dummy = 0;
 
     Benchmarks b = new Benchmarks();
-    if (false) {
+    if (true) {
     b.strategy = Strategy.ORACLE;
     b.inputSize = InputSize.MEDIUM;
     b.setUp();
@@ -90,7 +90,7 @@ public final class Benchmarks extends Benchmark {
       dummy += b.timeMatch();
     }
     duration = System.nanoTime() - start;
-    System.out.println(String.format("ours   %10d", duration));
+    System.out.println(String.format("  ours  %10d", duration));
 
     if (dummy == 0) { // unlikely.
       throw new RuntimeException();

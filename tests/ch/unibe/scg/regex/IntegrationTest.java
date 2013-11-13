@@ -21,27 +21,6 @@ public final class IntegrationTest {
   public void setUp() {
     State.resetCount();
     History.resetCount();
-//
-//    if (false) {
-//      assertThat(
-//          tnfa.toString(),
-//          is("q0 -> q14, {(q0, ANY)=[q0, NORMAL, NONE], "
-//              + "(q0, ε)=[q1, NORMAL, ➀0], "
-//              + "(q1, ε)=[q2, NORMAL, ➀1], "
-//              + "(q2, ε)=[q3, NORMAL, ➀2], "
-//              + "(q3, ε)=[q4, NORMAL, ➀3], "
-//              + "(q4, a-a)=[q5, NORMAL, NONE], "
-//              + "(q5, ε)=[q6, LOW, NONE, q4, NORMAL, NONE], "
-//              + "(q6, ε)=[q7, NORMAL, ➁3], "
-//              + "(q7, b-b)=[q8, NORMAL, NONE], "
-//              + "(q8, ε)=[q9, NORMAL, ➁2], "
-//              + "(q9, ε)=[q10, LOW, NONE, q2, NORMAL, NONE], "
-//              + "(q10, c-c)=[q11, NORMAL, NONE], "
-//              + "(q11, ε)=[q12, NORMAL, ➁1], "
-//              + "(q12, ε)=[q13, LOW, NONE, q1, NORMAL, NONE], "
-//              + "(q13, ε)=[q14, NORMAL, ➁0]}"));
-//    }
-//    tdfaInterpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
   }
 
   @Test
@@ -92,9 +71,6 @@ public final class IntegrationTest {
 
   @Test
   public void testMatchRanges() {
-    State.resetCount();
-    History.resetCount();
-
     final Regex parsed = new ParserProvider().regexp().parse("[a-b][b-c]");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
 
@@ -105,8 +81,6 @@ public final class IntegrationTest {
 
   @Test
   public void testMemoryAfterExecutionSimple() {
-    State.resetCount();
-    History.resetCount();
     final Regex parsed = new ParserProvider().regexp().parse("((a+)b)+");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
@@ -116,8 +90,15 @@ public final class IntegrationTest {
   }
 
   @Test
+  public void testNoInstructions() {
+    TDFAInterpreter interpreter = TDFAInterpreter.compile("a+b+");
+    interpreter.interpret("aab");
+    assertThat(interpreter.tdfaBuilder.build().toString(), is(""));
+  }
+
+  @Test
   public void testOtherLehrer() {
-    final Regex parsed = new ParserProvider().regexp().parse("((.*?),([0-9]+);)+");
+    final Regex parsed = new ParserProvider().regexp().parse("(.*?(.*?),([0-9]+);)+");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
     RealMatchResult res = (RealMatchResult) interpreter.interpret("Tom Lehrer,01;Alan Turing,23;");
@@ -125,6 +106,18 @@ public final class IntegrationTest {
     assertThat(Arrays.toString(res.captureGroupPositions),
       is("[98(0 0 ), 99(28 28 ), 92(14 14 0 ), 93(28 28 13 ), 57(14 14 0 ), "
           + "58(24 24 9 ), 78(26 26 11 ), 79(27 27 12 )]"));
+  }
+
+  @Test
+  public void testTwoGreedy() {
+    final Regex parsed = new ParserProvider().regexp().parse(".*(.*)");
+    final TNFA tnfa = new RegexToNFA().convert(parsed);
+
+    TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
+    RealMatchResult res = (RealMatchResult) interpreter.interpret("aaaa");
+
+    assertThat(Arrays.toString(res.captureGroupPositions),
+      is(""));
   }
 
   @Test

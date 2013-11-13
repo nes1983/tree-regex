@@ -164,6 +164,11 @@ class TDFATransitionTable {
       assert !transitionsIter.hasNext();
       return new TDFATransitionTable(froms, tos, states, newStates, instructions);
     }
+
+    @Override
+    public String toString() {
+      return build().toString();
+    }
   }
 
   private int cmp(final int state1, final int state2, final char ch1, final char ch2) {
