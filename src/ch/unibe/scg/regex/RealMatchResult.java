@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import ch.unibe.scg.regex.IntIterable.IntIterator;
+
 class RealMatchResult implements MatchResultTree {
   final History[] captureGroupPositions;
   /** The parent capture group number `t` is parentOf[t]. */
@@ -102,6 +104,7 @@ class RealMatchResult implements MatchResultTree {
       return Integer.compare(this.from, that.from);
     }
   }
+
   @Override
   public int end() {
     return end(0);
@@ -181,5 +184,25 @@ class RealMatchResult implements MatchResultTree {
     }
 
     return cols.get(0).get(0); // The root is in capture group 0, which has only one entry.
+  }
+
+  /**
+   * Testing only!
+   * @return a string dump of all matched positions for all groups, in reverse.
+   */
+  String matchPositionsDebugString() {
+    StringBuilder ret = new StringBuilder();
+    for (History h : captureGroupPositions) {
+      ret.append('(');
+      IntIterator iter = h.iterator();
+      iter.next(); // Ignore uncommitted.
+      while (iter.hasNext()) {
+        ret.append(iter.next());
+        ret.append(", ");
+      }
+      ret.append(") ");
+    }
+
+    return ret.toString();
   }
 }

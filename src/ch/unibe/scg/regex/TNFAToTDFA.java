@@ -286,13 +286,14 @@ class TNFAToTDFA {
     // For the purpose of this method, map is a restricted DAG.
     // Nodes have at most one incoming and outgoing edges.
     // The instructions that we return are the *edges* of the graph, histories are the nodes.
-    // Because of the instructions, we can identify every edge by its *source* node.
+    // We identify every edge by its *source* node.
     List<Instruction> ret = new ArrayList<>(map.size());
     Deque<History> stack = new ArrayDeque<>();
     Set<History> visitedSources = new HashSet<>();
 
     // Go through the edges of the graph. Identify edge e by source node source:
     for (History source : map.keySet()) {
+      assert source != null;
       // Push e on stack, unless e deleted
       if (visitedSources.contains(source)) {
         continue;
@@ -301,9 +302,11 @@ class TNFAToTDFA {
       stack.push(source);
       // while cur has undeleted following edges, mark cur as deleted, follow the edge, repeat.
       while (source != null && !visitedSources.contains(source)) {
-        source = map.get(source);
-        stack.push(source);
         visitedSources.add(source);
+        source = map.get(source);
+        if (source != null) {
+          stack.push(source);
+        }
       }
 
       // walk stack backward, add to ret.
@@ -316,6 +319,7 @@ class TNFAToTDFA {
         }
       }
     }
+    assert stack.isEmpty();
     return ret;
   }
 
