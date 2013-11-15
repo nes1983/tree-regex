@@ -2,7 +2,6 @@ package ch.unibe.scg.regex;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,8 +22,8 @@ public final class DFATTableBuilderTest {
 
   @Test
   public void testBuilder() {
-    final DFAState q0 = mock(DFAState.class);
-    final DFAState q1 = mock(DFAState.class);
+    final DFAState q0 = new DFAState(null, new byte[] {1}, null);
+    final DFAState q1 = new DFAState(null, new byte[] {2}, null);
     final List<Instruction> empty = Collections.emptyList();
     builder.addTransition(q0, InputRange.make('a', 'c'), q1, empty);
 
