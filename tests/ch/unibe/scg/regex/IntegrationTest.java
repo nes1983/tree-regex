@@ -137,6 +137,14 @@ public final class IntegrationTest {
   }
 
   @Test
+  public void testComplexRegex() {
+    TDFAInterpreter interpreter = TDFAInterpreter.compile("(.*?([a-z]+\\.)*([A-Z][a-zA-Z]*))*.*?");
+    RealMatchResult res = (RealMatchResult) interpreter.interpret("aa java.io.File aa java.io.File;");
+    assertThat(res.matchPositionsDebugString(),
+      is("(0, ) (31, ) (15, 0, ) (30, 14, ) (24, 19, 8, 3, ) (26, 23, 10, 7, ) (27, 11, ) (30, 14, ) "));
+  }
+
+  @Test
   public void testGroupMatch() {
     TDFAInterpreter tdfaInterpreter = TDFAInterpreter.compile("(((a+)b)+c)+");
     MatchResult result = tdfaInterpreter.interpret("aaabcaaabcaabc");
