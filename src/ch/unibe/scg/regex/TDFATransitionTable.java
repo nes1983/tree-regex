@@ -91,8 +91,6 @@ class TDFATransitionTable {
     }
 
     static class Mapping {
-      private int lastCreatedState = -1;
-
       /** Map from full DFAState to optimized state (an int) */
       final Map<DFAState, Integer> mapping = new LinkedHashMap<>();
 
@@ -105,13 +103,12 @@ class TDFATransitionTable {
           return to;
         }
 
-        lastCreatedState++;
-        final int next = lastCreatedState;
+        final int next = deoptimized.size();
 
         mapping.put(state, next);
 
         deoptimized.add(state);
-        assert deoptimized.get(lastCreatedState).equals(state);
+        assert deoptimized.get(next).equals(state);
 
         return next;
       }
