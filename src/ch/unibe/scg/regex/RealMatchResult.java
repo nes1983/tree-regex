@@ -1,7 +1,6 @@
 package ch.unibe.scg.regex;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -9,12 +8,12 @@ import java.util.NoSuchElementException;
 import ch.unibe.scg.regex.IntIterable.IntIterator;
 
 class RealMatchResult implements MatchResultTree {
-  final History[] captureGroupPositions;
+  final Arraylike captureGroupPositions;
   /** The parent capture group number `t` is parentOf[t]. */
   final int[] parentOf;
   final CharSequence input;
 
-  RealMatchResult(History[] fin, CharSequence input, int[] parentOf) {
+  RealMatchResult(Arraylike fin, CharSequence input, int[] parentOf) {
     this.captureGroupPositions = fin;
     this.input = input;
     this.parentOf = parentOf;
@@ -112,7 +111,7 @@ class RealMatchResult implements MatchResultTree {
 
   @Override
   public int end(final int group) {
-    return captureGroupPositions[group * 2 + 1].iterator().next();
+    return captureGroupPositions.get(group * 2 + 1).iterator().next();
   }
 
   @Override
@@ -127,7 +126,7 @@ class RealMatchResult implements MatchResultTree {
 
   @Override
   public int groupCount() {
-    return captureGroupPositions.length / 2;
+    return captureGroupPositions.size() / 2;
   }
 
   @Override
@@ -137,7 +136,7 @@ class RealMatchResult implements MatchResultTree {
 
   @Override
   public int start(final int group) {
-    return captureGroupPositions[group * 2].iterator().next();
+    return captureGroupPositions.get(group * 2).iterator().next();
   }
 
   @Override
@@ -149,11 +148,13 @@ class RealMatchResult implements MatchResultTree {
   public TreeNode getRoot() {
     // copy captureGroupPositions into hs, then move all histories one step down,
     // to see only committed values.
-    History[] hs = Arrays.copyOf(captureGroupPositions, captureGroupPositions.length);
-    for (int i = 0; i < hs.length; i++) {
-      if (hs[i] != null) {
-        hs[i] = hs[i].prev;
+    History[] hs = new History[captureGroupPositions.size()];
+    int i = 0;
+    for (History h: captureGroupPositions) {
+      if (h != null) {
+        hs[i] = h.prev;
       }
+      i++;
     }
 
     // Copy the input, which is an array of linked lists into an array of arrays.

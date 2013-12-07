@@ -5,7 +5,6 @@ import static ch.unibe.scg.regex.TNFAToTDFA.Hunger.HUNGRY;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -35,10 +34,7 @@ class TNFAToTDFA {
 
   /** Used to create the initial state of the DFA. */
   List<RThread> convertToDfaState(final State state) {
-    final History[] initialMemoryLocations = new History[tnfa.allTags().size()];
-    for (int i = 0; i < initialMemoryLocations.length; i++) {
-      initialMemoryLocations[i] = new History();
-    }
+    final Arraylike initialMemoryLocations = Arraylike.make(tnfa.allTags().size());
     return Collections.singletonList(new RThread(state, initialMemoryLocations));
   }
 
@@ -93,8 +89,8 @@ class TNFAToTDFA {
     final Deque<TransitioningThread> lowStack = new ArrayDeque<>(); // low priority
     final Deque<TransitioningThread> workStack = new ArrayDeque<>();
 
-    History[] finalHistories = null;
-
+    Arraylike finalHistories = null;
+    
     // Enqueue all states we're in as consuming thread to lowStack, or non-consuming if startState.
     for (RThread e : threads) {
       Hunger h = HUNGRY;
@@ -133,21 +129,21 @@ class TNFAToTDFA {
       for (final Transition trans : tnfa.availableEpsilonTransitionsFor(tt.thread.state)) {
         final Tag tau = trans.tag;
         final List<Instruction> transInstr = new ArrayList<>();
-        History[] newHistories = Arrays.copyOf(tt.thread.histories, tt.thread.histories.length);
+        Arraylike newHistories = tt.thread.histories;
 
         if (tau.isStartTag() || tau.isEndTag()) {
           final History newHistoryOpening = new History();
           int openingPos = positionFor(tau.getGroup().startTag);
-          transInstr.add(instructionMaker.reorder(newHistoryOpening, newHistories[openingPos]));
-          newHistories[openingPos] = newHistoryOpening;
+          transInstr.add(instructionMaker.reorder(newHistoryOpening, tt.thread.histories.get(openingPos)));
+          newHistories = newHistories.set(openingPos, newHistoryOpening);
 
           if (tau.isStartTag()) {
             transInstr.add(instructionMaker.storePosPlusOne(newHistoryOpening));
           } else {
             final History newHistoryClosing = new History();
             int closingPos = positionFor(tau.getGroup().endTag);
-            transInstr.add(instructionMaker.reorder(newHistoryClosing, newHistories[closingPos]));
-            newHistories[closingPos] = newHistoryClosing;
+            transInstr.add(instructionMaker.reorder(newHistoryClosing, tt.thread.histories.get(closingPos)));
+            newHistories = newHistories.set(closingPos, newHistoryClosing);
             transInstr.add(instructionMaker.storePos(newHistoryClosing));
             transInstr.add(instructionMaker.openingCommit(newHistoryOpening));
             transInstr.add(instructionMaker.closingCommit(newHistoryClosing));
@@ -185,8 +181,8 @@ class TNFAToTDFA {
    *
    * @return The new final history, if we found one. Otherwise, param {@code finalHistories}.
    */
-  private History[] fillRet(final List<RThread> newInner, List<Instruction> instructions,
-      final Deque<TransitioningThread> workStack, History[] finalHistories) {
+  private Arraylike fillRet(final List<RThread> newInner, List<Instruction> instructions,
+      final Deque<TransitioningThread> workStack, Arraylike finalHistories) {
     // Add instructions in the order they were created.
     Iterator<TransitioningThread> iter = workStack.descendingIterator();
     while (iter.hasNext()) {
@@ -236,8 +232,8 @@ class TNFAToTDFA {
 
     // A state is only mappable if its histories are mappable too.
     for (int i = 0; i < first.threads.size(); i++) {
-      final History[] mine = first.threads.get(i).histories;
-      final History[] theirs = second.threads.get(i).histories;
+      final Arraylike mine = first.threads.get(i).histories;
+      final Arraylike theirs = second.threads.get(i).histories;
       final boolean success = updateMap(mapping, reverse, mine, theirs);
       if (!success) {
         return false;
@@ -258,22 +254,27 @@ class TNFAToTDFA {
    * @return True if the mapping was successful; false otherwise.
    */
   private boolean updateMap(final Map<History, History> map, Map<History, History> reverse,
-        final History[] from, final History[] to) {
-    assert from.length == to.length;
+        final Arraylike from, final Arraylike to) {
+    assert from.size() == to.size();
 
     // Go over the tag list and iteratively try to find counterexample.
-    for (int i = 0; i < from.length; i++) {
-      if (!map.containsKey(from[i])) {
-        // If we don't know any mapping for from[i], we set it to the only mapping that can work.
+    Iterator<History> iterFrom = from.iterator();
+    Iterator<History> iterTo = to.iterator();
+    while (iterFrom.hasNext()) {
+    	assert iterTo.hasNext();
+    	History historyFrom = iterFrom.next();
+    	History historyTo = iterTo.next();
+      if (!map.containsKey(historyFrom)) {
+        // If we don't know any mapping for h_from, we set it to the only mapping that can work.
 
-        if (reverse.containsKey(to[i])) { // But the target is taken already
+        if (reverse.containsKey(historyTo)) { // But the target is taken already
           return false;
         }
 
-        map.put(from[i], to[i]);
-        reverse.put(to[i], from[i]);
-      } else if (!map.get(from[i]).equals(to[i]) || !from[i].equals(reverse.get(to[i]))) {
-        // Only mapping that could be chosen for from[i] and to[i] contradicts existing mapping.
+        map.put(historyFrom, historyTo);
+        reverse.put(historyTo, historyFrom);
+      } else if (!map.get(historyFrom).equals(historyTo) || !historyFrom.equals(reverse.get(historyTo))) {
+        // Only mapping that could be chosen for h_from and h_to contradicts existing mapping.
         return false;
       } // That means the existing mapping matches.
     }

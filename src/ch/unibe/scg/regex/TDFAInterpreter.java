@@ -1,6 +1,7 @@
 package ch.unibe.scg.regex;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -152,7 +153,7 @@ public class TDFAInterpreter {
       dfaState = tdfaBuilder.mapping.deoptimized.get(tdfaState);
     }
 
-    final History[] fin = dfaState.finalHistories;
+    final Arraylike fin = dfaState.finalHistories;
     if (fin == null) {
       return RealMatchResult.NoMatchResult.SINGLETON;
     }
@@ -164,11 +165,13 @@ public class TDFAInterpreter {
   /** Invariant: opening and closing tags must have same length histories. */
   private boolean historiesOk(List<RThread> threads) {
     for (final RThread thread : threads) {
-      History[] h = thread.histories;
-      for (int i = 0; i < h.length; i += 2) {
-        if (h[i+1] != null) {
-          assert h[i] != null;
-          if (h[i].size() != h[i+1].size()) {
+      Iterator<History> it = thread.histories.iterator();
+      while (it.hasNext()) {
+    	History h1 = it.next();
+    	History h2 = it.next();
+        if (h1 != null) {
+          assert h2 != null;
+          if (h1.size() != h2.size()) {
             return false;
           }
         }

@@ -16,9 +16,9 @@ class DFAState implements Comparable<DFAState> {
   final List<RThread> threads;
   final private byte[] comparisonKey;
   /** Histories of this state if it is finishing, otherwise null. */
-  final History[] finalHistories;
+  final Arraylike finalHistories;
 
-  DFAState(final List<RThread> threads, byte[] comparisonKey, History[] finalHistories) {
+  DFAState(final List<RThread> threads, byte[] comparisonKey, Arraylike finalHistories) {
     this.comparisonKey = requireNonNull(comparisonKey); // Needed for equals.
     this.threads = threads;
     this.finalHistories = finalHistories;
@@ -121,7 +121,7 @@ class DFAState implements Comparable<DFAState> {
     for (RThread el : threads) {
       sb.append(el.state);
       sb.append("->");
-      sb.append(Arrays.toString(el.histories));
+      sb.append(el.histories.toString());
       sb.append(", ");
     }
     sb.delete(sb.length() - 2, sb.length());
