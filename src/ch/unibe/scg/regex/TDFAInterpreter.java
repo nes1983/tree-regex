@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
-import ch.unibe.scg.regex.ParserProvider.Node.Regex;
+import ch.unibe.scg.regex.Node.Regex;
 import ch.unibe.scg.regex.TDFATransitionTable.NextDFAState;
 import ch.unibe.scg.regex.TDFATransitionTable.NextState;
 import ch.unibe.scg.regex.TNFAToTDFA.StateAndInstructions;
@@ -29,7 +29,7 @@ public class TDFAInterpreter {
   }
 
   public static TDFAInterpreter compile(String regex) {
-    final Regex parsed = new ParserProvider().regexp().parse(regex);
+    final Regex parsed = RegexParser.parse(regex);
     final TNFA tnfa = new RegexToNFA().convert(parsed);
     return new TDFAInterpreter(TNFAToTDFA.make(tnfa));
   }

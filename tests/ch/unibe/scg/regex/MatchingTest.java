@@ -8,12 +8,12 @@ import java.util.regex.MatchResult;
 import org.junit.Before;
 import org.junit.Test;
 
-import ch.unibe.scg.regex.ParserProvider.Node.Regex;
+import ch.unibe.scg.regex.Node.Regex;
 
 @SuppressWarnings("javadoc")
 public final class MatchingTest {
   private TDFAInterpreter makeInterpreter(String regex) {
-    final Regex parsed = new ParserProvider().regexp().parse(regex);
+    final Regex parsed = RegexParser.parse(regex);
     final TNFA tnfa = new RegexToNFA().convert(parsed);
 
     return new TDFAInterpreter(TNFAToTDFA.make(tnfa));

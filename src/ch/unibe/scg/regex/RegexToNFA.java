@@ -8,17 +8,17 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import ch.unibe.scg.regex.ParserProvider.Node;
-import ch.unibe.scg.regex.ParserProvider.Node.Basic;
-import ch.unibe.scg.regex.ParserProvider.Node.Group;
-import ch.unibe.scg.regex.ParserProvider.Node.NonGreedyStar;
-import ch.unibe.scg.regex.ParserProvider.Node.Optional;
-import ch.unibe.scg.regex.ParserProvider.Node.Plus;
-import ch.unibe.scg.regex.ParserProvider.Node.PositiveSet;
-import ch.unibe.scg.regex.ParserProvider.Node.SetItem;
-import ch.unibe.scg.regex.ParserProvider.Node.Simple;
-import ch.unibe.scg.regex.ParserProvider.Node.Star;
-import ch.unibe.scg.regex.ParserProvider.Node.Union;
+import ch.unibe.scg.regex.Node;
+import ch.unibe.scg.regex.Node.Basic;
+import ch.unibe.scg.regex.Node.Group;
+import ch.unibe.scg.regex.Node.NonGreedyStar;
+import ch.unibe.scg.regex.Node.Optional;
+import ch.unibe.scg.regex.Node.Plus;
+import ch.unibe.scg.regex.Node.PositiveSet;
+import ch.unibe.scg.regex.Node.SetItem;
+import ch.unibe.scg.regex.Node.Simple;
+import ch.unibe.scg.regex.Node.Star;
+import ch.unibe.scg.regex.Node.Union;
 import ch.unibe.scg.regex.TNFA.Builder;
 import ch.unibe.scg.regex.Transition.Priority;
 

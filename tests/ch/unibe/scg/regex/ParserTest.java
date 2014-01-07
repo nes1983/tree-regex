@@ -1,145 +1,145 @@
 package ch.unibe.scg.regex;
 
+import java.util.regex.PatternSyntaxException;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-import org.codehaus.jparsec.Parser;
-import org.codehaus.jparsec.error.ParserException;
-import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import ch.unibe.scg.regex.ParserProvider.Node;
+import ch.unibe.scg.regex.Node.Union;
 
 @SuppressWarnings("javadoc")
 public final class ParserTest {
-  public static void main(final String... arg) {
-    final ParserTest t = new ParserTest();
-    t.setUp();
-    t.testUnion2();
-  }
-
-  private ParserProvider pp;
-
+  
+  @SuppressWarnings("unchecked")
+  private <A extends Node.Basic> A getFirst(String regex) {
+    final Node.Regex r = RegexParser.parse(regex);
+    assertThat(r, instanceOf(Node.Simple.class));
+    final Node.Basic first = ((Node.Simple) RegexParser.parse(regex)).basics.get(0);
+    return (A) first;
+  }  
+  
   @Test
   public void regexp4() {
-    final Parser<Node.Regex> s = pp.regexp();
-    final Node.Regex r = s.parse("aaa");
+    final Node.Regex r = RegexParser.parse("aaa");
     assertThat(r.toString(), is("aaa"));
-  }
-
-  @Before
-  public void setUp() {
-    pp = new ParserProvider();
   }
 
   @Test
   public void testBasic() {
-    final Node.Basic s = pp.basic().parse(".*");
+    final Node.Basic s = getFirst(".*");
     assertThat(s, instanceOf(Node.Star.class));
     final Node.Star ss = (Node.Star) s;
     assertThat(ss.elementary, instanceOf(Node.Any.class));
     assertThat(s.toString(), is(".*"));
   }
 
-  @Test(expected = ParserException.class)
-  public void testDontParseRange() {
-    final Node.Range r = pp.range().parse("a--f");
-    assertThat(r.toString(), is("a-f"));
+  public void testWeirdParseRange() {
+    final Node.Regex r = RegexParser.parse("[a--f]");
+    assertThat(r.toString(), is("[a--f]"));
+    final Node.Regex rr = RegexParser.parse("[a--]");
+    assertThat(rr.toString(), is("[a--]"));
   }
 
   @Test
   public void testEscaped() {
-    final Node.EscapedChar s = pp.escapedCharacter().parse("\\(");
+    final Node.EscapedChar s = getFirst("\\(");
     assertThat(s.inputRange.getFrom(), is('('));
     assertThat(s.toString(), is("\\("));
   }
 
   @Test
   public void testGroup2() {
-    pp.prepare();
-    final Parser<Node.Group> s = pp.group();
-    final Node.Group u = s.parse("(aaa|bbb)");
+    final Node.Group u = getFirst("(aaa|bbb)");
     assertThat(u.toString(), is("(aaa|bbb)"));
   }
 
-  @Test(expected = ParserException.class)
+  @Test(expected = PatternSyntaxException.class)
   public void testNoSet() {
-    pp.set().parse("[a-fgk-zA-B][");
+    RegexParser.parse("[a-fgk-zA-B][");
   }
 
   @Test
   public void testOptional1() {
-    final Node.Optional s = pp.optional().parse("[a-fgk-zA-B]?");
+    final Node.Optional s = getFirst("[a-fgk-zA-B]?");
     assertThat(s.elementary, instanceOf(Node.Set.class));
     assertThat(s.toString(), is("[a-fgk-zA-B]?"));
   }
 
   @Test
   public void testOptional2() {
-    final Node.Optional s = pp.optional().parse(".?");
+    final Node.Optional s = getFirst(".?");
     assertThat(s.elementary, instanceOf(Node.Any.class));
     assertThat(s.toString(), is(".?"));
   }
 
   @Test
   public void testParseRange() {
-    final Node.Range r = pp.range().parse("a-f");
-    assertThat(r.toString(), is("a-f"));
+    final Node.Regex r = RegexParser.parse("[a-f]");
+    assertThat(r.toString(), is("[a-f]"));
+  }
+  
+  @Test
+  public void testParseRangeEscape() {
+    final Node.Regex r = RegexParser.parse("[a\\-]");
+    assertThat(r.toString(), is("[a\\-]"));
   }
 
   @Test
   public void testPlus1() {
-    final Node.Plus s = pp.plus().parse("[a-fgk-zA-B]+");
+    final Node.Plus s = getFirst("[a-fgk-zA-B]+");
     assertThat(s.elementary, instanceOf(Node.Set.class));
     assertThat(s.toString(), is("[a-fgk-zA-B]+"));
   }
 
   @Test
+  public void testNegativeSet() {
+    final Node.Plus s = getFirst("[^a-fgk-zA-B]+");
+    assertThat(s.elementary, instanceOf(Node.Set.class));
+    assertThat(s.toString(), is("[^a-fgk-zA-B]+"));
+  }
+
+  @Test
   public void testPlus2() {
-    final Node.Plus s = pp.plus().parse(".+");
+    final Node.Plus s = getFirst(".+");
     assertThat(s.elementary, instanceOf(Node.Any.class));
     assertThat(s.toString(), is(".+"));
   }
 
   @Test
   public void testRegexp() {
-    final Parser<Node.Regex> p = pp.regexp();
-    final Node.Regex rr = p.parse("aaa|bbb");
+    final Node.Regex rr = RegexParser.parse("aaa|bbb");
     assertThat(rr.toString(), is("aaa|bbb"));
   }
 
   @Test
   public void testSet() {
-    final Node.Set s = pp.set().parse("[a-fgk-zA-B]");
+    final Node.Set s = getFirst("[a-fgk-zA-B]");
 
     assertThat(s.toString(), is("[a-fgk-zA-B]"));
   }
-
-  @Test(expected = ParserException.class)
-  public void testSimpleNotEmpty() {
-    pp.simple().parse("");
-  }
+  
 
   @Test
   public void testStar1() {
-    final Node.Star s = pp.star().parse("[a-fgk-zA-B]*");
+    final Node.Star s = getFirst("[a-fgk-zA-B]*");
     assertThat(s.elementary, instanceOf(Node.Set.class));
     assertThat(s.toString(), is("[a-fgk-zA-B]*"));
   }
 
   @Test
   public void testStar2() {
-    final Node.Star s = pp.star().parse(".*");
+    final Node.Star s = getFirst(".*");
     assertThat(s.elementary, instanceOf(Node.Any.class));
     assertThat(s.toString(), is(".*"));
   }
 
   @Test
   public void testUnion() {
-    pp.prepare();
-    final Parser<Node.Union> s = pp.union();
-    final Node.Union u = s.parse("[a-fgk-zA-B]*|aaa");
+    final Node.Union u = (Union) RegexParser.parse("[a-fgk-zA-B]*|aaa");
     assertThat(u.toString(), is("[a-fgk-zA-B]*|aaa"));
     assertThat(u.left.getClass(), is((Object) Node.Simple.class));
     assertThat(u.right, instanceOf(Node.Simple.class));
@@ -147,35 +147,21 @@ public final class ParserTest {
 
   @Test
   public void testUnion2() {
-    pp.prepare();
-    final Parser<Node.Union> s = pp.union();
-    final Node.Union u = s.parse("[a-fgk-zA-B]*|(aaa|bbb)");
+    final Node.Union u = (Node.Union) RegexParser.parse("[a-fgk-zA-B]*|(aaa|bbb)");
     assertThat(u.toString(), is("[a-fgk-zA-B]*|(aaa|bbb)"));
-    assertThat(u.left.getClass(), is((Object) Node.Simple.class));
+    assertThat(u.left, instanceOf(Node.Simple.class));
     assertThat(u.right, instanceOf(Node.Simple.class));
   }
 
   @Test
   public void testUnion3() {
-    pp.prepare();
-    final Parser<Node.Union> s = pp.union();
-    final Node.Union u = s.parse("bbb|aaa");
+    final Node.Union u = (Node.Union) RegexParser.parse("bbb|aaa");
     assertThat(u.toString(), is("bbb|aaa"));
   }
 
   @Test
-  public void unionBig() {
-    final Parser<Node.Regex> p = pp.regexp();
-    final String s = "aaa|bbb";
-    final Node.Regex rr = p.parse(s);
-    assertThat(rr.toString(), is("aaa|bbb"));
-  }
-
-  @Test
   public void unionBig2() {
-    final Parser<Node.Regex> p = pp.regexp();
-    final String s = "aaa|(bbb)?";
-    final Node.Regex rr = p.parse(s);
+    final Node.Regex rr = RegexParser.parse("aaa|(bbb)?");
     assertThat(rr, instanceOf(Node.Union.class));
     final Node.Union u = (Node.Union) rr;
     final Node.Regex right = u.right;
@@ -184,5 +170,12 @@ public final class ParserTest {
     final Node.Basic optional = simple.basics.get(0);
     assertThat(optional, instanceOf(Node.Optional.class));
     assertThat(rr.toString(), is("aaa|(bbb)?"));
+  }
+  
+  @Ignore("Is not currently supported. Only stupid people would do it anyway.")
+  @Test
+  public void nestedPlus() {
+    final Node.Regex rr = RegexParser.parse("a++");
+    assertThat(rr, instanceOf(Node.Plus.class));
   }
 }

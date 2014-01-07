@@ -12,7 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import ch.unibe.scg.regex.MatchResultTree.TreeNode;
-import ch.unibe.scg.regex.ParserProvider.Node.Regex;
+import ch.unibe.scg.regex.Node.Regex;
 
 @SuppressWarnings("javadoc")
 public final class IntegrationTest {
@@ -58,7 +58,7 @@ public final class IntegrationTest {
 
   @Test
   public void testMatchExampleFromPaperTomLehrer() {
-    final Regex parsed = new ParserProvider().regexp().parse("(([a-zA-Z ]*),([0-9]+);)+");
+    final Regex parsed = RegexParser.parse("(([a-zA-Z ]*),([0-9]+);)+");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
 
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
@@ -69,7 +69,7 @@ public final class IntegrationTest {
 
   @Test
   public void testMatchRanges() {
-    final Regex parsed = new ParserProvider().regexp().parse("[a-b][b-c]");
+    final Regex parsed = RegexParser.parse("[a-b][b-c]");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
 
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
@@ -79,7 +79,7 @@ public final class IntegrationTest {
 
   @Test
   public void testMemoryAfterExecutionSimple() {
-    final Regex parsed = new ParserProvider().regexp().parse("((a+)b)+");
+    final Regex parsed = RegexParser.parse("((a+)b)+");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
     RealMatchResult res = (RealMatchResult) interpreter.interpret("abab");
@@ -96,7 +96,7 @@ public final class IntegrationTest {
 
   @Test
   public void testOtherLehrer() {
-    final Regex parsed = new ParserProvider().regexp().parse("(.*?(.*?),([0-9]+);)+");
+    final Regex parsed = RegexParser.parse("(.*?(.*?),([0-9]+);)+");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
     RealMatchResult res = (RealMatchResult) interpreter.interpret("Tom Lehrer,01;Alan Turing,23;");
@@ -107,7 +107,7 @@ public final class IntegrationTest {
 
   @Test
   public void testTwoGreedy() {
-    final Regex parsed = new ParserProvider().regexp().parse(".*(.*)");
+    final Regex parsed = RegexParser.parse(".*(.*)");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
 
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
@@ -118,7 +118,7 @@ public final class IntegrationTest {
 
   @Test
   public void testTwoNonGreedy() {
-    final Regex parsed = new ParserProvider().regexp().parse("(.*?(.*?))+");
+    final Regex parsed = RegexParser.parse("(.*?(.*?))+");
     final TNFA tnfa = new RegexToNFA().convert(parsed);
 
     TDFAInterpreter interpreter = new TDFAInterpreter(TNFAToTDFA.make(tnfa));
