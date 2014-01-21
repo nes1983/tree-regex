@@ -7,6 +7,8 @@ import java.util.Iterator;
 
 /** A fixed-size copy-on-write datastructure that supports accessing histories. */
 abstract class Arraylike implements Iterable<History> {
+  static boolean useTree = true;
+  
   public abstract Arraylike set(final int index, final History h);
 
   public abstract History get(final int index);
@@ -16,13 +18,12 @@ abstract class Arraylike implements Iterable<History> {
   /** @return an Arraylike that is efficient for the size. */
   static Arraylike make(final int size) {
     // TODO back heuristic up with data
-    if (size < 20) {
+    if (!useTree) {
       return new HistoryArray(size);
     }
     return new TreeArray(size);
   }
-
-
+  
   /** A fixed-size copy-on-write left-complete binary tree structure. */
   static final class TreeArray extends Arraylike {
     TreeArray left;
