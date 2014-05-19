@@ -3,7 +3,6 @@ package ch.unibe.scg.regex;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.List;
 import java.util.regex.PatternSyntaxException;
 
 import ch.unibe.scg.regex.RegexTokenizer.AnyToken;
@@ -38,19 +37,18 @@ final class RegexParser {
   private final String regex;
 
   /** The output of the {@link RegexTokenizer}. */
-  private final List<Token> tokens;
+  private final Iterable<Token> tokens;
 
   /** Feed the string to the parser. */
-  private RegexParser(final String r) {
+  private RegexParser(final String r, final Iterable<Token> tokens) {
     regex = r;
-    tokens = new RegexTokenizer(r).tokenize();
+    this.tokens = tokens;
     stack.addFirst(new OuterParser());
   }
 
   /** Building block for descending into deeper levels. */
   private interface SubParser {
-    /** Add meaning of token to currently built subexpression. */
-    void interpret(Token c);
+    void consume(Token c);
 
     /** Allow child parsers to add content to the parent parser. */
     void add(Node.Basic n);
@@ -59,8 +57,9 @@ final class RegexParser {
   /** Dispatch on tokens. */
   private abstract class StandardSubParser implements SubParser {
     @Override
-    public void interpret(final RegexTokenizer.Token c) {
+    public void consume(final RegexTokenizer.Token c) {
       // Dispatch: Java doesn't allow switch on classes.
+      // TODO(akarper): switch necessary? Profile!
       if (c instanceof CloseGroup) {
         parseCloseGroup((CloseGroup) c);
       } else if (c instanceof AnyToken) {
@@ -290,8 +289,8 @@ final class RegexParser {
     }
 
     @Override
-    public void interpret(final Token c) {
-      super.interpret(c);
+    public void consume(final Token c) {
+      super.consume(c);
       // We have at least 2 chars now: beginning and end.
       // There are cases however where we get more
       // (if a token is multiple chars, e.g. [^).
@@ -445,7 +444,7 @@ final class RegexParser {
     void parseCloseGroup(final CloseGroup c) {
       end();
       final SubParser parent = stack.peekFirst();
-      parent.interpret(c);
+      parent.consume(c);
     }
   }
 
@@ -458,10 +457,10 @@ final class RegexParser {
     }
 
     @Override
-    public void interpret(final Token c) {
+    public void consume(final Token c) {
       final RighthandOrParser child = new RighthandOrParser();
       stack.push(child);
-      child.interpret(c);
+      child.consume(c);
     }
 
     @Override
@@ -501,7 +500,7 @@ final class RegexParser {
   public Node.Regex parse() {
     for (final Token t: tokens) {
       final SubParser current = stack.peekFirst();
-      current.interpret(t);
+      current.consume(t);
     }
     SubParser current = stack.peekFirst();
     while (current instanceof RighthandOrParser) {
@@ -518,6 +517,6 @@ final class RegexParser {
 
   /** @return Parse of the regular expression given. */
   public static Node.Regex parse(final String s) {
-    return new RegexParser(s).parse();
+    return new RegexParser(s, new RegexTokenizer(s).tokenize()).parse();
   }
 }
